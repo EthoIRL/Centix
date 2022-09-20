@@ -49,8 +49,8 @@ pub mod Config {
             User::update_password
         ),
         components(
-            schemas(Media::Media, Media::UploadParam)
-            // schemas(Media::Media, Media::MediaUpload, Media::MediaError)
+            schemas(Media::Media, Media::UploadParam),
+            schemas(User::Error)
         ),
         tags(
             (name = "Media", description = "All media management api endpoints."),

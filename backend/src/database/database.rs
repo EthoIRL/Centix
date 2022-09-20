@@ -1,26 +1,28 @@
 pub mod database {
     use std::path::{PathBuf};
-
     use chrono::{DateTime, Utc};
+    use serde::{Deserialize, Serialize};
     
-    struct Media {
-        id: String,
-        name: String,
-        extension: String,
-        data_size: i32,
-        data_path: PathBuf,
-        data_compressed: bool,
-        upload_date: DateTime::<Utc>,
-        author_id: i32,
-        private: bool,
+    #[derive(Serialize, Deserialize, Clone)]
+    pub struct Media {
+        pub id: String,
+        pub name: String,
+        pub extension: String,
+        pub data_size: i32,
+        pub data_path: PathBuf,
+        pub data_compressed: bool,
+        pub upload_date: DateTime::<Utc>,
+        pub author_id: i32,
+        pub private: bool,
     }
 
-    struct User {
-        id: i32,
-        username: String,
-        creation_date: DateTime::<Utc>,
+    #[derive(Serialize, Deserialize, Clone)]
+    pub struct User {
+        pub id: i32,
+        pub username: String,
+        pub creation_date: DateTime::<Utc>,
         // Vec string of Media id's
-        uploads: Vec<String>,
-        api_key: String
+        pub uploads: Vec<String>,
+        pub api_key: String
     }
 }
