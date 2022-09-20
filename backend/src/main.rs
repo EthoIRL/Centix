@@ -23,14 +23,15 @@ pub mod Config {
 
     #[derive(Serialize, Deserialize)]
     pub struct Config {
-        content_directory: Option<String>,
-        content_compression: bool,
-        content_id_length: i32,
+        pub content_directory: Option<String>,
+        pub content_compression: bool,
+        pub content_id_length: i32,
+        pub allow_user_registration: bool,
     }
     
     impl Config {
         pub fn new() -> Config {
-            Config { content_directory: None, content_compression: true, content_id_length: 8 }
+            Config { content_directory: None, content_compression: true, content_id_length: 8, allow_user_registration: true }
         }
     }
 }

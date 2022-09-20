@@ -23,3 +23,6 @@ sled = "0.34.7"
 rand = "0.8.5"
 # Dates & Timings 
 chrono = { version = "0.4.22", features = ["serde"] }
+# Password hashing
+pbkdf2 = "0.10"
+rand_core = { version = "0.6.4", features = ["std"] }

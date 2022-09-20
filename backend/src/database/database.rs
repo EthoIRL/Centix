@@ -3,7 +3,7 @@ pub mod database {
     use chrono::{DateTime, Utc};
     use serde::{Deserialize, Serialize};
     
-    #[derive(Serialize, Deserialize, Clone)]
+    #[derive(Serialize, Deserialize, Clone, Debug)]
     pub struct Media {
         pub id: String,
         pub name: String,
@@ -16,13 +16,15 @@ pub mod database {
         pub private: bool,
     }
 
-    #[derive(Serialize, Deserialize, Clone)]
+    #[derive(Serialize, Deserialize, Clone, Debug)]
     pub struct User {
-        pub id: i32,
+        pub id: String,
         pub username: String,
         pub creation_date: DateTime::<Utc>,
         // Vec string of Media id's
         pub uploads: Vec<String>,
-        pub api_key: String
+        pub api_key: String,
+        pub password: String,
+        pub salt: Vec<u8>
     }
 }
