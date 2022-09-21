@@ -33,7 +33,7 @@ pub mod User {
         NotAllowed(String),
 
         #[response(status = 500)]
-        InternalError(String)
+        InternalError(Option<String>)
     }
 
     #[utoipa::path(
@@ -55,7 +55,7 @@ pub mod User {
     ) -> Result<Status, Error> {
         let config = match config_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("Failed to read internal server configruation")))
+            Err(_) => return Err(Error::InternalError(None))
         };
         
         if !config.allow_user_registration {
@@ -66,10 +66,10 @@ pub mod User {
             Ok(database) => {
                 match database.open_tree("user") {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(String::from("Failed to access user database")))
+                    Err(_) => return Err(Error::InternalError(None))
                 }
             },
-            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
+            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
         };
         
         let users: Vec<User> = user_database.iter().map(|item| 
@@ -83,16 +83,12 @@ pub mod User {
         let salt = SaltString::generate(&mut OsRng);
         let password_hash = match Pbkdf2.hash_password(password.as_bytes(), &salt) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("Failed to hash password")))
+            Err(_) => return Err(Error::InternalError(None))
         }.to_string();
-
-        // TODO: For now we will just generate a random 16 string character list for IDs, but this does not ensure the same ID will not be used twice.
         
         let user = User {
-            id: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
             username: username,
             creation_date: chrono::offset::Utc::now(),
-            salt: salt.as_bytes().to_vec(),
             password: password_hash,
             uploads: Vec::new(),
             api_key: Alphanumeric.sample_string(&mut rand::thread_rng(), 48)
@@ -100,17 +96,17 @@ pub mod User {
 
         let user_vec = match serde_json::to_vec(&user) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("Failed to convert user to json")))
+            Err(_) => return Err(Error::InternalError(None))
         };
         
-        match user_database.insert(user.id, user_vec) {
+        match user_database.insert(user.username, user_vec) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("Failed to convert insert user in database")))
+            Err(_) => return Err(Error::InternalError(None))
         };
 
         match user_database.flush() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("Failed to flush database")))
+            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to add user to database"))))
         };
         Ok(Status::Ok)
     }
@@ -119,17 +115,56 @@ pub mod User {
         get,
         context_path = "/user",
         responses(
-            (status = 200, description = "Successfully logged in account")
+            (status = 200, description = "Successfully logged in account"),
+            (status = 403, description = "An internal issue has occured when attemping to register an account", body = Error),
+            (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
     #[get("/login?<username>&<password>")]
     pub async fn login(
-        config: &State<Arc<Mutex<Config>>>,
-        database: &State<Arc<Mutex<sled::Db>>>,
+        _config: &State<Arc<Mutex<Config>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
         username: String,
         password: String
-    ) -> String {
-        todo!()
+    ) -> Result<String, Error> {
+        let user_vec = match database_store.lock() {
+            Ok(database) => {
+                match database.open_tree("user") {
+                    Ok(user_tree) => {
+                        match user_tree.get(&username) {
+                            Ok(vec) => {
+                                match vec {
+                                    Some(result) => result,
+                                    None => return Err(Error::InternalError(None))
+                                }
+                            },
+                            Err(_) => return Err(Error::Forbidden(String::from("Password or username is not correct")))
+                        }
+                    },
+                    Err(_) => return Err(Error::InternalError(None))
+                }
+            },
+            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+        };
+
+        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())) {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        println!("{:#?}", user);
+
+        let password_hash = match PasswordHash::new(&user.password) {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
+            Ok(_) => {
+                return Ok(user.api_key)
+            },
+            Err(_) => return Err(Error::Forbidden(String::from("Password or username is not correct")))
+        };
     }
 
     #[utoipa::path(

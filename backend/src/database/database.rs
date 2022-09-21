@@ -18,13 +18,11 @@ pub mod database {
 
     #[derive(Serialize, Deserialize, Clone, Debug)]
     pub struct User {
-        pub id: String,
         pub username: String,
         pub creation_date: DateTime::<Utc>,
         // Vec string of Media id's
         pub uploads: Vec<String>,
         pub api_key: String,
-        pub password: String,
-        pub salt: Vec<u8>
+        pub password: String
     }
 }
