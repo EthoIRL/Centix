@@ -72,16 +72,13 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
         
-        let medias: Vec<User> = user_database.iter().map(|item| 
+        let users: Vec<User> = user_database.iter().map(|item| 
             serde_json::from_str(&String::from_utf8_lossy(&item.unwrap().1.to_vec())).unwrap())
             .collect::<Vec<_>>();
         
-        if medias.iter().any(|media| media.username == username) {
+        if users.iter().any(|user| user.username == username) {
             return Err(Error::Forbidden(String::from("Username is already in use!")))
         }
-
-        // todo!("Implement password salt and hasing, and then inserting user into the database");
-
         
         let salt = SaltString::generate(&mut OsRng);
         let password_hash = match Pbkdf2.hash_password(password.as_bytes(), &salt) {
@@ -101,10 +98,20 @@ pub mod User {
             api_key: Alphanumeric.sample_string(&mut rand::thread_rng(), 48)
         };
 
-        println!("{:#?}", user);
-
-        // TODO: Insert user into user database and flush
+        let user_vec = match serde_json::to_vec(&user) {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("Failed to convert user to json")))
+        };
         
+        match user_database.insert(user.id, user_vec) {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("Failed to convert insert user in database")))
+        };
+
+        match user_database.flush() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("Failed to flush database")))
+        };
         Ok(Status::Ok)
     }
 
