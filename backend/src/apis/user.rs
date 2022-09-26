@@ -24,6 +24,9 @@ pub mod User {
 
     #[derive(Serialize, ToSchema, Responder)]
     pub enum Error {
+        #[response(status = 400)]
+        BadRequest(Option<String>),
+
         #[response(status = 401)]
         Unauthorized(String),
 
@@ -153,8 +156,6 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(None))
         };
 
-        println!("{:#?}", user);
-
         let password_hash = match PasswordHash::new(&user.password) {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
@@ -216,10 +217,8 @@ pub mod User {
 
         match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
             Ok(_) => {
-                println!("Password verified");
                 match user_database.remove(username) {
                     Ok(_) => {
-                        println!("Deleted account");
                         return Ok(Status::Ok)
                     },
                     Err(_) => return Err(Error::InternalError(Some(String::from("Failed delete user account"))))
@@ -234,18 +233,23 @@ pub mod User {
         context_path = "/user",
         responses(
             (status = 200, description = "Successfully updated account username"),
+            (status = 400, description = "The Client has sent a badly formed request", body = Error),
             (status = 403, description = "An authentication issue has occured when attemping to update account username", body = Error),
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
-    #[get("/update/username?<username>&<password>&<new_username>")]
+    #[get("/update/username?<username>&<password>&<newname>")]
     pub async fn update_username(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         username: String,
         password: String,
-        new_username: String
+        newname: String
     ) -> Result<Status, Error> {
+        if username == newname {
+            return Err(Error::BadRequest(None))
+        }
+
         let user_database = match database_store.lock() {
             Ok(database) => {
                 match database.open_tree("user") {
@@ -256,10 +260,12 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
         };
 
-        let user_vec = match user_database.get(&username) {
+        let user_vec = match user_database.get(username) {
             Ok(result) => {
                 match result {
-                    Some(result) => result,
+                    Some(result) => {
+                        result
+                    },
                     None => return Err(Error::InternalError(None))
                 }
             },
@@ -278,18 +284,24 @@ pub mod User {
 
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
             Ok(_) => {
-                match user_database.remove(user.username) {
+                match user_database.remove(&user.username) {
                     Ok(_) => {
-                        // TODO: Make sure username is not already in use if throw error
+                        let users: Vec<User> = user_database.iter().map(|item| 
+                            serde_json::from_str(&String::from_utf8_lossy(&item.unwrap().1.to_vec())).unwrap())
+                            .collect::<Vec<_>>();
                         
-                        user.username = username.clone();
+                        if users.iter().any(|user| user.username == newname) {
+                            return Err(Error::Forbidden(Some(String::from("Username is already in use!"))))
+                        }
+
+                        user.username = newname.clone();
                         
                         let user_insert_vec = match serde_json::to_vec(&user) {
                             Ok(result) => result,
                             Err(_) => return Err(Error::InternalError(None))
                         };
 
-                        match user_database.insert(new_username, user_insert_vec) {
+                        match user_database.insert(newname, user_insert_vec) {
                             Ok(_) => {
                                 if let Err(_) = user_database.flush() {
                                     return Err(Error::InternalError(Some(String::from("Failed to update backend database"))))
@@ -358,12 +370,13 @@ pub mod User {
                 match user_database.fetch_and_update(user.username, |option_vec| {
                     let user_vec = option_vec.unwrap();
                     let mut user: User = serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())).unwrap();
-                    // LOL... user.password = new_password.clone();
-                    // TODO:
+                    
+                    let salt = SaltString::generate(&mut OsRng);
+                    user.password = Pbkdf2.hash_password(new_password.as_bytes(), &salt).unwrap().to_string();
+
                     Some(IVec::from(serde_json::to_vec(&user).unwrap()))
                 }) {
                     Ok(_) => {
-                        println!("changed password");
                         if let Err(_) = user_database.flush() {
                             return Err(Error::InternalError(Some(String::from("Failed to update backend database"))))
                         };
