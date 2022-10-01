@@ -3,3 +3,5 @@
 **/temp
 /backend/database
 **/config.json
+
+**.vscode

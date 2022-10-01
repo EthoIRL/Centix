@@ -26,12 +26,14 @@ pub mod Config {
         pub content_directory: Option<String>,
         pub content_compression: bool,
         pub content_id_length: i32,
+        pub use_invite_keys: bool,
         pub allow_user_registration: bool,
+        pub first_user_admin: bool
     }
     
     impl Config {
         pub fn new() -> Config {
-            Config { content_directory: None, content_compression: true, content_id_length: 8, allow_user_registration: true }
+            Config { content_directory: None, content_compression: true, content_id_length: 8, use_invite_keys: false, allow_user_registration: true, first_user_admin: true }
         }
     }
 }

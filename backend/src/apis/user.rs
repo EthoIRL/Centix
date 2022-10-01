@@ -2,7 +2,7 @@
 pub mod User {
     use std::sync::{Arc, Mutex};
 
-    use crate::{Config::*, database::database::database::User};
+    use crate::{Config::*, database::database::database::{User, Invite}};
     use rocket::{
         get,
         http::Status,
@@ -45,17 +45,19 @@ pub mod User {
         context_path = "/user",
         responses(
             (status = 200, description = "Successfully registered account"),
+            (status = 401, description = "An ", body = Error),
             (status = 403, description = "An internal issue has occured when attemping to register an account", body = Error),
             (status = 405, description = "The api endpoint is not allowed to execute", body = Error),
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
-    #[get("/register?<username>&<password>")]
+    #[get("/register?<username>&<password>&<invite_key>")]
     pub async fn register(
         config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         username: String,
-        password: String
+        password: String,
+        invite_key: Option<String>
     ) -> Result<Status, Error> {
         let config = match config_store.lock() {
             Ok(result) => result,
@@ -66,19 +68,52 @@ pub mod User {
             return Err(Error::NotAllowed(String::from("User registration is disabled on this server!")))
         }
 
-        let user_database = match database_store.lock() {
-            Ok(database) => {
-                match database.open_tree("user") {
-                    Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(None))
-                }
-            },
+        let database = match database_store.lock() {
+            Ok(result) => result,
             Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
         };
+
+        let invite_database = match database.open_tree("invite") {
+            Ok(result) => {
+                result
+            },
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let user_database = match database.open_tree("user") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
         
-        let users: Vec<User> = user_database.iter().map(|item| 
+        let users: Vec<User> = user_database.iter().map(|item|
             serde_json::from_str(&String::from_utf8_lossy(&item.unwrap().1.to_vec())).unwrap())
             .collect::<Vec<_>>();
+
+        let mut invite: Option<Invite> = None;
+
+        if config.use_invite_keys && !users.is_empty() {
+            let optional_invite = match invite_key.clone() {
+                Some(key) => {
+                    match invite_database.get(key) {
+                        Ok(result) => result,
+                        Err(_) => return Err(Error::Unauthorized(String::from("Invitation key does not exist in the database!")))
+                    }
+                },
+                None => {
+                    return Err(Error::Unauthorized(String::from("An invitation key is required to register!")))
+                }
+            };
+
+            invite = match optional_invite {
+                Some(invite_vec) => {
+                    match serde_json::from_str(&String::from_utf8_lossy(&invite_vec.to_vec())) {
+                        Ok(result) => Some(result),
+                        Err(_) => return Err(Error::InternalError(None))
+                    }
+                },
+                None => return Err(Error::InternalError(None))
+            };
+        }
         
         if users.iter().any(|user| user.username == username) {
             return Err(Error::Forbidden(Some(String::from("Username is already in use!"))))
@@ -91,25 +126,57 @@ pub mod User {
         }.to_string();
         
         let user = User {
-            username: username,
+            username: username.clone(),
             creation_date: chrono::offset::Utc::now(),
             password: password_hash,
             uploads: Vec::new(),
-            api_key: Alphanumeric.sample_string(&mut rand::thread_rng(), 48)
+            api_key: Alphanumeric.sample_string(&mut rand::thread_rng(), 48),
+            admin: users.is_empty() && config.first_user_admin,
+            invite_key: {
+                if config.use_invite_keys && !users.is_empty() {
+                    invite_key
+                } else {
+                    None
+                }
+            }
         };
+        
+        println!("{:#?}", user);
 
         let user_vec = match serde_json::to_vec(&user) {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
         };
         
-        match user_database.insert(user.username, user_vec) {
+        match user_database.insert(user.username, user_vec) { 
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
         };
 
         match user_database.flush() {
-            Ok(result) => result,
+            Ok(result) => {
+                if let Some(mut invite) = invite {
+                    invite = Invite {
+                        invitee_username: Some(username.clone()),
+                        invitee_date: Some(chrono::offset::Utc::now()),
+                        used: true,
+                        ..invite
+                    };
+
+                    match invite_database.update_and_fetch(&invite.key, |_| {
+                        Some(IVec::from(serde_json::to_vec(&invite).unwrap()))
+                    }) {
+                        Ok(_) => {
+                            if let Err(_) = invite_database.flush() {
+                                return Err(Error::InternalError(Some(String::from("Failed to update backend database"))))
+                            };
+                        },
+                        Err(_) => return Err(Error::InternalError(None))
+                    }
+
+                }
+                result
+            },
             Err(_) => return Err(Error::InternalError(Some(String::from("Failed to add user to database"))))
         };
         Ok(Status::Ok)
