@@ -45,10 +45,13 @@ pub mod User {
         context_path = "/user",
         responses(
             (status = 200, description = "Successfully registered account"),
-            (status = 401, description = "An ", body = Error),
+            (status = 401, description = "An unauthurized request has been attempted", body = Error),
             (status = 403, description = "An internal issue has occured when attemping to register an account", body = Error),
             (status = 405, description = "The api endpoint is not allowed to execute", body = Error),
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
+        ),
+        params(
+            ("invite_key", description = "A key provided from an external source allowing a single account to be registered")
         )
     )]
     #[get("/register?<username>&<password>&<invite_key>")]
@@ -84,9 +87,10 @@ pub mod User {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
         };
-        
-        let users: Vec<User> = user_database.iter().map(|item|
-            serde_json::from_str(&String::from_utf8_lossy(&item.unwrap().1.to_vec())).unwrap())
+
+        let users: Vec<User> = user_database.iter()
+            .filter_map(|item| item.ok())
+            .map(|item| serde_json::from_str(&String::from_utf8_lossy(&item.1.to_vec())).unwrap())
             .collect::<Vec<_>>();
 
         let mut invite: Option<Invite> = None;
@@ -94,14 +98,25 @@ pub mod User {
         if config.use_invite_keys && !users.is_empty() {
             let optional_invite = match invite_key.clone() {
                 Some(key) => {
-                    match invite_database.get(key) {
-                        Ok(result) => result,
-                        Err(_) => return Err(Error::Unauthorized(String::from("Invitation key does not exist in the database!")))
+                    match invite_database.contains_key(&key) {
+                        Ok(has_key) => {
+                            if has_key {
+                                match invite_database.get(key) {
+                                    Ok(result) => { 
+                                        result 
+                                    },
+                                    Err(_) => {
+                                        return Err(Error::Unauthorized(String::from("Invitation key does not exist in the database!"))) 
+                                    }   
+                                }
+                            } else {
+                                return Err(Error::Unauthorized(String::from("Invitation key does not exist in the database!")))
+                            }
+                        },
+                        Err(_) => return Err(Error::Unauthorized(String::from("An error occured while looking for your invitiation key!"))) 
                     }
                 },
-                None => {
-                    return Err(Error::Unauthorized(String::from("An invitation key is required to register!")))
-                }
+                None => return Err(Error::Unauthorized(String::from("An invitation key is required to register!")))
             };
 
             invite = match optional_invite {
