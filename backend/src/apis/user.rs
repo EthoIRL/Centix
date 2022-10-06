@@ -49,18 +49,15 @@ pub mod User {
             (status = 403, description = "An internal issue has occured when attemping to register an account", body = Error),
             (status = 405, description = "The api endpoint is not allowed to execute", body = Error),
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
-        ),
-        params(
-            ("invite_key", description = "A key provided from an external source allowing a single account to be registered")
         )
     )]
-    #[get("/register?<username>&<password>&<invite_key>")]
+    #[get("/register?<username>&<password>&<invite>")]
     pub async fn register(
         config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         username: String,
         password: String,
-        invite_key: Option<String>
+        invite: Option<String>
     ) -> Result<Status, Error> {
         let config = match config_store.lock() {
             Ok(result) => result,
@@ -93,10 +90,10 @@ pub mod User {
             .map(|item| serde_json::from_str(&String::from_utf8_lossy(&item.1.to_vec())).unwrap())
             .collect::<Vec<_>>();
 
-        let mut invite: Option<Invite> = None;
+        let mut option_invite: Option<Invite> = None;
 
         if config.use_invite_keys && !users.is_empty() {
-            let optional_invite = match invite_key.clone() {
+            let optional_invite = match invite.clone() {
                 Some(key) => {
                     match invite_database.contains_key(&key) {
                         Ok(has_key) => {
@@ -119,7 +116,7 @@ pub mod User {
                 None => return Err(Error::Unauthorized(String::from("An invitation key is required to register!")))
             };
 
-            invite = match optional_invite {
+            option_invite = match optional_invite {
                 Some(invite_vec) => {
                     match serde_json::from_str(&String::from_utf8_lossy(&invite_vec.to_vec())) {
                         Ok(result) => Some(result),
@@ -128,6 +125,12 @@ pub mod User {
                 },
                 None => return Err(Error::InternalError(None))
             };
+        }
+        
+        if let Some(invite) = &option_invite { 
+            if invite.used {
+                return Err(Error::Forbidden(Some(String::from("Invitation has already been used!"))))
+            }
         }
         
         if users.iter().any(|user| user.username == username) {
@@ -149,7 +152,7 @@ pub mod User {
             admin: users.is_empty() && config.first_user_admin,
             invite_key: {
                 if config.use_invite_keys && !users.is_empty() {
-                    invite_key
+                    invite
                 } else {
                     None
                 }
@@ -170,7 +173,7 @@ pub mod User {
 
         match user_database.flush() {
             Ok(result) => {
-                if let Some(mut invite) = invite {
+                if let Some(mut invite) = option_invite {
                     invite = Invite {
                         invitee_username: Some(username.clone()),
                         invitee_date: Some(chrono::offset::Utc::now()),
@@ -469,5 +472,100 @@ pub mod User {
             },
             Err(_) => Err(Error::Forbidden(None))
         };
+    }
+
+    #[utoipa::path(
+        get,
+        context_path = "/user",
+        responses(
+            (status = 200, description = "Successfully created an invite"),
+            (status = 403, description = "A issue has occured when attemping to create an invite", body = Error),
+            (status = 405, description = "The api endpoint is not allowed to execute", body = Error),
+            (status = 500, description = "An internal error on the server's end has occured", body = Error)
+        )
+    )]
+    #[get("/generate/invite?<username>&<password>")]
+    pub async fn generate_invite(
+        config_store: &State<Arc<Mutex<Config>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
+        username: String,
+        password: String
+    ) -> Result<String, Error> {
+        let config = match config_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+        
+        if !config.use_invite_keys {
+            return Err(Error::NotAllowed(String::from("Invitations are disabled on this server!")))
+        }
+
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+        };
+
+        let invite_database = match database.open_tree("invite") {
+            Ok(result) => {
+                result
+            },
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let user_database = match database.open_tree("user") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let user_vec = match user_database.get(&username) {
+            Ok(result) => {
+                match result {
+                    Some(result) => result,
+                    None => return Err(Error::InternalError(None))
+                }
+            },
+            Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
+        };
+
+        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())) {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let password_hash = match PasswordHash::new(&user.password) {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
+            Ok(_) => {
+                let invite = Invite {
+                    key: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
+                    invitee_username: None,
+                    invitee_date: None,
+                    creation_date: chrono::offset::Utc::now(),
+                    creator_username: username,
+                    used: false
+                };
+
+                let invite_vec = match serde_json::to_vec(&invite) {
+                    Ok(result) => result,
+                    Err(_) => return Err(Error::InternalError(None))
+                };
+                
+                match invite_database.insert(&invite.key, invite_vec) { 
+                    Ok(result) => result,
+                    Err(_) => return Err(Error::InternalError(None))
+                };
+
+                match user_database.flush() {
+                    Ok(_) => {
+                        Ok(invite.key)
+                    }
+                    Err(_) => Err(Error::InternalError(None))
+                }
+            }
+            Err(_) => Err(Error::Forbidden(None))
+        }
     }
 }

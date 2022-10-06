@@ -49,7 +49,8 @@ pub mod Config {
             User::login,
             User::delete,
             User::update_username,
-            User::update_password
+            User::update_password,
+            User::generate_invite
         ),
         components(
             schemas(Media::Media, Media::UploadParam),
@@ -126,7 +127,8 @@ fn rocket() -> Rocket<Build> {
                 User::login,
                 User::delete,
                 User::update_username,
-                User::update_password
+                User::update_password,
+                User::generate_invite
             ]
         )
 }
