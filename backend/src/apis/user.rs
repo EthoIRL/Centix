@@ -8,9 +8,9 @@ pub mod User {
         http::Status,
         State, Responder
     };
-    use serde::{Deserialize, Serialize};
+    use serde::Serialize;
     use sled::IVec;
-    use utoipa::{IntoParams, ToSchema};
+    use utoipa::ToSchema;
 
     use pbkdf2::{
         password_hash::{
@@ -87,7 +87,11 @@ pub mod User {
 
         let users: Vec<User> = user_database.iter()
             .filter_map(|item| item.ok())
-            .map(|item| serde_json::from_str(&String::from_utf8_lossy(&item.1.to_vec())).unwrap())
+            .map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1.to_vec())) {
+                Ok(result) => result,
+                Err(_) => return None
+            })
+            .filter_map(|user| user)
             .collect::<Vec<_>>();
 
         let mut option_invite: Option<Invite> = None;
@@ -182,7 +186,10 @@ pub mod User {
                     };
 
                     match invite_database.update_and_fetch(&invite.key, |_| {
-                        Some(IVec::from(serde_json::to_vec(&invite).unwrap()))
+                        Some(IVec::from(match serde_json::to_vec(&invite) {
+                            Ok(result) => result,
+                            Err(_) => return None
+                        }))
                     }) {
                         Ok(_) => {
                             if let Err(_) = invite_database.flush() {
@@ -371,10 +378,15 @@ pub mod User {
             Ok(_) => {
                 match user_database.remove(&user.username) {
                     Ok(_) => {
-                        let users: Vec<User> = user_database.iter().map(|item| 
-                            serde_json::from_str(&String::from_utf8_lossy(&item.unwrap().1.to_vec())).unwrap())
+                        let users: Vec<User> = user_database.iter()
+                            .filter_map(|item| item.ok())
+                            .map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1.to_vec())) {
+                                Ok(result) => result,
+                                Err(_) => return None
+                            })
+                            .filter_map(|user| user)
                             .collect::<Vec<_>>();
-                        
+
                         if users.iter().any(|user| user.username == newname) {
                             return Err(Error::Forbidden(Some(String::from("Username is already in use!"))))
                         }
@@ -453,13 +465,27 @@ pub mod User {
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
             Ok(_) => {
                 match user_database.fetch_and_update(user.username, |option_vec| {
-                    let user_vec = option_vec.unwrap();
-                    let mut user: User = serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())).unwrap();
+                    let user_vec = match option_vec {
+                        Some(result) => result,
+                        None => return None
+                    };
+
+                    let mut user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())) {
+                        Ok(result) => result,
+                        Err(_) => return None
+                    };
                     
                     let salt = SaltString::generate(&mut OsRng);
-                    user.password = Pbkdf2.hash_password(new_password.as_bytes(), &salt).unwrap().to_string();
 
-                    Some(IVec::from(serde_json::to_vec(&user).unwrap()))
+                    user.password = match Pbkdf2.hash_password(new_password.as_bytes(), &salt) {
+                        Ok(result) => result.to_string(),
+                        Err(_) => return None
+                    };
+
+                    Some(IVec::from(match serde_json::to_vec(&user) {
+                        Ok(result) => result,
+                        Err(_) => return None
+                    }))
                 }) {
                     Ok(_) => {
                         if let Err(_) = user_database.flush() {
@@ -547,6 +573,8 @@ pub mod User {
                     creator_username: username,
                     used: false
                 };
+
+                println!("{:#?}", invite);
 
                 let invite_vec = match serde_json::to_vec(&invite) {
                     Ok(result) => result,
