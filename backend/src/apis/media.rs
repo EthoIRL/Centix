@@ -9,6 +9,7 @@ pub mod Media {
         http::Status,
         serde::json::Json,
         FromForm, State,
+        FromFormField
     };
     use serde::{Deserialize, Serialize};
     use utoipa::{IntoParams, ToSchema};
@@ -25,6 +26,13 @@ pub mod Media {
         name: String,
         #[schema(example = "Publicly listed on /all/ endpoint")]
         private: Option<bool>,
+    }
+
+    #[derive(FromFormField, ToSchema)]
+    pub enum ContentType {
+        Video,
+        Image,
+        Other
     }
 
     #[utoipa::path(
@@ -54,7 +62,7 @@ pub mod Media {
         config: &State<Arc<Mutex<Config>>>,
         database: &State<Arc<Mutex<sled::Db>>>,
         username: Option<String>,
-        content_type: Option<String>,
+        content_type: Option<ContentType>,
     ) -> Json<Vec<Media>> {
         todo!()
     }

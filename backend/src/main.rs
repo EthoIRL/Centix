@@ -58,7 +58,7 @@ pub mod Config {
             Stats::user
         ),
         components(
-            schemas(Media::Media, Media::UploadParam),
+            schemas(Media::Media, Media::UploadParam, Media::ContentType),
             schemas(User::Error)
         ),
         tags(

@@ -31,6 +31,7 @@ pub mod database {
     }
 
     // TODO: Single use or multi use?
+    // TODO: Expirtation date?
     #[derive(Serialize, Deserialize, Clone, Debug)]
     pub struct Invite {
         // Main key
