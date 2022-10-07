@@ -2,11 +2,11 @@
 pub mod User {
     use std::sync::{Arc, Mutex};
 
-    use crate::{Config::*, database::{database::database::{User, Invite}, self}};
+    use crate::{Config::*, database::{database::database::{User, Invite}}};
     use rocket::{
-        get,
         http::Status,
-        State, Responder
+        State, Responder, 
+        get, delete, post, put
     };
     use serde::Serialize;
     use sled::IVec;
@@ -41,7 +41,7 @@ pub mod User {
     }
 
     #[utoipa::path(
-        get,
+        post,
         context_path = "/user",
         responses(
             (status = 200, description = "Successfully registered account"),
@@ -51,7 +51,7 @@ pub mod User {
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
-    #[get("/register?<username>&<password>&<invite>")]
+    #[post("/register?<username>&<password>&<invite>")]
     pub async fn register(
         config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
@@ -262,7 +262,7 @@ pub mod User {
     }
 
     #[utoipa::path(
-        get,
+        delete,
         context_path = "/user",
         responses(
             (status = 200, description = "Successfully deleted account"),
@@ -270,7 +270,7 @@ pub mod User {
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
-    #[get("/delete?<username>&<password>")]
+    #[delete("/delete?<username>&<password>")]
     pub async fn delete(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
@@ -321,7 +321,7 @@ pub mod User {
     }
 
     #[utoipa::path(
-        get,
+        put,
         context_path = "/user",
         responses(
             (status = 200, description = "Successfully updated account username"),
@@ -330,7 +330,7 @@ pub mod User {
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
-    #[get("/update/username?<username>&<password>&<newname>")]
+    #[put("/update/username?<username>&<password>&<newname>")]
     pub async fn update_username(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
@@ -416,7 +416,7 @@ pub mod User {
     }
 
     #[utoipa::path(
-        get,
+        put,
         context_path = "/user",
         responses(
             (status = 200, description = "Successfully updated account's password"),
@@ -424,7 +424,7 @@ pub mod User {
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
-    #[get("/update/password?<username>&<password>&<new_password>&<new_api_key>")]
+    #[put("/update/password?<username>&<password>&<new_password>&<new_api_key>")]
     pub async fn update_password(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
@@ -508,7 +508,7 @@ pub mod User {
     }
 
     #[utoipa::path(
-        get,
+        post,
         context_path = "/user",
         responses(
             (status = 200, description = "Successfully created an invite"),
@@ -517,7 +517,7 @@ pub mod User {
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
-    #[get("/generate/invite?<username>&<password>")]
+    #[post("/generate/invite?<username>&<password>")]
     pub async fn generate_invite(
         config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
