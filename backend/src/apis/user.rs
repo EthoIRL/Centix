@@ -2,7 +2,7 @@
 pub mod User {
     use std::sync::{Arc, Mutex};
 
-    use crate::{Config::*, database::database::database::{User, Invite}};
+    use crate::{Config::*, database::{database::database::{User, Invite}, self}};
     use rocket::{
         get,
         http::Status,
