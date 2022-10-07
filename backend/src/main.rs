@@ -8,6 +8,7 @@ use utoipa::Modify;
 pub mod apis {
     pub mod media;
     pub mod user;
+    pub mod stats;
 }
 
 pub mod database {
@@ -16,6 +17,7 @@ pub mod database {
 
 use crate::apis::media::Media;
 use crate::apis::user::User;
+use crate::apis::stats::Stats;
 
 #[allow(non_snake_case)]
 pub mod Config {
@@ -45,12 +47,15 @@ pub mod Config {
             Media::grab,
             Media::all,
             Media::upload,
+            Media::delete,
             User::register,
             User::login,
             User::delete,
             User::update_username,
             User::update_password,
-            User::generate_invite
+            User::generate_invite,
+            Stats::media,
+            Stats::user
         ),
         components(
             schemas(Media::Media, Media::UploadParam),
@@ -58,7 +63,8 @@ pub mod Config {
         ),
         tags(
             (name = "Media", description = "All media management api endpoints."),
-            (name = "User", description = "All user management api endpoints.")
+            (name = "User", description = "All user management api endpoints."),
+            (name = "Stats", description = "All statistical management api endpoints.")
         )
     )]
     struct ApiDoc;
@@ -111,7 +117,8 @@ fn rocket() -> Rocket<Build> {
             "/media",
             routes![
                 Media::all,
-                Media::upload
+                Media::upload,
+                Media::delete
             ]
         )
         .mount(
@@ -129,6 +136,13 @@ fn rocket() -> Rocket<Build> {
                 User::update_username,
                 User::update_password,
                 User::generate_invite
+            ]
+        )
+        .mount(
+            "/stats", 
+            routes![
+                Stats::media,
+                Stats::user
             ]
         )
 }
