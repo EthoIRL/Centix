@@ -152,7 +152,7 @@ pub mod User {
             creation_date: chrono::offset::Utc::now(),
             password: password_hash,
             uploads: Vec::new(),
-            api_key: Alphanumeric.sample_string(&mut rand::thread_rng(), 48),
+            api_key: Alphanumeric.sample_string(&mut OsRng, 48),
             admin: users.is_empty() && config.first_user_admin,
             invite_key: {
                 if config.use_invite_keys && !users.is_empty() {
@@ -424,13 +424,14 @@ pub mod User {
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
-    #[get("/update/password?<username>&<password>&<new_password>")]
+    #[get("/update/password?<username>&<password>&<new_password>&<new_api_key>")]
     pub async fn update_password(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         username: String,
         password: String,
-        new_password: String
+        new_password: String,
+        new_api_key: Option<bool>
     ) -> Result<Status, Error> {
         let user_database = match database_store.lock() {
             Ok(database) => {
@@ -481,6 +482,12 @@ pub mod User {
                         Ok(result) => result.to_string(),
                         Err(_) => return None
                     };
+
+                    if let Some(new_key) = new_api_key {
+                        if new_key {
+                            user.api_key = Alphanumeric.sample_string(&mut OsRng, 48);
+                        }
+                    }
 
                     Some(IVec::from(match serde_json::to_vec(&user) {
                         Ok(result) => result,
