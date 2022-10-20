@@ -2,15 +2,14 @@
 pub mod User {
     use std::sync::{Arc, Mutex};
 
-    use crate::{Config::*, database::{database::database::{User, Invite}}};
+    use crate::{Config::*, database::{database::database::{User, Invite}}, Error};
+    
     use rocket::{
         http::Status,
-        State, Responder, 
+        State,
         get, delete, post, put
     };
-    use serde::Serialize;
     use sled::IVec;
-    use utoipa::ToSchema;
 
     use pbkdf2::{
         password_hash::{
@@ -21,24 +20,6 @@ pub mod User {
     };
 
     use rand::distributions::{Alphanumeric, DistString};
-
-    #[derive(Serialize, ToSchema, Responder)]
-    pub enum Error {
-        #[response(status = 400)]
-        BadRequest(Option<String>),
-
-        #[response(status = 401)]
-        Unauthorized(String),
-
-        #[response(status = 403)]
-        Forbidden(Option<String>),
-
-        #[response(status = 405)]
-        NotAllowed(String),
-
-        #[response(status = 500)]
-        InternalError(Option<String>)
-    }
 
     #[utoipa::path(
         post,

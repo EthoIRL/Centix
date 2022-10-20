@@ -1,9 +1,28 @@
-use std::{path::Path, fs::{File, self}, io::BufReader, sync::{Arc, Mutex}};
+use std::{
+    path::Path,
+    fs::{File, self},
+    io::BufReader,
+    sync::{Arc, Mutex}
+};
 
-use rocket::{routes, Build, Rocket};
-use utoipa::{OpenApi, openapi};
+use rocket::{
+    routes, Build,
+    Rocket,
+    serde::Serialize,
+    Responder
+};
+
+use utoipa::{
+    OpenApi,
+    openapi
+};
+
+use utoipa::{
+    Modify,
+    ToSchema
+};
+
 use utoipa_swagger_ui::SwaggerUi;
-use utoipa::Modify;
 
 pub mod apis {
     pub mod media;
@@ -40,34 +59,51 @@ pub mod Config {
     }
 }
 
-
 #[derive(OpenApi)]
-    #[openapi(
-        paths(
-            Media::grab,
-            Media::all,
-            Media::upload,
-            Media::delete,
-            User::register,
-            User::login,
-            User::delete,
-            User::update_username,
-            User::update_password,
-            User::generate_invite,
-            Stats::media,
-            Stats::user
-        ),
-        components(
-            schemas(Media::Media, Media::UploadParam, Media::ContentType),
-            schemas(User::Error)
-        ),
-        tags(
-            (name = "Media", description = "All media management api endpoints."),
-            (name = "User", description = "All user management api endpoints."),
-            (name = "Stats", description = "All statistical management api endpoints.")
-        )
-    )]
-    struct ApiDoc;
+#[openapi(
+    paths(
+        Media::grab,
+        Media::all,
+        Media::upload,
+        Media::delete,
+        User::register,
+        User::login,
+        User::delete,
+        User::update_username,
+        User::update_password,
+        User::generate_invite,
+        Stats::media,
+        Stats::user
+    ),
+    components(
+        schemas(Media::Media, Media::UploadParam, Media::ContentType),
+        schemas(Error)
+    ),
+    tags(
+        (name = "Media", description = "All media management api endpoints."),
+        (name = "User", description = "All user management api endpoints."),
+        (name = "Stats", description = "All statistical management api endpoints.")
+    )
+)]
+struct ApiDoc;
+
+#[derive(Serialize, ToSchema, Responder, Debug)]
+pub enum Error {
+    #[response(status = 400)]
+    BadRequest(Option<String>),
+
+    #[response(status = 401)]
+    Unauthorized(String),
+
+    #[response(status = 403)]
+    Forbidden(Option<String>),
+
+    #[response(status = 405)]
+    NotAllowed(String),
+
+    #[response(status = 500)]
+    InternalError(Option<String>)
+}
 
 #[rocket::launch]
 fn rocket() -> Rocket<Build> {
