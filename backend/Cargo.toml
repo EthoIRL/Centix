@@ -26,3 +26,9 @@ chrono = { version = "0.4.22", features = ["serde"] }
 # Password hashing
 pbkdf2 = "0.10"
 rand_core = { version = "0.6.4", features = ["std"] }
+# Base 64 Encoding & Decoding
+base64 = "0.13.0"
+# Mime Type & Magic detection  
+infer = { version = "0.3", default-features = false }
+# Lossless Compression
+flate2 = "1.0.24"
