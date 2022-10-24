@@ -13,7 +13,7 @@ pub mod database {
         pub data_path: PathBuf,
         pub data_compressed: bool,
         pub upload_date: DateTime::<Utc>,
-        pub author_id: i32,
+        pub author_username: String,
         pub private: bool,
     }
 

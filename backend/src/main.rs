@@ -45,16 +45,23 @@ pub mod Config {
     #[derive(Serialize, Deserialize)]
     pub struct Config {
         pub content_directory: Option<String>,
-        pub content_compression: bool,
         pub content_id_length: i32,
+        pub content_name_length: i32,
+        // pub content_compression: bool,
+        // // Eg.. 80 = 80% of the original size, 60% of the original size
+        // pub content_compression_target: i32,
+        // // In the form of mb's 1 = 1mb
+        pub content_max_size: i32,
         pub use_invite_keys: bool,
         pub allow_user_registration: bool,
-        pub first_user_admin: bool
+        pub first_user_admin: bool,
+        pub store_compressed: bool
     }
     
     impl Config {
         pub fn new() -> Config {
-            Config { content_directory: None, content_compression: true, content_id_length: 8, use_invite_keys: false, allow_user_registration: true, first_user_admin: true }
+            // content_compression: true, content_compression_target: 75
+            Config { content_directory: None, content_id_length: 8, content_name_length: 32, content_max_size: 24, use_invite_keys: false, allow_user_registration: true, first_user_admin: true, store_compressed: true }
         }
     }
 }
