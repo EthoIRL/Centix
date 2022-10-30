@@ -4,7 +4,7 @@ pub mod Media {
 
     use crate::{Config::*};
     use crate::Error;
-    use crate::database::database::database::{User, Media as DBMedia};
+    use crate::database::database::{User, Media as DBMedia};
 
     use flate2::{write::ZlibEncoder, Compression};
     use rocket::{
@@ -213,12 +213,6 @@ pub mod Media {
 
                 if !content_directory.exists() && fs::create_dir_all(&content_directory).is_err() {
                     return Err(Error::InternalError(None))
-                }
-
-                if !content_directory.exists() {
-                    if fs::create_dir_all(&content_directory).is_err() {
-                        return Err(Error::InternalError(None))
-                    }
                 }
 
                 content_directory = content_directory.join(Alphanumeric.sample_string(&mut OsRng, 24));

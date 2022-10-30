@@ -2,7 +2,7 @@
 pub mod User {
     use std::sync::{Arc, Mutex};
 
-    use crate::{Config::*, database::{database::database::{User, Invite}}, Error};
+    use crate::{Config::*, database::{database::{User, Invite}}, Error};
     
     use rocket::{
         http::Status,
@@ -68,11 +68,10 @@ pub mod User {
 
         let users: Vec<User> = user_database.iter()
             .filter_map(|item| item.ok())
-            .map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+            .filter_map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
                 Ok(result) => result,
                 Err(_) => None
             })
-            .flatten()
             .collect::<Vec<_>>();
 
         let mut option_invite: Option<Invite> = None;
@@ -361,11 +360,10 @@ pub mod User {
                     Ok(_) => {
                         let users: Vec<User> = user_database.iter()
                             .filter_map(|item| item.ok())
-                            .map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                            .filter_map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
                                 Ok(result) => result,
                                 Err(_) => None
                             })
-                            .flatten()
                             .collect::<Vec<_>>();
 
                         if users.iter().any(|user| user.username == newname) {
@@ -453,7 +451,7 @@ pub mod User {
                         None => return None
                     };
 
-                    let mut user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
+                    let mut user: User = match serde_json::from_str(&String::from_utf8_lossy(user_vec)) {
                         Ok(result) => result,
                         Err(_) => return None
                     };

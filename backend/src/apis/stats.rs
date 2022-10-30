@@ -18,8 +18,8 @@ pub mod Stats {
     )]
     #[get("/media")]
     pub async fn media(
-        config: &State<Arc<Mutex<Config>>>,
-        database: &State<Arc<Mutex<sled::Db>>>,
+        _config: &State<Arc<Mutex<Config>>>,
+        _database: &State<Arc<Mutex<sled::Db>>>,
     ) -> Status {
         todo!()
     }
@@ -33,8 +33,8 @@ pub mod Stats {
     )]
     #[get("/user")]
     pub async fn user(
-        config: &State<Arc<Mutex<Config>>>,
-        database: &State<Arc<Mutex<sled::Db>>>,
+        _config: &State<Arc<Mutex<Config>>>,
+        _database: &State<Arc<Mutex<sled::Db>>>,
     ) -> Status {
         todo!()
     }

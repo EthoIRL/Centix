@@ -57,9 +57,9 @@ pub mod Config {
         pub first_user_admin: bool,
         pub store_compressed: bool
     }
-    
-    impl Config {
-        pub fn new() -> Config {
+
+    impl Default for Config {
+        fn default() -> Self {
             // content_compression: true, content_compression_target: 75
             Config { content_directory: None, content_id_length: 8, content_name_length: 32, content_max_size: 24, use_invite_keys: false, allow_user_registration: true, first_user_admin: true, store_compressed: true }
         }
@@ -133,7 +133,7 @@ fn rocket() -> Rocket<Build> {
     }
     
     if config.is_none() {
-        config = Some(Config::Config::new());
+        config = Some(Config::Config::default());
         // Hope it writes to file.
         let _ = fs::write(config_path, serde_json::to_string_pretty(&config).unwrap());
     }
