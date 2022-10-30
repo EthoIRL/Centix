@@ -68,11 +68,11 @@ pub mod User {
 
         let users: Vec<User> = user_database.iter()
             .filter_map(|item| item.ok())
-            .map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1.to_vec())) {
+            .map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
                 Ok(result) => result,
-                Err(_) => return None
+                Err(_) => None
             })
-            .filter_map(|user| user)
+            .flatten()
             .collect::<Vec<_>>();
 
         let mut option_invite: Option<Invite> = None;
@@ -103,7 +103,7 @@ pub mod User {
 
             option_invite = match optional_invite {
                 Some(invite_vec) => {
-                    match serde_json::from_str(&String::from_utf8_lossy(&invite_vec.to_vec())) {
+                    match serde_json::from_str(&String::from_utf8_lossy(&invite_vec)) {
                         Ok(result) => Some(result),
                         Err(_) => return Err(Error::InternalError(None))
                     }
@@ -160,7 +160,7 @@ pub mod User {
             Ok(result) => {
                 if let Some(mut invite) = option_invite {
                     invite = Invite {
-                        invitee_username: Some(username.clone()),
+                        invitee_username: Some(username),
                         invitee_date: Some(chrono::offset::Utc::now()),
                         used: true,
                         ..invite
@@ -173,7 +173,7 @@ pub mod User {
                         }))
                     }) {
                         Ok(_) => {
-                            if let Err(_) = invite_database.flush() {
+                            if invite_database.flush().is_err() {
                                 return Err(Error::InternalError(Some(String::from("Failed to update backend database"))))
                             };
                         },
@@ -224,7 +224,7 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
         };
 
-        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())) {
+        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
         };
@@ -234,11 +234,11 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(None))
         };
 
-        match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
+        return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
             Ok(_) => {
-                return Ok(user.api_key)
+                Ok(user.api_key)
             },
-            Err(_) => return Err(Error::Forbidden(Some(String::from("Password or username is not correct"))))
+            Err(_) => Err(Error::Forbidden(Some(String::from("Password or username is not correct"))))
         };
     }
 
@@ -278,7 +278,7 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
         };
 
-        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())) {
+        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
         };
@@ -288,16 +288,16 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(None))
         };
 
-        match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
+        return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
             Ok(_) => {
                 match user_database.remove(username) {
                     Ok(_) => {
-                        return Ok(Status::Ok)
+                        Ok(Status::Ok)
                     },
-                    Err(_) => return Err(Error::InternalError(Some(String::from("Failed delete user account"))))
-                };
+                    Err(_) => Err(Error::InternalError(Some(String::from("Failed delete user account"))))
+                }
             },
-            Err(_) => return Err(Error::Forbidden(None))
+            Err(_) => Err(Error::Forbidden(None))
         };
     }
 
@@ -345,7 +345,7 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
         };
 
-        let mut user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())) {
+        let mut user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
         };
@@ -361,11 +361,11 @@ pub mod User {
                     Ok(_) => {
                         let users: Vec<User> = user_database.iter()
                             .filter_map(|item| item.ok())
-                            .map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1.to_vec())) {
+                            .map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
                                 Ok(result) => result,
-                                Err(_) => return None
+                                Err(_) => None
                             })
-                            .filter_map(|user| user)
+                            .flatten()
                             .collect::<Vec<_>>();
 
                         if users.iter().any(|user| user.username == newname) {
@@ -381,9 +381,10 @@ pub mod User {
 
                         match user_database.insert(newname, user_insert_vec) {
                             Ok(_) => {
-                                if let Err(_) = user_database.flush() {
+                                if user_database.flush().is_err() {
                                     return Err(Error::InternalError(Some(String::from("Failed to update backend database"))))
-                                };
+                                }
+
                                 Ok(Status::Ok)
                             },
                             Err(_) => Err(Error::InternalError(None))
@@ -434,7 +435,7 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
         };
 
-        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())) {
+        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
         };
@@ -452,7 +453,7 @@ pub mod User {
                         None => return None
                     };
 
-                    let mut user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())) {
+                    let mut user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
                         Ok(result) => result,
                         Err(_) => return None
                     };
@@ -476,7 +477,7 @@ pub mod User {
                     }))
                 }) {
                     Ok(_) => {
-                        if let Err(_) = user_database.flush() {
+                        if user_database.flush().is_err() {
                             return Err(Error::InternalError(Some(String::from("Failed to update backend database"))))
                         };
                         Ok(Status::Ok)
@@ -541,7 +542,7 @@ pub mod User {
             Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
         };
 
-        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec.to_vec())) {
+        let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
         };

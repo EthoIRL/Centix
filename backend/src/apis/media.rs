@@ -118,7 +118,7 @@ pub mod Media {
         let user = user_database.iter()
             .filter_map(|item| item.ok())
             .map(|item| {
-                let result: User = match serde_json::from_str(&String::from_utf8_lossy(&item.1.to_vec())) {
+                let result: User = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
                     Ok(result) => result,
                     Err(_) => return None
                 };
@@ -145,7 +145,7 @@ pub mod Media {
                 };
 
                 if upload.name.len() as i32 > config.content_name_length {
-                    return Err(Error::BadRequest(Some(String::from(format!("Name length too long. Maximum of {} characters", config.content_name_length)))))
+                    return Err(Error::BadRequest(Some(format!("Name length too long. Maximum of {} characters", config.content_name_length))))
                 }
 
                 let upload_data = match decode(body_data.0) {
@@ -158,7 +158,7 @@ pub mod Media {
                 if config.content_max_size > 0 {
                     let mb_size = upload_data.len() as i32 / 1000000;
                     if mb_size > config.content_max_size {
-                        return Err(Error::BadRequest(Some(String::from(format!("File size too big! Maximum of {} megabytes", config.content_max_size)))))
+                        return Err(Error::BadRequest(Some(format!("File size too big! Maximum of {} megabytes", config.content_max_size))))
                     }
                 }
                 
@@ -174,10 +174,9 @@ pub mod Media {
                     None => return Err(Error::InternalError(None)) 
                 };
 
-                let data: (Vec<u8>, bool);
-                if config.store_compressed {
+                let data: (Vec<u8>, bool) = if config.store_compressed {
                     let zlib_encoder = ZlibEncoder::new(upload_data.clone(), Compression::best());
-                    data = match zlib_encoder.finish() {
+                    match zlib_encoder.finish() {
                         Ok(result) => { 
                             if result.len() > upload_data.len() {
                                 (upload_data, false)
@@ -186,10 +185,10 @@ pub mod Media {
                             } 
                         },
                         Err(_) => (upload_data, false)
-                    };
+                    }
                 } else {
-                    data = (upload_data, false)
-                }
+                    (upload_data, false)
+                };
 
                 let content_path = match &config.content_directory {
                     Some(result) => {
@@ -212,8 +211,12 @@ pub mod Media {
                     }
                 };
 
+                if !content_directory.exists() && fs::create_dir_all(&content_directory).is_err() {
+                    return Err(Error::InternalError(None))
+                }
+
                 if !content_directory.exists() {
-                    if let Err(_) = fs::create_dir_all(&content_directory) {
+                    if fs::create_dir_all(&content_directory).is_err() {
                         return Err(Error::InternalError(None))
                     }
                 }
@@ -226,7 +229,7 @@ pub mod Media {
                     Err(_) => return Err(Error::InternalError(None))
                 };
 
-                if let Err(_) = content_file.write_all(&data.0) {
+                if content_file.write_all(&data.0).is_err() {
                     return Err(Error::InternalError(None))
                 }
 
@@ -239,12 +242,7 @@ pub mod Media {
                     upload_date: chrono::offset::Utc::now(),
                     data_compressed: data.1,
                     author_username: user.username.clone(),
-                    private: {
-                        match upload.private {
-                            Some(result) => result,
-                            None => false
-                        }
-                    }
+                    private: upload.private.unwrap_or(false)
                 };
 
                 println!("Media: {:#?}", media);
@@ -259,25 +257,34 @@ pub mod Media {
                     Err(_) => return Err(Error::InternalError(None))
                 };
 
-                if let Err(_) = media_database.insert(&media.id, media_vec) {
+                if media_database.insert(&media.id, media_vec).is_err() {
                     return Err(Error::InternalError(None))
                 }
 
                 match media_database.flush() {
                     Ok(_) => {
                         user.uploads.push(media.id);
-                        if let Err(_) = user_database.update_and_fetch(&user.username, |_| {
+                        if user_database.update_and_fetch(&user.username, |_| {
                             Some(IVec::from(match serde_json::to_vec(&user) {
                                 Ok(result) => result,
                                 Err(_) => return None
                             }))
-                        }) {
+                        }).is_err() {
+                            return Err(Error::InternalError(None))
+                        }
+
+                        if user_database.update_and_fetch(&user.username, |_| {
+                            Some(IVec::from(match serde_json::to_vec(&user) {
+                                Ok(result) => result,
+                                Err(_) => return None
+                            }))
+                        }).is_err() {
                             return Err(Error::InternalError(None))
                         }
 
                         println!("User: {:#?}", user);
 
-                        if let Err(_) = user_database.flush() {
+                        if user_database.flush().is_err() {
                             return Err(Error::InternalError(None))
                         }
 
