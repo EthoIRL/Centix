@@ -221,7 +221,7 @@ pub mod Media {
                     }
                 }
 
-                content_directory = content_directory.join(upload.name.clone());
+                content_directory = content_directory.join(Alphanumeric.sample_string(&mut OsRng, 24));
                 let mut content_file = match File::create(&content_directory) {
                     Ok(result) => {
                         result
