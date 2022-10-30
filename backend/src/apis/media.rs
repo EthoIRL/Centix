@@ -25,6 +25,8 @@ pub mod Media {
 
     use infer::{MatcherType};
 
+    use sled::IVec;
+
     #[derive(Serialize, Deserialize, FromForm, IntoParams, ToSchema, Clone)]
     pub struct Media {
         #[schema(example = "HilrvkpJ")]
@@ -81,7 +83,6 @@ pub mod Media {
         todo!()
     }
 
-    //TODO: Figure out how to use mulipart file datastream with both utoipa/rocket.
     #[utoipa::path(
         post,
         context_path = "/media",
@@ -94,17 +95,16 @@ pub mod Media {
         params(
             UploadParam
         ),
-        request_body = String
+        request_body = Json<String>
     )]
     #[post("/upload?<api_key>&<upload..>", data = "<body_data>")]
     pub async fn upload(
         config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         upload: UploadParam,
-        body_data: String,
+        body_data: Json<String>,
         api_key: String
     ) -> Result<Status, Error> {
-        println!("found");
         let database = match database_store.lock() {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
@@ -136,10 +136,9 @@ pub mod Media {
                     None => None
                 }
             });
-        println!("hmm ok");
 
         return match user {
-            Some(user) => {
+            Some(mut user) => {
                 let config = match config_store.lock() {
                     Ok(result) => result,
                     Err(_) => return Err(Error::InternalError(None))
@@ -149,7 +148,7 @@ pub mod Media {
                     return Err(Error::BadRequest(Some(String::from(format!("Name length too long. Maximum of {} characters", config.content_name_length)))))
                 }
 
-                let upload_data = match decode(body_data) {
+                let upload_data = match decode(body_data.0) {
                     Ok(result) => {
                         result
                     },
@@ -166,20 +165,26 @@ pub mod Media {
                 // DONE # TODO: Magic mime type grabber lib & determine extension
                 // DONE # TODO: Loseless cold compress the file
                 // DONE # TODO: Store file to disk with path based on config.content_directory
-                // TODO: Update the user's uploads to contain id of new media
+                // DONE # TODO: Update the user's uploads to contain id of new media
 
                 let data_type = match infer::get(&upload_data) {
                     Some(result) => {
                         result
                     }
-                    None => return Err(Error::InternalError(None))
+                    None => return Err(Error::InternalError(None)) 
                 };
 
                 let data: (Vec<u8>, bool);
                 if config.store_compressed {
                     let zlib_encoder = ZlibEncoder::new(upload_data.clone(), Compression::best());
                     data = match zlib_encoder.finish() {
-                        Ok(result) => (result, true),
+                        Ok(result) => { 
+                            if result.len() > upload_data.len() {
+                                (upload_data, false)
+                            } else {
+                                (result, true)
+                            } 
+                        },
                         Err(_) => (upload_data, false)
                     };
                 } else {
@@ -191,16 +196,9 @@ pub mod Media {
                         Path::new(result)
                     },
                     None => { 
-                        Path::new("./")
+                        Path::new(".\\")
                     }
-                };
-
-                let directory_path_clone = content_path.clone().join("content");
-                if !directory_path_clone.exists() {
-                    if let Err(_) = fs::create_dir(directory_path_clone) {
-                        return Err(Error::InternalError(None))
-                    }
-                }
+                }.join("content");
 
                 let mut content_directory = match data_type.matcher_type() {
                     MatcherType::VIDEO => {
@@ -213,6 +211,12 @@ pub mod Media {
                         content_path.join("Other") 
                     }
                 };
+
+                if !content_directory.exists() {
+                    if let Err(_) = fs::create_dir_all(&content_directory) {
+                        return Err(Error::InternalError(None))
+                    }
+                }
 
                 content_directory = content_directory.join(upload.name.clone());
                 let mut content_file = match File::create(&content_directory) {
@@ -234,7 +238,7 @@ pub mod Media {
                     data_size: data.0.len() as i32,
                     upload_date: chrono::offset::Utc::now(),
                     data_compressed: data.1,
-                    author_username: user.username,
+                    author_username: user.username.clone(),
                     private: {
                         match upload.private {
                             Some(result) => result,
@@ -243,17 +247,46 @@ pub mod Media {
                     }
                 };
 
-                println!("{:#?}", media);
+                println!("Media: {:#?}", media);
 
                 let media_database = match database.open_tree("media") {
                     Ok(result) => result,
                     Err(_) => return Err(Error::InternalError(None))
                 };
 
-                Ok(Status::Ok)
+                let media_vec = match serde_json::to_vec(&media) {
+                    Ok(result) => result,
+                    Err(_) => return Err(Error::InternalError(None))
+                };
+
+                if let Err(_) = media_database.insert(&media.id, media_vec) {
+                    return Err(Error::InternalError(None))
+                }
+
+                match media_database.flush() {
+                    Ok(_) => {
+                        user.uploads.push(media.id);
+                        if let Err(_) = user_database.update_and_fetch(&user.username, |_| {
+                            Some(IVec::from(match serde_json::to_vec(&user) {
+                                Ok(result) => result,
+                                Err(_) => return None
+                            }))
+                        }) {
+                            return Err(Error::InternalError(None))
+                        }
+
+                        println!("User: {:#?}", user);
+
+                        if let Err(_) = user_database.flush() {
+                            return Err(Error::InternalError(None))
+                        }
+
+                        Ok(Status::Ok)
+                    },
+                    Err(_) => return Err(Error::InternalError(None))
+                }
             }
             None => {
-                println!("wasd");
                 Err(Error::Forbidden(None))
             }
         };
