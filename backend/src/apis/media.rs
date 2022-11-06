@@ -41,7 +41,7 @@ pub mod Media {
         private: Option<bool>
     }
 
-    #[derive(FromFormField, ToSchema)]
+    #[derive(Serialize, Deserialize, FromFormField, ToSchema, PartialEq, Clone, Debug)]
     pub enum ContentType {
         Video,
         Image,
@@ -75,12 +75,60 @@ pub mod Media {
     )]
     #[get("/all?<username>&<content_type>")]
     pub async fn all(
-        config: &State<Arc<Mutex<Config>>>,
-        database: &State<Arc<Mutex<sled::Db>>>,
+        _config_store: &State<Arc<Mutex<Config>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
         username: Option<String>,
         content_type: Option<ContentType>
-    ) -> Json<Vec<Media>> {
-        todo!()
+    ) -> Result<Json<Vec<String>>, Error> {
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+        };
+
+        let media_database = match database.open_tree("media") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let medias: Vec<String> = media_database.iter()
+            .filter_map(|item| item.ok())
+            .map(|item| {
+                let result: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                    Ok(result) => result,
+                    Err(_) => return None
+                };
+                Some(result)
+            })
+            .filter_map(|item| item)
+            .filter(|media| {
+                if username.is_none() {
+                    return true;
+                }
+
+                if let Some(username) = &username {
+                    if &media.author_username == username {
+                        return true
+                    } else {
+                        return false
+                    }
+                }
+                false
+            })
+            .filter(|media| {
+                if content_type.is_none() {
+                    return true;
+                }
+
+                if let Some(content) = &content_type {
+                    if content == &media.data_type {
+                        return true
+                    }
+                }
+                false
+            })
+            .map(|media| media.id)
+            .collect();
+        return Ok(Json(medias))
     }
 
     #[utoipa::path(
@@ -199,11 +247,14 @@ pub mod Media {
                     }
                 }.join("content");
 
+                let mut content_type = ContentType::Other;
                 let mut content_directory = match data_type.matcher_type() {
                     MatcherType::VIDEO => {
+                        content_type = ContentType::Video;
                         content_path.join("Video") 
                     }
                     MatcherType::IMAGE => {
+                        content_type = ContentType::Image;
                         content_path.join("Image")
                     }
                     _ => {
@@ -231,6 +282,7 @@ pub mod Media {
                     id: Alphanumeric.sample_string(&mut OsRng, config.content_id_length as usize),
                     name: upload.name,
                     extension: data_type.extension().to_string(),
+                    data_type: content_type,
                     data_path: content_directory,
                     data_size: data.0.len() as i32,
                     upload_date: chrono::offset::Utc::now(),

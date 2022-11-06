@@ -1,6 +1,8 @@
 use std::path::{PathBuf};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+
+use crate::apis::media::Media::ContentType;
     
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Media {
@@ -8,6 +10,7 @@ pub struct Media {
     pub id: String,
     pub name: String,
     pub extension: String,
+    pub data_type: ContentType,
     pub data_size: i32,
     pub data_path: PathBuf,
     pub data_compressed: bool,
