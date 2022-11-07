@@ -70,7 +70,8 @@ pub mod Media {
         get,
         context_path = "/media",
         responses(
-            (status = 200, description = "Successfully grabbed all media")
+            (status = 200, description = "Successfully grabbed all media"),
+            (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
     #[get("/all?<username>&<content_type>")]
