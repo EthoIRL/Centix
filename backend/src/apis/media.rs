@@ -47,10 +47,11 @@ pub mod Media {
     pub struct ContentInfo {
         #[schema(example = "Etho")]
         author_username: String,
-        #[schema(example = "4 megabytes")]
+        #[schema(example = "582000 bytes")]
         content_size: i32,
+        #[schema(example = "UTC Format")]
         upload_date: DateTime::<Utc>,
-        #[schema(example = "Private video not listed on /all/ endpoint")]
+        #[schema(example = "Privately listed video")]
         private: bool
     }
 
@@ -74,10 +75,42 @@ pub mod Media {
     #[get("/info/<id>")]
     pub async fn info(
         _config: &State<Arc<Mutex<Config>>>,
-        _database: &State<Arc<Mutex<sled::Db>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
         id: String,
     ) -> Result<Json<ContentInfo>, Error> {
-        todo!()
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+        };
+
+        let media_database = match database.open_tree("media") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let media_vec: IVec = match media_database.get(id) {
+            Ok(result) => {
+                match result {
+                    Some(result) => {
+                        result
+                    },
+                    None => return Err(Error::InternalError(None))
+                }
+            },
+            Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find media associated with id"))))
+        };
+
+        let media: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&media_vec)) {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        return Ok(Json(ContentInfo {
+            author_username: media.author_username,
+            content_size: media.data_size,
+            upload_date: media.upload_date,
+            private: media.private
+        }));
     }
 
     #[utoipa::path(
