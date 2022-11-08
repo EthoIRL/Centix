@@ -41,7 +41,7 @@ pub mod Media {
         private: Option<bool>
     }
 
-    #[derive(Serialize, Deserialize, FromFormField, ToSchema, PartialEq, Clone, Debug)]
+    #[derive(Serialize, Deserialize, FromFormField, ToSchema, PartialEq, Eq, Clone, Debug)]
     pub enum ContentType {
         Video,
         Image,
@@ -59,8 +59,8 @@ pub mod Media {
     )]
     #[get("/<id>")]
     pub async fn grab(
-        config: &State<Arc<Mutex<Config>>>,
-        database: &State<Arc<Mutex<sled::Db>>>,
+        _config: &State<Arc<Mutex<Config>>>,
+        _database: &State<Arc<Mutex<sled::Db>>>,
         id: String,
     ) -> Option<NamedFile> {
         todo!()
@@ -93,25 +93,20 @@ pub mod Media {
 
         let medias: Vec<String> = media_database.iter()
             .filter_map(|item| item.ok())
-            .map(|item| {
+            .filter_map(|item| {
                 let result: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
-                    Ok(result) => result,
+                Ok(result) => result,
                     Err(_) => return None
                 };
                 Some(result)
             })
-            .filter_map(|item| item)
             .filter(|media| {
                 if username.is_none() {
                     return true;
                 }
 
                 if let Some(username) = &username {
-                    if &media.author_username == username {
-                        return true
-                    } else {
-                        return false
-                    }
+                    return &media.author_username == username
                 }
                 false
             })
@@ -129,7 +124,7 @@ pub mod Media {
             })
             .map(|media| media.id)
             .collect();
-        return Ok(Json(medias))
+        Ok(Json(medias))
     }
 
     #[utoipa::path(
@@ -353,12 +348,90 @@ pub mod Media {
             (status = 200, description = "Successfully deleted media")
         )
     )]
-    #[get("/delete?<id>")]
+    #[get("/delete?<api_key>&<id>")]
     pub async fn delete(
-        config: &State<Arc<Mutex<Config>>>,
-        database: &State<Arc<Mutex<sled::Db>>>,
+        _config_store: &State<Arc<Mutex<Config>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
         id: String,
-    ) -> Status {
-        todo!()
+        api_key: String
+    ) -> Result<Status, Error> {
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+        };
+
+        let user_database = match database.open_tree("user") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let user = user_database.iter()
+            .filter_map(|item| item.ok())
+            .map(|item| {
+                let result: User = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                    Ok(result) => result,
+                    Err(_) => return None
+                };
+                Some(result)
+            }).find_map(|user| {
+                match user {
+                    Some(result) => {
+                        println!("Username: {}, Key: {}", &result.username, &result.api_key);
+
+                        if result.api_key == api_key {
+                            return Some(result)
+                        }
+                        None
+                    },
+                    None => None
+                }
+            });
+
+        return match user {
+            Some(mut user) => {
+                let media_database = match database.open_tree("media") {
+                    Ok(result) => result,
+                    Err(_) => return Err(Error::InternalError(None))
+                };
+
+                let media_vec = match media_database.get(&id) {
+                    Ok(result) => {
+                        match result {
+                            Some(result) => result,
+                            None => return Err(Error::InternalError(None))
+                        }
+                    },
+                    Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find media associated with id"))))
+                };
+
+                let media: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&media_vec)) {
+                    Ok(result) => result,
+                    Err(_) => return Err(Error::InternalError(None))
+                };
+
+                if media.author_username == user.username {
+                    match media_database.remove(&id) {
+                        Ok(_) => {
+                            user.uploads.retain(|upload| upload == &id);
+                            match user_database.update_and_fetch(&user.username, |_| {
+                                Some(IVec::from(match serde_json::to_vec(&user) {
+                                    Ok(result) => result,
+                                    Err(_) => return None
+                                }))
+                            }) {
+                                Ok(_) => {
+                                    Ok(Status::Ok)
+                                },
+                                Err(_) => Err(Error::InternalError(None))
+                            }
+                        },
+                        Err(_) => Err(Error::InternalError(Some(String::from("Failed delete media from database"))))
+                    }
+                } else {
+                    Err(Error::Unauthorized(String::from("Media does not belong to associated api key!")))
+                }
+            },
+            None => Err(Error::Unauthorized(String::from("Api key is invalid and does not exist")))
+        }
     }
 }
