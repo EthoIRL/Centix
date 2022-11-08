@@ -63,6 +63,7 @@ pub mod Media {
 
     #[utoipa::path(
         get,
+        context_path = "/media",
         responses(
             (status = 200, description = "Successfully grabbed media information")
         ),
