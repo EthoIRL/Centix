@@ -27,6 +27,8 @@ pub mod Media {
 
     use sled::IVec;
 
+    use chrono::{DateTime, Utc};
+
     #[derive(Serialize, Deserialize, FromForm, IntoParams, ToSchema, Clone)]
     pub struct Media {
         #[schema(example = "HilrvkpJ")]
@@ -41,11 +43,40 @@ pub mod Media {
         private: Option<bool>
     }
 
+    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
+    pub struct ContentInfo {
+        #[schema(example = "Etho")]
+        author_username: String,
+        #[schema(example = "4 megabytes")]
+        content_size: i32,
+        upload_date: DateTime::<Utc>,
+        #[schema(example = "Private video not listed on /all/ endpoint")]
+        private: bool
+    }
+
     #[derive(Serialize, Deserialize, FromFormField, ToSchema, PartialEq, Eq, Clone, Debug)]
     pub enum ContentType {
         Video,
         Image,
         Other
+    }
+
+    #[utoipa::path(
+        get,
+        responses(
+            (status = 200, description = "Successfully grabbed media information")
+        ),
+        params(
+            ("id", example = "HilrvkpJ")
+        )
+    )]
+    #[get("/info/<id>")]
+    pub async fn info(
+        _config: &State<Arc<Mutex<Config>>>,
+        _database: &State<Arc<Mutex<sled::Db>>>,
+        id: String,
+    ) -> Result<Json<ContentInfo>, Error> {
+        todo!()
     }
 
     #[utoipa::path(
