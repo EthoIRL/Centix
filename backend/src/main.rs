@@ -69,6 +69,7 @@ pub mod Config {
 #[derive(OpenApi)]
 #[openapi(
     paths(
+        Media::info,
         Media::grab,
         Media::all,
         Media::upload,
@@ -159,6 +160,7 @@ fn rocket() -> Rocket<Build> {
         .mount(
             "/media",
             routes![
+                Media::info,
                 Media::all,
                 Media::upload,
                 Media::delete
