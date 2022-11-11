@@ -172,14 +172,14 @@ pub mod Media {
             };
 
             let mut upload_data = Vec::new();
-            if let Err(_) = file.read_to_end(&mut upload_data) {
+            if file.read_to_end(&mut upload_data).is_err() {
                 return Err(Error::InternalError(None))
             };
 
             let data: Vec<u8> = if media.data_compressed {
                 let mut writer = Vec::new();
                 let mut zlibdecoder = ZlibDecoder::new(writer);
-                if let Err(_) = zlibdecoder.write_all(&upload_data) {
+                if zlibdecoder.write_all(&upload_data).is_err() {
                     return Err(Error::InternalError(None))
                 };
                 writer = match zlibdecoder.finish() {
