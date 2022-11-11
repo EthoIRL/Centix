@@ -1,19 +1,19 @@
 #[allow(non_snake_case)]
 pub mod Media {
-    use std::{sync::{Arc, Mutex}, path::Path, fs::{self, File}, io::Write};
+    use std::{sync::{Arc, Mutex}, path::Path, fs::{self, File}, io::{Write, Read}};
 
     use crate::{Config::*};
     use crate::Error;
     use crate::database::database::{User, Media as DBMedia};
 
-    use flate2::{write::ZlibEncoder, Compression};
+    use flate2::{write::{ZlibEncoder, ZlibDecoder}, Compression};
     use rocket::{
-        fs::{NamedFile},
-        get,
-        http::Status,
+        get, 
+        http::{Status, Header},
         serde::json::Json,
         FromForm, State,
         FromFormField, post,
+        response::Responder
     };
     use serde::{Deserialize, Serialize};
     use utoipa::{IntoParams, ToSchema};
@@ -60,6 +60,20 @@ pub mod Media {
         Video,
         Image,
         Other
+    }
+
+    #[derive(Responder)]
+    pub struct FileResponder<T> {
+        inner: T,
+        content_disposition: Header<'static>,
+    }
+    impl<'r, 'o: 'r, T: Responder<'r, 'o>> FileResponder<T> {
+        pub fn new(inner: T, file_disposition: String) -> Self {
+            FileResponder {
+                inner,
+                content_disposition: Header::new("content-disposition", file_disposition),
+            }
+        }
     }
 
     #[utoipa::path(
@@ -117,7 +131,8 @@ pub mod Media {
     #[utoipa::path(
         get,
         responses(
-            (status = 200, description = "Successfully found media")
+            (status = 200, description = "Successfully found media"),
+            (status = 500, description = "An internal error on the server's end has occured", body = Error)
         ),
         params(
             ("id", example = "HilrvkpJ")
@@ -126,10 +141,61 @@ pub mod Media {
     #[get("/<id>")]
     pub async fn grab(
         _config: &State<Arc<Mutex<Config>>>,
-        _database: &State<Arc<Mutex<sled::Db>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
         id: String,
-    ) -> Option<NamedFile> {
-        todo!()
+    ) -> Result<FileResponder<Vec<u8>>, Error> {
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+        };
+
+        let media_database = match database.open_tree("media") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let media: Option<DBMedia> = media_database.iter()
+            .filter_map(|item| item.ok())
+            .filter_map(|item| {
+                let result: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                    Ok(result) => result,
+                    Err(_) => return None
+                };
+                Some(result)
+            })
+            .find(|media| media.id == id);
+
+        if let Some(media) = media {
+            let mut file = match File::open(media.data_path) {
+                Ok(result) => result,
+                Err(_) => panic!()
+            };
+
+            let mut upload_data = Vec::new();
+            if let Err(_) = file.read_to_end(&mut upload_data) {
+                return Err(Error::InternalError(None))
+            };
+
+            let data: Vec<u8> = if media.data_compressed {
+                let mut writer = Vec::new();
+                let mut zlibdecoder = ZlibDecoder::new(writer);
+                if let Err(_) = zlibdecoder.write_all(&upload_data) {
+                    return Err(Error::InternalError(None))
+                };
+                writer = match zlibdecoder.finish() {
+                    Ok(result) => result,
+                    Err(_) => return Err(Error::InternalError(None))
+                };
+                writer.to_vec()
+            } else {
+                upload_data
+            };
+
+            let filename_extension = format!("{}.{}", media.name, media.extension);
+            return Ok(FileResponder::new(data, format!(r#"attachment; filename={};"#, filename_extension)));
+        } else {
+            return Err(Error::InternalError(None))
+        }
     }
 
     #[utoipa::path(
