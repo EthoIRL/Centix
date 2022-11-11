@@ -66,7 +66,8 @@ pub mod Media {
         get,
         context_path = "/media",
         responses(
-            (status = 200, description = "Successfully grabbed media information")
+            (status = 200, description = "Successfully grabbed media information"),
+            (status = 500, description = "An internal error on the server's end has occured", body = Error)
         ),
         params(
             ("id", example = "HilrvkpJ")
@@ -105,12 +106,12 @@ pub mod Media {
             Err(_) => return Err(Error::InternalError(None))
         };
 
-        return Ok(Json(ContentInfo {
+        Ok(Json(ContentInfo {
             author_username: media.author_username,
             content_size: media.data_size,
             upload_date: media.upload_date,
             private: media.private
-        }));
+        }))
     }
 
     #[utoipa::path(
@@ -198,7 +199,7 @@ pub mod Media {
         responses(
             (status = 200, description = "Successfully uploaded media"),
             (status = 400, description = "Server recieved malformed client request", body = Error),
-            (status = 403, description = "An authentication issue has occured", body = Error),
+            (status = 401, description = "An authentication issue has occured", body = Error),
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         ),
         params(
@@ -401,7 +402,7 @@ pub mod Media {
                 }
             }
             None => {
-                Err(Error::Forbidden(None))
+                Err(Error::Unauthorized(String::from("Invalid or wrong credentials provided")))
             }
         };
     }
@@ -410,7 +411,9 @@ pub mod Media {
         get,
         context_path = "/media",
         responses(
-            (status = 200, description = "Successfully deleted media")
+            (status = 200, description = "Successfully deleted media"),
+            (status = 401, description = "Unauthorized deletion", body = Error),
+            (status = 500, description = "An internal error on the server's end has occured", body = Error),
         )
     )]
     #[get("/delete?<api_key>&<id>")]
