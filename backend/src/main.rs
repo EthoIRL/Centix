@@ -85,6 +85,7 @@ pub mod Config {
     ),
     components(
         schemas(Media::Media, Media::UploadParam, Media::ContentType, Media::ContentInfo),
+        schemas(Stats::MediaStats, Stats::UserStats),
         schemas(Error)
     ),
     tags(

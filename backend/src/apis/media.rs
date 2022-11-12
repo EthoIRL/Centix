@@ -260,7 +260,8 @@ pub mod Media {
             None
         };
 
-        let medias: Vec<String> = media_database.iter()
+        let medias: Vec<String> = media_database
+            .iter()
             .filter_map(|item| item.ok())
             .filter_map(|item| {
                 let result: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
