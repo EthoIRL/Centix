@@ -13,7 +13,7 @@ pub mod Media {
         serde::json::Json,
         FromForm, State,
         FromFormField, post,
-        response::Responder
+        response::Responder, delete
     };
     use serde::{Deserialize, Serialize};
     use utoipa::{IntoParams, ToSchema};
@@ -206,12 +206,13 @@ pub mod Media {
             (status = 500, description = "An internal error on the server's end has occured", body = Error)
         )
     )]
-    #[get("/all?<username>&<content_type>")]
+    #[get("/all?<username>&<content_type>&<api_key>")]
     pub async fn all(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         username: Option<String>,
-        content_type: Option<ContentType>
+        content_type: Option<ContentType>,
+        api_key: Option<String>
     ) -> Result<Json<Vec<String>>, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -221,6 +222,42 @@ pub mod Media {
         let media_database = match database.open_tree("media") {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let user_database = match database.open_tree("user") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let user: Option<User> = if api_key.is_some() {
+            user_database
+                .iter()
+                .filter_map(|item| item.ok())
+                .map(|item| {
+                    let result: User = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                        Ok(result) => result,
+                        Err(_) => return None
+                    };
+                    Some(result)
+                })
+                .find_map(|user| {
+                    match user {
+                        Some(result) => {
+                            match &api_key {
+                                Some(key) => {
+                                    if &result.api_key == key {
+                                        return Some(result)
+                                    }
+                                },
+                                None => return None
+                            }
+                            None
+                        },
+                        None => None
+                    }
+                })
+        } else {
+            None
         };
 
         let medias: Vec<String> = media_database.iter()
@@ -253,6 +290,13 @@ pub mod Media {
                     }
                 }
                 false
+            })
+            .filter(|media| {
+                if user.is_some() {
+                    return true;
+                }
+
+                !media.private
             })
             .map(|media| media.id)
             .collect();
@@ -302,8 +346,6 @@ pub mod Media {
             }).find_map(|user| {
                 match user {
                     Some(result) => {
-                        println!("Username: {}, Key: {}", &result.username, &result.api_key);
-
                         if result.api_key == api_key {
                             return Some(result)
                         }
@@ -337,11 +379,6 @@ pub mod Media {
                         return Err(Error::BadRequest(Some(format!("File size too big! Maximum of {} megabytes", config.content_max_size))))
                     }
                 }
-                
-                // DONE # TODO: Magic mime type grabber lib & determine extension
-                // DONE # TODO: Loseless cold compress the file
-                // DONE # TODO: Store file to disk with path based on config.content_directory
-                // DONE # TODO: Update the user's uploads to contain id of new media
 
                 let data_type = match infer::get(&upload_data) {
                     Some(result) => {
@@ -474,7 +511,7 @@ pub mod Media {
     }
 
     #[utoipa::path(
-        get,
+        delete,
         context_path = "/media",
         responses(
             (status = 200, description = "Successfully deleted media"),
@@ -482,7 +519,7 @@ pub mod Media {
             (status = 500, description = "An internal error on the server's end has occured", body = Error),
         )
     )]
-    #[get("/delete?<api_key>&<id>")]
+    #[delete("/delete?<api_key>&<id>")]
     pub async fn delete(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
@@ -510,8 +547,6 @@ pub mod Media {
             }).find_map(|user| {
                 match user {
                     Some(result) => {
-                        println!("Username: {}, Key: {}", &result.username, &result.api_key);
-
                         if result.api_key == api_key {
                             return Some(result)
                         }
