@@ -7,7 +7,8 @@ pub mod User {
     use rocket::{
         http::Status,
         State,
-        get, delete, post, put
+        get, delete, post, put,
+        serde::json::Json
     };
     use sled::IVec;
 
@@ -20,6 +21,23 @@ pub mod User {
     };
 
     use rand::distributions::{Alphanumeric, DistString};
+
+    use serde::{Serialize, Deserialize};
+    use utoipa::{IntoParams, ToSchema};
+
+    use chrono::{DateTime, Utc};
+
+    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
+    pub struct InviteInfo {
+        #[schema(example = "The invited user's username")]
+        invitee_username: Option<String>,
+        #[schema(example = "When the invite was used")]
+        invitee_date: Option<DateTime::<Utc>>,
+        #[schema(example = "Invite creator's username")]
+        creator_username: String,
+        #[schema(example = "When invite was created")]
+        creation_date: DateTime::<Utc>
+    }
 
     #[utoipa::path(
         post,
@@ -519,9 +537,7 @@ pub mod User {
         };
 
         let invite_database = match database.open_tree("invite") {
-            Ok(result) => {
-                result
-            },
+            Ok(result) => result,
             Err(_) => return Err(Error::InternalError(None))
         };
 
@@ -582,5 +598,54 @@ pub mod User {
             }
             Err(_) => Err(Error::Forbidden(None))
         }
+    }
+
+
+
+    #[utoipa::path(
+        get,
+        context_path = "/user",
+        responses(
+            (status = 200, description = "Successfully grabbed invite imformation"),
+            (status = 500, description = "An internal error on the server's end has occured", body = Error)
+        )
+    )]
+    #[get("/info/invite?<invite_key>")]
+    pub async fn invite_info(
+        _config_store: &State<Arc<Mutex<Config>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
+        invite_key: String
+    ) -> Result<Json<InviteInfo>, Error> {
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+        };
+
+        let invite_database = match database.open_tree("invite") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        let invite_vec = match invite_database.get(&invite_key) {
+            Ok(result) => {
+                match result {
+                    Some(result) => result,
+                    None => return Err(Error::InternalError(None))
+                }
+            },
+            Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
+        };
+
+        let invite: Invite = match serde_json::from_str(&String::from_utf8_lossy(&invite_vec)) {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(None))
+        };
+
+        Ok(Json(InviteInfo {
+            invitee_username: invite.invitee_username,
+            invitee_date: invite.invitee_date,
+            creator_username: invite.creator_username,
+            creation_date: invite.creation_date
+        }))
     }
 }

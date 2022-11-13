@@ -55,13 +55,14 @@ pub mod Config {
         pub use_invite_keys: bool,
         pub allow_user_registration: bool,
         pub first_user_admin: bool,
-        pub store_compressed: bool
+        pub store_compressed: bool,
+        pub domains: Vec<String>
     }
 
     impl Default for Config {
         fn default() -> Self {
             // content_compression: true, content_compression_target: 75
-            Config { content_directory: None, content_id_length: 8, content_name_length: 32, content_max_size: 24, use_invite_keys: false, allow_user_registration: true, first_user_admin: true, store_compressed: true }
+            Config { content_directory: None, content_id_length: 8, content_name_length: 32, content_max_size: 24, use_invite_keys: false, allow_user_registration: true, first_user_admin: true, store_compressed: true, domains: Vec::new() }
         }
     }
 }
@@ -80,12 +81,14 @@ pub mod Config {
         User::update_username,
         User::update_password,
         User::generate_invite,
+        User::invite_info,
         Stats::media,
         Stats::user
     ),
     components(
         schemas(Media::Media, Media::UploadParam, Media::ContentType, Media::ContentInfo),
         schemas(Stats::MediaStats, Stats::UserStats),
+        schemas(User::InviteInfo),
         schemas(Error)
     ),
     tags(
@@ -181,7 +184,8 @@ fn rocket() -> Rocket<Build> {
                 User::delete,
                 User::update_username,
                 User::update_password,
-                User::generate_invite
+                User::generate_invite,
+                User::invite_info
             ]
         )
         .mount(
