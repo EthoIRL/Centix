@@ -36,7 +36,9 @@ pub mod User {
         #[schema(example = "Invite creator's username")]
         creator_username: String,
         #[schema(example = "When invite was created")]
-        creation_date: DateTime::<Utc>
+        creation_date: DateTime::<Utc>,
+        #[schema(example = "Whether or not the inviation has been used")]
+        used: bool
     }
 
     #[utoipa::path(
@@ -645,7 +647,8 @@ pub mod User {
             invitee_username: invite.invitee_username,
             invitee_date: invite.invitee_date,
             creator_username: invite.creator_username,
-            creation_date: invite.creation_date
+            creation_date: invite.creation_date,
+            used: invite.used
         }))
     }
 }
