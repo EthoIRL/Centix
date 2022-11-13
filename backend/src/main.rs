@@ -28,6 +28,7 @@ pub mod apis {
     pub mod media;
     pub mod user;
     pub mod stats;
+    pub mod service;
 }
 
 pub mod database {
@@ -37,16 +38,18 @@ pub mod database {
 use crate::apis::media::Media;
 use crate::apis::user::User;
 use crate::apis::stats::Stats;
+use crate::apis::service::Service;
 
 #[allow(non_snake_case)]
 pub mod Config {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Clone)]
     pub struct Config {
         pub content_directory: Option<String>,
         pub content_id_length: i32,
         pub content_name_length: i32,
+        // TODO: -->
         // pub content_compression: bool,
         // // Eg.. 80 = 80% of the original size, 60% of the original size
         // pub content_compression_target: i32,
@@ -83,22 +86,26 @@ pub mod Config {
         User::generate_invite,
         User::invite_info,
         Stats::media,
-        Stats::user
+        Stats::user,
+        Service::domains
     ),
     components(
         schemas(Media::Media, Media::UploadParam, Media::ContentType, Media::ContentInfo),
         schemas(Stats::MediaStats, Stats::UserStats),
         schemas(User::InviteInfo),
+        schemas(Service::DomainInfo),
         schemas(Error)
     ),
     tags(
-        (name = "Media", description = "All media management api endpoints."),
-        (name = "User", description = "All user management api endpoints."),
-        (name = "Stats", description = "All statistical management api endpoints.")
+        (name = "Media", description = "All media management related api endpoints."),
+        (name = "User", description = "All user management related api endpoints."),
+        (name = "Stats", description = "All statistical management related api endpoints."),
+        (name = "Service", description = "All service related api endpoints.")
     )
 )]
 struct ApiDoc;
 
+// TODO: Option's don't work in status code responses
 #[derive(Serialize, ToSchema, Responder, Debug)]
 pub enum Error {
     #[response(status = 400)]
@@ -193,6 +200,12 @@ fn rocket() -> Rocket<Build> {
             routes![
                 Stats::media,
                 Stats::user
+            ]
+        )
+        .mount(
+            "/services", 
+            routes![
+                Service::domains
             ]
         )
 }
