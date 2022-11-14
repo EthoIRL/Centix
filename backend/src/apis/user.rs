@@ -62,7 +62,7 @@ pub mod User {
     ) -> Result<Status, Error> {
         let config = match config_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
         
         if !config.allow_user_registration {
@@ -71,19 +71,19 @@ pub mod User {
 
         let database = match database_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
 
         let invite_database = match database.open_tree("invite") {
             Ok(result) => {
                 result
             },
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let users: Vec<User> = user_database.iter()
@@ -124,27 +124,27 @@ pub mod User {
                 Some(invite_vec) => {
                     match serde_json::from_str(&String::from_utf8_lossy(&invite_vec)) {
                         Ok(result) => Some(result),
-                        Err(_) => return Err(Error::InternalError(None))
+                        Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                     }
                 },
-                None => return Err(Error::InternalError(None))
+                None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
             };
         }
         
         if let Some(invite) = &option_invite { 
             if invite.used {
-                return Err(Error::Forbidden(Some(String::from("Invitation has already been used!"))))
+                return Err(Error::Forbidden(String::from("Invitation has already been used!")))
             }
         }
         
         if users.iter().any(|user| user.username == username) {
-            return Err(Error::Forbidden(Some(String::from("Username is already in use!"))))
+            return Err(Error::Forbidden(String::from("Username is already in use!")))
         }
         
         let salt = SaltString::generate(&mut OsRng);
         let password_hash = match Pbkdf2.hash_password(password.as_bytes(), &salt) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         }.to_string();
         
         let user = User {
@@ -167,12 +167,12 @@ pub mod User {
 
         let user_vec = match serde_json::to_vec(&user) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
         
         match user_database.insert(user.username, user_vec) { 
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         match user_database.flush() {
@@ -193,16 +193,16 @@ pub mod User {
                     }) {
                         Ok(_) => {
                             if invite_database.flush().is_err() {
-                                return Err(Error::InternalError(Some(String::from("Failed to update backend database"))))
+                                return Err(Error::InternalError(String::from("Failed to update backend database")))
                             };
                         },
-                        Err(_) => return Err(Error::InternalError(None))
+                        Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                     }
 
                 }
                 result
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to add user to database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to add user to database")))
         };
         Ok(Status::Ok)
     }
@@ -231,33 +231,33 @@ pub mod User {
                             Ok(vec) => {
                                 match vec {
                                     Some(result) => result,
-                                    None => return Err(Error::InternalError(None))
+                                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                                 }
                             },
-                            Err(_) => return Err(Error::Forbidden(Some(String::from("Password or username is not correct"))))
+                            Err(_) => return Err(Error::Forbidden(String::from("Password or username is not correct")))
                         }
                     },
-                    Err(_) => return Err(Error::InternalError(None))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
 
         let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let password_hash = match PasswordHash::new(&user.password) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
             Ok(_) => {
                 Ok(user.api_key)
             },
-            Err(_) => Err(Error::Forbidden(Some(String::from("Password or username is not correct"))))
+            Err(_) => Err(Error::Forbidden(String::from("Password or username is not correct")))
         };
     }
 
@@ -281,30 +281,30 @@ pub mod User {
             Ok(database) => {
                 match database.open_tree("user") {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(None))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
 
         let user_vec = match user_database.get(&username) {
             Ok(result) => {
                 match result {
                     Some(result) => result,
-                    None => return Err(Error::InternalError(None))
+                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
+            Err(_) => return Err(Error::InternalError(String::from("Couldn't find user associated with username")))
         };
 
         let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let password_hash = match PasswordHash::new(&user.password) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
@@ -313,10 +313,10 @@ pub mod User {
                     Ok(_) => {
                         Ok(Status::Ok)
                     },
-                    Err(_) => Err(Error::InternalError(Some(String::from("Failed delete user account"))))
+                    Err(_) => Err(Error::InternalError(String::from("Failed delete user account")))
                 }
             },
-            Err(_) => Err(Error::Forbidden(None))
+            Err(_) => Err(Error::Forbidden(String::from("An internal error on the server's end has occured")))
         };
     }
 
@@ -339,17 +339,17 @@ pub mod User {
         newname: String
     ) -> Result<Status, Error> {
         if username == newname {
-            return Err(Error::BadRequest(None))
+            return Err(Error::BadRequest(String::from("Invalid request, cannot change name to original name")))
         }
 
         let user_database = match database_store.lock() {
             Ok(database) => {
                 match database.open_tree("user") {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(None))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
 
         let user_vec = match user_database.get(username) {
@@ -358,20 +358,20 @@ pub mod User {
                     Some(result) => {
                         result
                     },
-                    None => return Err(Error::InternalError(None))
+                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
+            Err(_) => return Err(Error::InternalError(String::from("Couldn't find user associated with username")))
         };
 
         let mut user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let password_hash = match PasswordHash::new(&user.password) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
@@ -387,31 +387,31 @@ pub mod User {
                             .collect::<Vec<_>>();
 
                         if users.iter().any(|user| user.username == newname) {
-                            return Err(Error::Forbidden(Some(String::from("Username is already in use!"))))
+                            return Err(Error::Forbidden(String::from("Username is already in use!")))
                         }
 
                         user.username = newname.clone();
                         
                         let user_insert_vec = match serde_json::to_vec(&user) {
                             Ok(result) => result,
-                            Err(_) => return Err(Error::InternalError(None))
+                            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                         };
 
                         match user_database.insert(newname, user_insert_vec) {
                             Ok(_) => {
                                 if user_database.flush().is_err() {
-                                    return Err(Error::InternalError(Some(String::from("Failed to update backend database"))))
+                                    return Err(Error::InternalError(String::from("Failed to update backend database")))
                                 }
 
                                 Ok(Status::Ok)
                             },
-                            Err(_) => Err(Error::InternalError(None))
+                            Err(_) => Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                         }
                     },
-                    Err(_) => Err(Error::InternalError(None)) 
+                    Err(_) => Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => Err(Error::Forbidden(None))
+            Err(_) => Err(Error::Forbidden(String::from("An authentication issue has occured on the client's end")))
         };
     }
 
@@ -437,30 +437,30 @@ pub mod User {
             Ok(database) => {
                 match database.open_tree("user") {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(None))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
 
         let user_vec = match user_database.get(&username) {
             Ok(result) => {
                 match result {
                     Some(result) => result,
-                    None => return Err(Error::InternalError(None))
+                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
+            Err(_) => return Err(Error::InternalError(String::from("Couldn't find user associated with username")))
         };
 
         let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let password_hash = match PasswordHash::new(&user.password) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
@@ -496,14 +496,14 @@ pub mod User {
                 }) {
                     Ok(_) => {
                         if user_database.flush().is_err() {
-                            return Err(Error::InternalError(Some(String::from("Failed to update backend database"))))
+                            return Err(Error::InternalError(String::from("Failed to update backend database")))
                         };
                         Ok(Status::Ok)
                     },
-                    Err(_) => Err(Error::InternalError(None))
+                    Err(_) => Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => Err(Error::Forbidden(None))
+            Err(_) => Err(Error::Forbidden(String::from("An authentication issue has occured on the client's end")))
         };
     }
 
@@ -526,7 +526,7 @@ pub mod User {
     ) -> Result<String, Error> {
         let config = match config_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
         
         if !config.use_invite_keys {
@@ -535,37 +535,37 @@ pub mod User {
 
         let database = match database_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
 
         let invite_database = match database.open_tree("invite") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let user_vec = match user_database.get(&username) {
             Ok(result) => {
                 match result {
                     Some(result) => result,
-                    None => return Err(Error::InternalError(None))
+                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
+            Err(_) => return Err(Error::InternalError(String::from("Couldn't find user associated with username")))
         };
 
         let user: User = match serde_json::from_str(&String::from_utf8_lossy(&user_vec)) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let password_hash = match PasswordHash::new(&user.password) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
@@ -583,22 +583,22 @@ pub mod User {
 
                 let invite_vec = match serde_json::to_vec(&invite) {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(None))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 };
                 
                 match invite_database.insert(&invite.key, invite_vec) { 
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(None))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 };
 
                 match user_database.flush() {
                     Ok(_) => {
                         Ok(invite.key)
                     }
-                    Err(_) => Err(Error::InternalError(None))
+                    Err(_) => Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             }
-            Err(_) => Err(Error::Forbidden(None))
+            Err(_) => Err(Error::Forbidden(String::from("An authentication issue has occured on the client's end")))
         }
     }
 
@@ -620,27 +620,27 @@ pub mod User {
     ) -> Result<Json<InviteInfo>, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
 
         let invite_database = match database.open_tree("invite") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let invite_vec = match invite_database.get(&invite_key) {
             Ok(result) => {
                 match result {
                     Some(result) => result,
-                    None => return Err(Error::InternalError(None))
+                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
                 }
             },
-            Err(_) => return Err(Error::InternalError(Some(String::from("Couldn't find user associated with username"))))
+            Err(_) => return Err(Error::InternalError(String::from("Couldn't find user associated with username")))
         };
 
         let invite: Invite = match serde_json::from_str(&String::from_utf8_lossy(&invite_vec)) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         Ok(Json(InviteInfo {

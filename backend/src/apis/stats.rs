@@ -42,12 +42,12 @@ pub mod Stats {
     ) -> Result<Json<MediaStats>, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
 
         let media_database = match database.open_tree("media") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let media_count: Vec<i32> = media_database.iter()
@@ -83,12 +83,12 @@ pub mod Stats {
     ) -> Result<Json<UserStats>, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(Some(String::from("Failed to access backend database"))))
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let users: i32 = user_database.iter()

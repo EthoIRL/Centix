@@ -32,7 +32,7 @@ pub mod Service {
     ) -> Result<Json<DomainInfo>, Error> {
         let config = match config_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(None))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         Ok(Json(DomainInfo {

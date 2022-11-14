@@ -109,19 +109,19 @@ struct ApiDoc;
 #[derive(Serialize, ToSchema, Responder, Debug)]
 pub enum Error {
     #[response(status = 400)]
-    BadRequest(Option<String>),
+    BadRequest(String),
 
     #[response(status = 401)]
     Unauthorized(String),
 
     #[response(status = 403)]
-    Forbidden(Option<String>),
+    Forbidden(String),
 
     #[response(status = 405)]
     NotAllowed(String),
 
     #[response(status = 500)]
-    InternalError(Option<String>)
+    InternalError(String)
 }
 
 #[rocket::launch]
