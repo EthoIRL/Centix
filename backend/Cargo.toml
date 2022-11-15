@@ -9,7 +9,7 @@ edition = "2021"
 # Web framework
 rocket = { version = "0.5.0-rc.2", features = ["json"] }
 # OpenAPI/Swagger
-utoipa = { version = "2.2.0", features = ["rocket_extras"] }
+utoipa = { version = "2.3.0", features = ["rocket_extras"] }
 utoipa-swagger-ui = { version = "2.0.1", features = ["rocket"] }
 # Serde & Json
 serde = { version = "1.0.85", features = ["derive"] }
