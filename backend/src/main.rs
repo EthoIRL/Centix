@@ -85,6 +85,7 @@ pub mod Config {
         User::update_password,
         User::generate_invite,
         User::invite_info,
+        User::list,
         Stats::media,
         Stats::user,
         Service::domains
@@ -105,7 +106,6 @@ pub mod Config {
 )]
 struct ApiDoc;
 
-// TODO: Option's don't work in status code responses
 #[derive(Serialize, ToSchema, Responder, Debug)]
 pub enum Error {
     #[response(status = 400)]
@@ -192,7 +192,8 @@ fn rocket() -> Rocket<Build> {
                 User::update_username,
                 User::update_password,
                 User::generate_invite,
-                User::invite_info
+                User::invite_info,
+                User::list
             ]
         )
         .mount(

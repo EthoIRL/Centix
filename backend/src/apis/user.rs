@@ -651,4 +651,39 @@ pub mod User {
             used: invite.used
         }))
     }
+
+    #[utoipa::path(
+        get,
+        context_path = "/user",
+        responses(
+            (status = 200, description = "Successfully grabbed all users"),
+            (status = 500, description = "An internal error on the server's end has occured", body = Error)
+        )
+    )]
+    #[get("/list")]
+    pub async fn list(
+        _config_store: &State<Arc<Mutex<Config>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>
+    ) -> Result<Json<Vec<String>>, Error> {
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
+        };
+
+        let user_database = match database.open_tree("user") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+        };
+
+        let usernames = user_database.iter()
+            .filter_map(|item| item.ok())
+            .filter_map(|item| match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                Ok(result) => result,
+                Err(_) => None
+            })
+            .map(|user: User| user.username)
+            .collect::<Vec<String>>();
+
+        Ok(Json(usernames))
+    }
 }
