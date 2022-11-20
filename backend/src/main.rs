@@ -101,7 +101,8 @@ pub mod Config {
         (name = "Media", description = "All media management related api endpoints."),
         (name = "User", description = "All user management related api endpoints."),
         (name = "Stats", description = "All statistical management related api endpoints."),
-        (name = "Service", description = "All service related api endpoints.")
+        (name = "Service", description = "All service related api endpoints."),
+        (name = "Admin", description = "All admin related api endpoints.")
     )
 )]
 struct ApiDoc;
