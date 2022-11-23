@@ -81,7 +81,7 @@ pub mod Media {
         context_path = "/media",
         responses(
             (status = 200, description = "Successfully grabbed media information"),
-            (status = 500, description = "An internal error on the server's end has occured", body = Error)
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         ),
         params(
             ("id", example = "HilrvkpJ")
@@ -100,7 +100,7 @@ pub mod Media {
 
         let media_database = match database.open_tree("media") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         let media_vec: IVec = match media_database.get(id) {
@@ -109,7 +109,7 @@ pub mod Media {
                     Some(result) => {
                         result
                     },
-                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 }
             },
             Err(_) => return Err(Error::InternalError(String::from("Couldn't find media associated with id")))
@@ -117,7 +117,7 @@ pub mod Media {
 
         let media: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&media_vec)) {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         Ok(Json(ContentInfo {
@@ -132,7 +132,7 @@ pub mod Media {
         get,
         responses(
             (status = 200, description = "Successfully found media"),
-            (status = 500, description = "An internal error on the server's end has occured", body = Error)
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         ),
         params(
             ("id", example = "HilrvkpJ")
@@ -151,7 +151,7 @@ pub mod Media {
 
         let media_database = match database.open_tree("media") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         let media: Option<DBMedia> = media_database.iter()
@@ -168,23 +168,23 @@ pub mod Media {
         if let Some(media) = media {
             let mut file = match File::open(media.data_path) {
                 Ok(result) => result,
-                Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
             };
 
             let mut upload_data = Vec::new();
             if file.read_to_end(&mut upload_data).is_err() {
-                return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
             };
 
             let data: Vec<u8> = if media.data_compressed {
                 let mut writer = Vec::new();
                 let mut zlibdecoder = ZlibDecoder::new(writer);
                 if zlibdecoder.write_all(&upload_data).is_err() {
-                    return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 };
                 writer = match zlibdecoder.finish() {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 };
                 writer.to_vec()
             } else {
@@ -194,7 +194,7 @@ pub mod Media {
             let filename_extension = format!("{}.{}", media.name, media.extension);
             Ok(FileResponder::new(data, format!(r#"attachment; filename={};"#, filename_extension)))
         } else {
-            Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         }
     }
 
@@ -203,7 +203,7 @@ pub mod Media {
         context_path = "/media",
         responses(
             (status = 200, description = "Successfully grabbed all media"),
-            (status = 500, description = "An internal error on the server's end has occured", body = Error)
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
     #[get("/all?<username>&<content_type>&<api_key>")]
@@ -221,12 +221,12 @@ pub mod Media {
 
         let media_database = match database.open_tree("media") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         let user: Option<User> = if api_key.is_some() {
@@ -309,9 +309,9 @@ pub mod Media {
         context_path = "/media",
         responses(
             (status = 200, description = "Successfully uploaded media"),
-            (status = 400, description = "Server recieved malformed client request", body = Error),
-            (status = 401, description = "An authentication issue has occured", body = Error),
-            (status = 500, description = "An internal error on the server's end has occured", body = Error)
+            (status = 400, description = "Server received malformed client request", body = Error),
+            (status = 401, description = "An authentication issue has occurred", body = Error),
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         ),
         params(
             UploadParam
@@ -333,7 +333,7 @@ pub mod Media {
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         let user = user_database.iter()
@@ -360,7 +360,7 @@ pub mod Media {
             Some(mut user) => {
                 let config = match config_store.lock() {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 };
 
                 if upload.name.len() as i32 > config.content_name_length {
@@ -371,7 +371,7 @@ pub mod Media {
                     Ok(result) => {
                         result
                     },
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 };
 
                 if config.content_max_size > 0 {
@@ -385,7 +385,7 @@ pub mod Media {
                     Some(result) => {
                         result
                     }
-                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured"))) 
+                    None => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred"))) 
                 };
 
                 let data: (Vec<u8>, bool) = if config.store_compressed {
@@ -429,7 +429,7 @@ pub mod Media {
                 };
 
                 if !content_directory.exists() && fs::create_dir_all(&content_directory).is_err() {
-                    return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 }
 
                 content_directory = content_directory.join(Alphanumeric.sample_string(&mut OsRng, 24));
@@ -437,11 +437,11 @@ pub mod Media {
                     Ok(result) => {
                         result
                     }
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 };
 
                 if content_file.write_all(&data.0).is_err() {
-                    return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 }
 
                 let media = DBMedia {
@@ -461,16 +461,16 @@ pub mod Media {
 
                 let media_database = match database.open_tree("media") {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 };
 
                 let media_vec = match serde_json::to_vec(&media) {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 };
 
                 if media_database.insert(&media.id, media_vec).is_err() {
-                    return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 }
 
                 match media_database.flush() {
@@ -482,7 +482,7 @@ pub mod Media {
                                 Err(_) => return None
                             }))
                         }).is_err() {
-                            return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                            return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                         }
 
                         if user_database.update_and_fetch(&user.username, |_| {
@@ -491,18 +491,18 @@ pub mod Media {
                                 Err(_) => return None
                             }))
                         }).is_err() {
-                            return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                            return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                         }
 
                         println!("User: {:#?}", user);
 
                         if user_database.flush().is_err() {
-                            return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                            return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                         }
 
                         Ok(Status::Ok)
                     },
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 }
             }
             None => {
@@ -517,7 +517,7 @@ pub mod Media {
         responses(
             (status = 200, description = "Successfully deleted media"),
             (status = 401, description = "Unauthorized deletion", body = Error),
-            (status = 500, description = "An internal error on the server's end has occured", body = Error),
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error),
         )
     )]
     #[delete("/delete?<api_key>&<id>")]
@@ -534,7 +534,7 @@ pub mod Media {
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         let user = user_database.iter()
@@ -561,14 +561,14 @@ pub mod Media {
             Some(mut user) => {
                 let media_database = match database.open_tree("media") {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 };
 
                 let media_vec = match media_database.get(&id) {
                     Ok(result) => {
                         match result {
                             Some(result) => result,
-                            None => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                            None => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                         }
                     },
                     Err(_) => return Err(Error::InternalError(String::from("Couldn't find media associated with id")))
@@ -576,7 +576,7 @@ pub mod Media {
 
                 let media: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&media_vec)) {
                     Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 };
 
                 if media.author_username == user.username {
@@ -592,7 +592,7 @@ pub mod Media {
                                 Ok(_) => {
                                     Ok(Status::Ok)
                                 },
-                                Err(_) => Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                                Err(_) => Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                             }
                         },
                         Err(_) => Err(Error::InternalError(String::from("Failed delete media from database")))

@@ -32,7 +32,7 @@ pub mod Stats {
         context_path = "/stats",
         responses(
             (status = 200, description = "Successfully grabbed media stats"),
-            (status = 500, description = "An internal error on the server's end has occured", body = Error)
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
     #[get("/media")]
@@ -47,7 +47,7 @@ pub mod Stats {
 
         let media_database = match database.open_tree("media") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         let media_count: Vec<i32> = media_database.iter()
@@ -73,7 +73,7 @@ pub mod Stats {
         context_path = "/stats",
         responses(
             (status = 200, description = "Successfully grabbed user stats"),
-            (status = 500, description = "An internal error on the server's end has occured", body = Error)
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
     #[get("/user")]
@@ -88,7 +88,7 @@ pub mod Stats {
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         let users: i32 = user_database.iter()

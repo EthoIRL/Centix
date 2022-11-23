@@ -13,7 +13,7 @@ pub mod Service {
 
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
     pub struct DomainInfo {
-        #[schema(example = "List of avaliable domains on this centix instance")]
+        #[schema(example = "List of available domains on this Centix instance")]
         domains: Vec<String>
     }
 
@@ -21,8 +21,8 @@ pub mod Service {
         get,
         context_path = "/services",
         responses(
-            (status = 200, description = "Successfully grabbed all avaliable domains pointing to centix instance"),
-            (status = 500, description = "An internal error on the server's end has occured", body = Error::InternalError)
+            (status = 200, description = "Successfully grabbed all available domains pointing to Centix instance"),
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error::InternalError)
         )
     )]
     #[get("/domains")]
@@ -32,7 +32,7 @@ pub mod Service {
     ) -> Result<Json<DomainInfo>, Error> {
         let config = match config_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         };
 
         Ok(Json(DomainInfo {
