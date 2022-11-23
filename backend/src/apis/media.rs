@@ -168,7 +168,7 @@ pub mod Media {
         if let Some(media) = media {
             let mut file = match File::open(media.data_path) {
                 Ok(result) => result,
-                Err(_) => panic!()
+                Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
             };
 
             let mut upload_data = Vec::new();
@@ -192,9 +192,9 @@ pub mod Media {
             };
 
             let filename_extension = format!("{}.{}", media.name, media.extension);
-            return Ok(FileResponder::new(data, format!(r#"attachment; filename={};"#, filename_extension)));
+            Ok(FileResponder::new(data, format!(r#"attachment; filename={};"#, filename_extension)))
         } else {
-            return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+            Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         }
     }
 
