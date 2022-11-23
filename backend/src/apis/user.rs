@@ -313,6 +313,29 @@ pub mod User {
 
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
             Ok(_) => {
+                let media_database = match database.open_tree("media") {
+                    Ok(result) => result,
+                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
+                };
+
+                let medias: Vec<String> = media_database
+                    .iter()
+                    .filter_map(|item| item.ok())
+                    .filter_map(|item| {
+                        let result: Media = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                        Ok(result) => result,
+                            Err(_) => return None
+                        };
+                        Some(result)
+                    })
+                    .filter(|media| media.author_username == username)
+                    .map(|media| media.id)
+                    .collect::<Vec<_>>();
+                
+                for media_id in medias {
+                    if media_database.remove(media_id).is_err() {
+                        continue;
+                    }
                 }
 
                 match user_database.remove(username) {
