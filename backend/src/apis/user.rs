@@ -2,7 +2,7 @@
 pub mod User {
     use std::sync::{Arc, Mutex};
 
-    use crate::{Config::*, database::{database::{User, Invite}}, Error};
+    use crate::{Config::*, database::{database::{User, Invite, Media}}, Error};
     
     use rocket::{
         http::Status,
@@ -41,6 +41,7 @@ pub mod User {
         used: bool
     }
 
+    /// Create's a user account
     #[utoipa::path(
         post,
         context_path = "/user",
@@ -207,6 +208,7 @@ pub mod User {
         Ok(Status::Ok)
     }
 
+    /// Grabs media api-key for a user account
     #[utoipa::path(
         get,
         context_path = "/user",
@@ -261,6 +263,8 @@ pub mod User {
         };
     }
 
+    /// Permanently deletes user account
+    /// along with all media on the instance
     #[utoipa::path(
         delete,
         context_path = "/user",
@@ -277,14 +281,14 @@ pub mod User {
         username: String,
         password: String
     ) -> Result<Status, Error> {
-        let user_database = match database_store.lock() {
-            Ok(database) => {
-                match database.open_tree("user") {
-                    Ok(result) => result,
-                    Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
-                }
-            },
+        let database = match database_store.lock() {
+            Ok(result) => result,
             Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
+        };
+
+        let user_database = match database.open_tree("user") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occured")))
         };
 
         let user_vec = match user_database.get(&username) {
@@ -309,17 +313,20 @@ pub mod User {
 
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
             Ok(_) => {
+                }
+
                 match user_database.remove(username) {
                     Ok(_) => {
                         Ok(Status::Ok)
                     },
-                    Err(_) => Err(Error::InternalError(String::from("Failed delete user account")))
+                    Err(_) => Err(Error::InternalError(String::from("Failed to remove user account from database")))
                 }
             },
-            Err(_) => Err(Error::Forbidden(String::from("An internal error on the server's end has occured")))
+            Err(_) => Err(Error::Forbidden(String::from("Invalid or incorrect credentials provided")))
         };
     }
 
+    /// Change or update a user's associated username
     #[utoipa::path(
         put,
         context_path = "/user",
@@ -415,6 +422,7 @@ pub mod User {
         };
     }
 
+    /// Change or update a user's associated password
     #[utoipa::path(
         put,
         context_path = "/user",
@@ -507,6 +515,8 @@ pub mod User {
         };
     }
 
+    /// Generates or create's a user invitation
+    /// to be used when registering for a account
     #[utoipa::path(
         post,
         context_path = "/user",
@@ -603,7 +613,8 @@ pub mod User {
     }
 
 
-
+    /// Grabs information about an invite
+    /// such as author, creation date, used status, and invitee name/date
     #[utoipa::path(
         get,
         context_path = "/user",
@@ -652,6 +663,7 @@ pub mod User {
         }))
     }
 
+    /// Lists all users on this instance
     #[utoipa::path(
         get,
         context_path = "/user",
