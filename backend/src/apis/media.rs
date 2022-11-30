@@ -415,11 +415,11 @@ pub mod Media {
 
                 let mut content_type = ContentType::Other;
                 let mut content_directory = match data_type.matcher_type() {
-                    MatcherType::VIDEO => {
+                    MatcherType::Video => {
                         content_type = ContentType::Video;
                         content_path.join("Video") 
                     }
-                    MatcherType::IMAGE => {
+                    MatcherType::Image => {
                         content_type = ContentType::Image;
                         content_path.join("Image")
                     }

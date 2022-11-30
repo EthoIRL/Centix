@@ -9,26 +9,26 @@ edition = "2021"
 # Web framework
 rocket = { version = "0.5.0-rc.2", features = ["json"] }
 # OpenAPI/Swagger
-utoipa = { version = "2.3.0", features = ["rocket_extras"] }
-utoipa-swagger-ui = { version = "2.0.1", features = ["rocket"] }
+utoipa = { version = "2.4.2", features = ["rocket_extras"] }
+utoipa-swagger-ui = { version = "3.0.1", features = ["rocket"] }
 # Serde & Json
-serde = { version = "1.0.85", features = ["derive"] }
-serde_json = "1.0.85"
+serde = { version = "1.0.148", features = ["derive"] }
+serde_json = "1.0.89"
 # Logging
-env_logger = "0.9.0"
-log = "0.4"
+env_logger = "0.10.0"
+log = "0.4.17"
 # Database
 sled = "0.34.7"
 # Randomization
 rand = "0.8.5"
 # Dates & Timings 
-chrono = { version = "0.4.22", features = ["serde"] }
+chrono = { version = "0.4.23", features = ["serde"] }
 # Password hashing
-pbkdf2 = "0.10"
+pbkdf2 = "0.11"
 rand_core = { version = "0.6.4", features = ["std"] }
 # Base 64 Encoding & Decoding
-base64 = "0.13.0"
+base64 = "0.13.1"
 # Mime Type & Magic detection  
-infer = { version = "0.3", default-features = false }
+infer = { version = "0.11", default-features = false }
 # Lossless Compression
-flate2 = "1.0.24"
+flate2 = "1.0.25"
