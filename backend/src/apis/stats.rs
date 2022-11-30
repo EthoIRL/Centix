@@ -27,6 +27,8 @@ pub mod Stats {
         user_count: i32
     }
 
+    /// Grabs all media related stats
+    /// such as total media count and storage usage regarding media.
     #[utoipa::path(
         get,
         context_path = "/stats",
@@ -68,6 +70,8 @@ pub mod Stats {
         }))
     }
 
+    /// Grabs all user related stats
+    /// such as total user accounts.
     #[utoipa::path(
         get,
         context_path = "/stats",

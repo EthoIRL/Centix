@@ -76,6 +76,7 @@ pub mod Media {
         }
     }
 
+    /// Returns useful media information  
     #[utoipa::path(
         get,
         context_path = "/media",
@@ -128,6 +129,7 @@ pub mod Media {
         }))
     }
 
+    /// Returns file-disposition based file download
     #[utoipa::path(
         get,
         responses(
@@ -198,6 +200,7 @@ pub mod Media {
         }
     }
 
+    /// Grabs all media id's in the form of a list
     #[utoipa::path(
         get,
         context_path = "/media",
@@ -304,6 +307,9 @@ pub mod Media {
         Ok(Json(medias))
     }
 
+    /// Uploads media to a user's account
+    /// 
+    /// Media data should be in the form of base64 string inside the body 
     #[utoipa::path(
         post,
         context_path = "/media",
@@ -511,6 +517,7 @@ pub mod Media {
         };
     }
 
+    /// Permanently deletes media from instance
     #[utoipa::path(
         delete,
         context_path = "/media",

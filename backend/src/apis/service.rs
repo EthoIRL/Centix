@@ -17,6 +17,7 @@ pub mod Service {
         domains: Vec<String>
     }
 
+    /// Grabs domains pointing to this Centix instance
     #[utoipa::path(
         get,
         context_path = "/services",
