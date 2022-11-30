@@ -3,7 +3,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::apis::media::Media::ContentType;
-    
+
+// TODO: Media tags
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Media {
      // Main key
@@ -33,7 +34,7 @@ pub struct User {
 }
 
 // TODO: Single use or multi use?
-// TODO: Expirtation date?
+// TODO: Expiration date?
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Invite {
     // Main key

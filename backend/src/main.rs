@@ -14,7 +14,7 @@ use rocket::{
 
 use utoipa::{
     OpenApi,
-    openapi
+    openapi::{self, Server}
 };
 
 use utoipa::{
@@ -59,13 +59,25 @@ pub mod Config {
         pub allow_user_registration: bool,
         pub first_user_admin: bool,
         pub store_compressed: bool,
-        pub domains: Vec<String>
+        pub domains: Vec<String>,
+        pub tags: Vec<String>
     }
 
     impl Default for Config {
         fn default() -> Self {
             // content_compression: true, content_compression_target: 75
-            Config { content_directory: None, content_id_length: 8, content_name_length: 32, content_max_size: 24, use_invite_keys: false, allow_user_registration: true, first_user_admin: true, store_compressed: true, domains: Vec::new() }
+            Config { 
+                content_directory: None,
+                content_id_length: 8,
+                content_name_length: 32,
+                content_max_size: 24,
+                use_invite_keys: false,
+                allow_user_registration: true,
+                first_user_admin: true,
+                store_compressed: true,
+                domains: Vec::new(),
+                tags: Vec::new()
+            }
         }
     }
 }
@@ -129,27 +141,7 @@ pub enum Error {
 fn rocket() -> Rocket<Build> {
     env_logger::init();
 
-    let config_path = Path::new("./config.json");
-    let mut config: Option<Config::Config> = Option::None;
-    if config_path.exists() {
-        let file = match File::open(config_path) {
-            Ok(result) => Some(result),
-            Err(_) => None
-        };
-        if let Some(file) = file {
-            let reader = BufReader::new(file);
-            config = match serde_json::from_reader(reader) {
-                Ok(result) => result,
-                Err(_) => None
-            }
-        } 
-    }
-    
-    if config.is_none() {
-        config = Some(Config::Config::default());
-        // Hope it writes to file.
-        let _ = fs::write(config_path, serde_json::to_string_pretty(&config).unwrap());
-    }
+    let config = grab_config();
 
     let database = match sled::open("database") {
         Ok(result) => result,
@@ -218,5 +210,54 @@ impl Modify for ApiDoc {
         openapi.info.description = Some(String::from("Centix backend api"));
         openapi.info.license = None;
         openapi.info.version = String::from("V1");
+        
+        let config = grab_config();
+        let mut domain_servers: Vec<Server> = Vec::new();
+
+        if let Some(cfg) = config {
+            for domain in cfg.domains {
+                domain_servers.push(Server::new(domain))
+            }
+        }
+        
+        if !domain_servers.is_empty() {
+            openapi.servers = Some(domain_servers);
+        }
     }
+}
+
+fn grab_config() -> Option<Config::Config> {
+    let config_path = Path::new("./config.json");
+    let mut config: Option<Config::Config> = Option::None;
+    
+    if config_path.exists() {
+        let file = match File::open(config_path) {
+            Ok(result) => Some(result),
+            Err(_) => None
+        };
+        if let Some(file) = file {
+            let reader = BufReader::new(file);
+            config = match serde_json::from_reader(reader) {
+                Ok(result) => result,
+                Err(_) => None
+            }
+        } 
+    }
+    
+    if config.is_none() {
+        config = Some(Config::Config::default());
+
+        let pretty_config: Option<String> = match serde_json::to_string_pretty(&config) {
+            Ok(result) => Some(result),
+            Err(_) => None
+        };
+
+        if let Some(pretty_cfg) = pretty_config {
+            if fs::write(config_path, pretty_cfg).is_err() {
+                return None
+            };
+        }
+    }
+
+    config
 }
