@@ -143,6 +143,10 @@ fn rocket() -> Rocket<Build> {
 
     let config = grab_config();
 
+    if config.is_none() {
+        panic!("Config couldn't be generated or grabbed!");
+    }
+
     let database = match sled::open("database") {
         Ok(result) => result,
         Err(error) => panic!("{error}")
@@ -216,7 +220,10 @@ impl Modify for ApiDoc {
 
         if let Some(cfg) = config {
             for domain in cfg.domains {
-                domain_servers.push(Server::new(domain))
+                let mut server = Server::new("/");
+                server.description = Some(domain);
+
+                domain_servers.push(server);
             }
         }
         
