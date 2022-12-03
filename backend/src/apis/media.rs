@@ -343,7 +343,6 @@ pub mod Media {
         Ok(Json(medias))
     }
 
-    // TODO: Return string containing media id
     /// Uploads media to a user's account
     /// 
     /// Media data should be in the form of base64 string inside the body 
@@ -368,7 +367,7 @@ pub mod Media {
         upload: UploadParam,
         body_data: Json<String>,
         api_key: String
-    ) -> Result<Status, Error> {
+    ) -> Result<String, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
@@ -541,7 +540,9 @@ pub mod Media {
 
                 match media_database.flush() {
                     Ok(_) => {
-                        user.uploads.push(media.id);
+                        let media_id = media.id;
+                        user.uploads.push(media_id.clone());
+
                         if user_database.update_and_fetch(&user.username, |_| {
                             Some(IVec::from(match serde_json::to_vec(&user) {
                                 Ok(result) => result,
@@ -566,7 +567,7 @@ pub mod Media {
                             return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                         }
 
-                        Ok(Status::Ok)
+                        Ok(media_id)
                     },
                     Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 }
