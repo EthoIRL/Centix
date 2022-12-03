@@ -45,7 +45,7 @@ use crate::config::Config;
     paths(
         Media::info,
         Media::grab,
-        Media::all,
+        Media::find,
         Media::upload,
         Media::delete,
         Media::edit,
@@ -129,7 +129,7 @@ fn rocket() -> Rocket<Build> {
             "/media",
             routes![
                 Media::info,
-                Media::all,
+                Media::find,
                 Media::upload,
                 Media::delete,
                 Media::edit,

@@ -1,11 +1,12 @@
 #[allow(non_snake_case)]
 pub mod Media {
-    use std::{sync::{Arc, Mutex}, path::Path, fs::{self, File}, io::{Write, Read}};
+    use std::{sync::{Arc, Mutex}, path::Path, fs::{self, File}, io::{Write, Read}, ops::Deref};
 
     use crate::{Error, Config};
     use crate::database::database::{User, Media as DBMedia};
 
     use flate2::{write::{ZlibEncoder, ZlibDecoder}, Compression};
+    use log::info;
     use rocket::{
         get, 
         http::{Status, Header},
@@ -36,22 +37,28 @@ pub mod Media {
 
     #[derive(Serialize, Deserialize, FromForm, IntoParams, ToSchema, Clone)]
     pub struct UploadParam {
-        #[schema(example = "Funny Cat")]
+        #[schema(example = "Funny cat video")]
         name: String,
-        #[schema(example = "Private video not listed on /all/ endpoint")]
-        private: Option<bool>
+        #[schema(example = "Private media not listed on /all/ endpoint")]
+        private: Option<bool>,
+        #[schema(example = "Tags relating to the media")]
+        tags: Option<Vec<String>>
     }
 
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
     pub struct ContentInfo {
         #[schema(example = "Etho")]
         author_username: String,
+        #[schema(example = "Funny cat video")]
+        content_name: String,
         #[schema(example = "582000 bytes")]
         content_size: i32,
         #[schema(example = "UTC Format")]
         upload_date: DateTime::<Utc>,
-        #[schema(example = "Privately listed video")]
-        private: bool
+        #[schema(example = "Privately listed media")]
+        private: bool,
+        #[schema(example = "Tags associated to media")]
+        tags: Option<Vec<String>>
     }
 
     #[derive(Serialize, Deserialize, FromFormField, ToSchema, PartialEq, Eq, Clone, Debug)]
@@ -122,9 +129,11 @@ pub mod Media {
 
         Ok(Json(ContentInfo {
             author_username: media.author_username,
+            content_name: media.name,
             content_size: media.data_size,
             upload_date: media.upload_date,
-            private: media.private
+            private: media.private,
+            tags: media.tags
         }))
     }
 
@@ -199,24 +208,23 @@ pub mod Media {
         }
     }
 
-    // TODO: Maybe rename this to /find/ instead of /all/
-    // TODO: Implement tag sorting into /all/
     /// Grabs all media id's in the form of a list
     #[utoipa::path(
         get,
         context_path = "/media",
         responses(
-            (status = 200, description = "Successfully grabbed all media"),
+            (status = 200, description = "Successfully found all media"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[get("/all?<username>&<content_type>&<api_key>")]
-    pub async fn all(
+    #[get("/find?<username>&<content_type>&<api_key>&<tags>")]
+    pub async fn find(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         username: Option<String>,
         content_type: Option<ContentType>,
-        api_key: Option<String>
+        api_key: Option<String>,
+        tags: Option<Vec<String>>
     ) -> Result<Json<Vec<String>>, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -308,6 +316,7 @@ pub mod Media {
         Ok(Json(medias))
     }
 
+    // TODO: Return string containing media id
     /// Uploads media to a user's account
     /// 
     /// Media data should be in the form of base64 string inside the body 
@@ -650,6 +659,7 @@ pub mod Media {
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
     ) -> Result<Status, Error> {
+        // index all tags used by config + media if custom tags are allowed
         todo!()
     }
 }
