@@ -6,6 +6,7 @@ pub mod Media {
     use crate::database::database::{User, Media as DBMedia};
 
     use flate2::{write::{ZlibEncoder, ZlibDecoder}, Compression};
+    use itertools::Itertools;
     use log::info;
     use rocket::{
         get, 
@@ -317,24 +318,29 @@ pub mod Media {
                 }
 
                 if let Some(tags) = &tags {
-                    if media.tags.is_none() {
-                        return false;
+                    if tags.is_empty() {
+                        return true;
                     }
 
-                    if let Some(media_tags) = &media.tags {
-                        if media_tags.is_empty() {
+                    for find_tag in tags {
+                        if media.tags.is_none() {
                             return false;
                         }
 
-                        for m_tag in media_tags {
-                            if !tags.contains(&m_tag.to_lowercase()) {
-                                
+                        let tag = find_tag.to_lowercase();
+                        
+                        if let Some(media_tags) = &media.tags {
+                            if media_tags.is_empty() {
+                                return false;
+                            }
+
+                            if !media_tags.contains(&tag) {
                                 return false;
                             }
                         }
+                    } 
 
-                        return true;
-                    }
+                    return true;
                 }
                 false
             })
@@ -492,13 +498,17 @@ pub mod Media {
                     let sorted_tags: Vec<String> = tags
                     .into_iter()
                     .filter(|tag| {
-                        if config.allow_custom_tags {
-                            if tag.chars().count() as i32 > config.custom_tag_length {
-                                return false
+                        let contains = config.tags.contains(&tag.to_lowercase());
+                        if !contains {
+                            if config.allow_custom_tags {
+                                if tag.chars().count() as i32 > config.custom_tag_length {
+                                    return false
+                                }
+                                return true
                             }
-                            return true
+                            return false;
                         }
-                        config.tags.contains(&tag.to_lowercase())
+                        return contains;
                     }
                     ).map(|tag| tag.to_lowercase())
                     .collect();
@@ -696,8 +706,8 @@ pub mod Media {
         todo!()
     }
 
-    // TODO: Grab all available on tags 
-    /// Grabs all media related tags available on the instance
+    // TODO: Grab all available on tags being used 
+    /// Grabs all media related tags in use on the instance
     #[utoipa::path(
         get,
         context_path = "/media",

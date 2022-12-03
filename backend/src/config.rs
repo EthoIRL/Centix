@@ -41,7 +41,7 @@ impl Default for Config {
             first_user_admin: true,
             store_compressed: true,
             domains: Vec::new(),
-            // TODO: Implement good list of basic tags
+            // TODO: Implement good list of basic tags (Must be lowercase)
             tags: vec![String::from("funny"), String::from("meme"), String::from("nsfw"), String::from("clip")]
         }
     }

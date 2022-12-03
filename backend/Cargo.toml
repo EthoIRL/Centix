@@ -32,3 +32,5 @@ base64 = "0.13.1"
 infer = { version = "0.11", default-features = false }
 # Lossless Compression
 flate2 = "1.0.25"
+# Iterator tools
+itertools = "0.10.5"
