@@ -199,6 +199,8 @@ pub mod Media {
         }
     }
 
+    // TODO: Maybe rename this to /find/ instead of /all/
+    // TODO: Implement tag sorting into /all/
     /// Grabs all media id's in the form of a list
     #[utoipa::path(
         get,
@@ -609,5 +611,45 @@ pub mod Media {
             },
             None => Err(Error::Unauthorized(String::from("Api key is invalid and does not exist")))
         }
+    }
+
+    // TODO: editing + add/remove tags
+    /// Edit media information
+    /// such as name, privatizing, and tags
+    #[utoipa::path(
+        post,
+        context_path = "/media",
+        responses(
+            (status = 200, description = "Successfully edited media")
+        )
+    )]
+    #[post("/edit?<api_key>&<id>&<name>&<private>&<tags>")]
+    pub async fn edit(
+        _config_store: &State<Arc<Mutex<Config>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
+        id: String,
+        api_key: String,
+        name: Option<String>,
+        private: Option<bool>,
+        tags: Option<Vec<String>>
+    ) -> Result<Status, Error> {
+        todo!()
+    }
+
+    // TODO: Grab all available on tags 
+    /// Grabs all media related tags available on the instance
+    #[utoipa::path(
+        get,
+        context_path = "/media",
+        responses(
+            (status = 200, description = "Successfully grabbed all available tags")
+        )
+    )]
+    #[get("/tags")]
+    pub async fn tags(
+        _config_store: &State<Arc<Mutex<Config>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
+    ) -> Result<Status, Error> {
+        todo!()
     }
 }

@@ -12,6 +12,8 @@ pub struct Config {
     // pub content_compression_target: i32,
     // // In the form of mb's 1 = 1mb
     pub content_max_size: i32,
+    // TODO: ->
+    pub allow_content_editing: bool,
     pub use_invite_keys: bool,
     pub allow_user_registration: bool,
     pub first_user_admin: bool,
@@ -28,6 +30,7 @@ impl Default for Config {
             content_id_length: 8,
             content_name_length: 32,
             content_max_size: 24,
+            allow_content_editing: true,
             use_invite_keys: false,
             allow_user_registration: true,
             first_user_admin: true,

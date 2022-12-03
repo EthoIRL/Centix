@@ -48,6 +48,8 @@ use crate::config::Config;
         Media::all,
         Media::upload,
         Media::delete,
+        Media::edit,
+        Media::tags,
         User::register,
         User::login,
         User::delete,
@@ -129,7 +131,9 @@ fn rocket() -> Rocket<Build> {
                 Media::info,
                 Media::all,
                 Media::upload,
-                Media::delete
+                Media::delete,
+                Media::edit,
+                Media::tags
             ]
         )
         .mount(
