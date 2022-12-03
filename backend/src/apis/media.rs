@@ -209,7 +209,8 @@ pub mod Media {
         }
     }
 
-    /// Grabs all media id's in the form of a list
+    /// Finds all media id's in the form of a list
+    /// based on optional queries patterns
     #[utoipa::path(
         get,
         context_path = "/media",
@@ -712,15 +713,40 @@ pub mod Media {
         get,
         context_path = "/media",
         responses(
-            (status = 200, description = "Successfully grabbed all available tags")
+            (status = 200, description = "Successfully grabbed all in use tags"),
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
     #[get("/tags")]
     pub async fn tags(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-    ) -> Result<Status, Error> {
-        // index all tags used by config + media if custom tags are allowed
-        todo!()
+    ) -> Result<Json<Vec<String>>, Error> {
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
+        };
+
+        let media_database = match database.open_tree("media") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+        };
+
+        let media_tags: Vec<String> = media_database
+            .into_iter()
+            .filter_map(|item| item.ok())
+            .filter_map(|item| {
+                let result: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                    Ok(result) => result,
+                    Err(_) => return None
+                };
+                Some(result)
+            })
+            .flat_map(|x| x.tags)
+            .flatten()
+            .unique()
+            .collect();
+        
+        Ok(Json(media_tags))
     }
 }
