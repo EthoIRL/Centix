@@ -2,8 +2,7 @@
 pub mod Media {
     use std::{sync::{Arc, Mutex}, path::Path, fs::{self, File}, io::{Write, Read}};
 
-    use crate::{Config::*};
-    use crate::Error;
+    use crate::{Error, Config};
     use crate::database::database::{User, Media as DBMedia};
 
     use flate2::{write::{ZlibEncoder, ZlibDecoder}, Compression};

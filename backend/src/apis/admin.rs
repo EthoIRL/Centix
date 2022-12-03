@@ -3,6 +3,4 @@ pub mod Admin {
 
     // TODO:
     // # admin/user/delete/
-    // # admin/user/kick/
-    
 }

@@ -2,7 +2,7 @@
 pub mod Service {
     use std::{sync::{Arc, Mutex}};
 
-    use crate::{Config::*, Error};
+    use crate::{Error, Config};
     use rocket::{
         get,
         State,

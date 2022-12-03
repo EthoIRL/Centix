@@ -2,7 +2,7 @@
 pub mod Stats {
     use std::sync::{Arc, Mutex};
 
-    use crate::{Config::*, Error};
+    use crate::{Config, Error};
     use rocket::{
         get,
         State, serde::json::Json
