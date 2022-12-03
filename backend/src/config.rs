@@ -14,6 +14,9 @@ pub struct Config {
     pub content_max_size: i32,
     // TODO: ->
     pub allow_content_editing: bool,
+    pub allow_custom_tags: bool,
+    pub custom_tag_length: i32,
+    
     pub use_invite_keys: bool,
     pub allow_user_registration: bool,
     pub first_user_admin: bool,
@@ -31,12 +34,15 @@ impl Default for Config {
             content_name_length: 32,
             content_max_size: 24,
             allow_content_editing: true,
+            allow_custom_tags: false,
+            custom_tag_length: 16,
             use_invite_keys: false,
             allow_user_registration: true,
             first_user_admin: true,
             store_compressed: true,
             domains: Vec::new(),
-            tags: Vec::new()
+            // TODO: Implement good list of basic tags
+            tags: vec![String::from("funny"), String::from("meme"), String::from("nsfw"), String::from("clip")]
         }
     }
 }

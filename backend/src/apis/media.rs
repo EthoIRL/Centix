@@ -311,6 +311,33 @@ pub mod Media {
 
                 !media.private
             })
+            .filter(|media| {
+                if tags.is_none() {
+                    return true
+                }
+
+                if let Some(tags) = &tags {
+                    if media.tags.is_none() {
+                        return false;
+                    }
+
+                    if let Some(media_tags) = &media.tags {
+                        if media_tags.is_empty() {
+                            return false;
+                        }
+
+                        for m_tag in media_tags {
+                            if !tags.contains(&m_tag.to_lowercase()) {
+                                
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }
+                }
+                false
+            })
             .map(|media| media.id)
             .collect();
         Ok(Json(medias))
@@ -460,6 +487,28 @@ pub mod Media {
                     return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 }
 
+                let mut safe_tags: Option<Vec<String>> = None;
+
+                if let Some(tags) = upload.tags {
+                    let sorted_tags: Vec<String> = tags
+                    .into_iter()
+                    .filter(|tag| {
+                        if config.allow_custom_tags {
+                            if tag.chars().count() as i32 > config.custom_tag_length {
+                                return false
+                            }
+                            return true
+                        }
+                        config.tags.contains(&tag.to_lowercase())
+                    }
+                    ).map(|tag| tag.to_lowercase())
+                    .collect();
+
+                    if !sorted_tags.is_empty() {
+                        safe_tags = Some(sorted_tags);
+                    }
+                }
+
                 let media = DBMedia {
                     id: Alphanumeric.sample_string(&mut OsRng, config.content_id_length as usize),
                     name: upload.name,
@@ -470,7 +519,8 @@ pub mod Media {
                     upload_date: chrono::offset::Utc::now(),
                     data_compressed: data.1,
                     author_username: user.username.clone(),
-                    private: upload.private.unwrap_or(false)
+                    private: upload.private.unwrap_or(false),
+                    tags: safe_tags
                 };
 
                 println!("Media: {:#?}", media);
