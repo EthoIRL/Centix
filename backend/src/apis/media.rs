@@ -1,13 +1,12 @@
 #[allow(non_snake_case)]
 pub mod Media {
-    use std::{sync::{Arc, Mutex}, path::Path, fs::{self, File}, io::{Write, Read}, ops::Deref};
+    use std::{sync::{Arc, Mutex}, path::Path, fs::{self, File}, io::{Write, Read}};
 
     use crate::{Error, Config};
     use crate::database::database::{User, Media as DBMedia};
 
     use flate2::{write::{ZlibEncoder, ZlibDecoder}, Compression};
     use itertools::Itertools;
-    use log::info;
     use rocket::{
         get, 
         http::{Status, Header},
@@ -684,30 +683,148 @@ pub mod Media {
         }
     }
 
-    // TODO: editing + add/remove tags
     /// Edit media information
     /// such as name, privatizing, and tags
     #[utoipa::path(
         post,
         context_path = "/media",
         responses(
-            (status = 200, description = "Successfully edited media")
+            (status = 200, description = "Successfully edited media"),
+            (status = 400, description = "Server received malformed client request", body = Error),
+            (status = 401, description = "An authentication issue has occurred", body = Error),
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[post("/edit?<api_key>&<id>&<name>&<private>&<tags>")]
+    #[post("/edit?<api_key>&<id>&<name>&<private>&<tags>&<edit_tags>")]
     pub async fn edit(
-        _config_store: &State<Arc<Mutex<Config>>>,
+        config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         id: String,
         api_key: String,
         name: Option<String>,
         private: Option<bool>,
-        tags: Option<Vec<String>>
+        tags: Option<Vec<String>>,
+        edit_tags: Option<bool>,
     ) -> Result<Status, Error> {
-        todo!()
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
+        };
+
+        let user_database = match database.open_tree("user") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+        };
+
+        let user = user_database.iter()
+            .filter_map(|item| item.ok())
+            .map(|item| {
+                let result: User = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                    Ok(result) => result,
+                    Err(_) => return None
+                };
+                Some(result)
+            }).find_map(|user| {
+                match user {
+                    Some(result) => {
+                        if result.api_key == api_key {
+                            return Some(result)
+                        }
+                        None
+                    },
+                    None => None
+                }
+            });
+
+        if user.is_some() {
+            let media_database = match database.open_tree("media") {
+                Ok(result) => result,
+                Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+            };
+
+            let media: Option<DBMedia> = media_database.iter()
+                .filter_map(|item| item.ok())
+                .filter_map(|item| {
+                    let result: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                        Ok(result) => result,
+                        Err(_) => return None
+                    };
+                    Some(result)
+                })
+                .find(|media| media.id == id);
+
+            match media {
+                Some(media) => {
+                    let config = match config_store.lock() {
+                        Ok(result) => result,
+                        Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+                    };
+
+                    let mut edited_media = media;
+                    
+                    if let Some(name) = name {
+                        if name.len() as i32 > config.content_name_length {
+                            return Err(Error::BadRequest(format!("Name length too long. Maximum of {} characters", config.content_name_length)))
+                        }
+                        
+                        edited_media.name = name;
+                    }
+
+                    if let Some(private) = private {
+                        edited_media.private = private;
+                    }
+
+                    if let Some(edit_tags) = edit_tags {
+                        if edit_tags == true {
+                            let mut safe_tags: Option<Vec<String>> = None;
+
+                            if let Some(tags) = tags {
+                                let sorted_tags: Vec<String> = tags
+                                .into_iter()
+                                .filter(|tag| {
+                                    let contains = config.tags.contains(&tag.to_lowercase());
+                                    if !contains {
+                                        if config.allow_custom_tags {
+                                            if tag.chars().count() as i32 > config.custom_tag_length {
+                                                return false
+                                            }
+                                            return true
+                                        }
+                                        return false;
+                                    }
+                                    return contains;
+                                }
+                                ).map(|tag| tag.to_lowercase())
+                                .collect();
+
+                                if !sorted_tags.is_empty() {
+                                    safe_tags = Some(sorted_tags);
+                                }
+                            }
+
+                            edited_media.tags = safe_tags;
+                        }
+                    }
+                    
+                    match media_database.update_and_fetch(&edited_media.id, |_| {
+                        Some(IVec::from(match serde_json::to_vec(&edited_media) {
+                            Ok(result) => result,
+                            Err(_) => return None
+                        }))
+                    }) {
+                        Ok(_) => {
+                            return Ok(Status::Ok)
+                        },
+                        Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+                    }
+                },
+                None => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+            }
+        } else {
+            return Err(Error::Unauthorized(String::from("Api key is invalid and does not exist")))
+        }
     }
 
-    // TODO: Grab all available on tags being used 
     /// Grabs all media related tags in use on the instance
     #[utoipa::path(
         get,
