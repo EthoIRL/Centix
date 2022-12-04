@@ -562,15 +562,6 @@ pub mod Media {
                             return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                         }
 
-                        if user_database.update_and_fetch(&user.username, |_| {
-                            Some(IVec::from(match serde_json::to_vec(&user) {
-                                Ok(result) => result,
-                                Err(_) => return None
-                            }))
-                        }).is_err() {
-                            return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
-                        }
-
                         println!("User: {:#?}", user);
 
                         if user_database.flush().is_err() {
