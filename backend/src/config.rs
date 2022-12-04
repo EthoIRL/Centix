@@ -12,7 +12,6 @@ pub struct Config {
     // pub content_compression_target: i32,
     // // In the form of mb's 1 = 1mb
     pub content_max_size: i32,
-    // TODO: ->
     pub allow_content_editing: bool,
     pub allow_custom_tags: bool,
     pub custom_tag_length: i32,

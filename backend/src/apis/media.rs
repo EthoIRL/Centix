@@ -683,6 +683,7 @@ pub mod Media {
             (status = 200, description = "Successfully edited media"),
             (status = 400, description = "Server received malformed client request", body = Error),
             (status = 401, description = "An authentication issue has occurred", body = Error),
+            (status = 403, description = "A forbidden action has been performed by the client", body = Error),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
@@ -701,6 +702,15 @@ pub mod Media {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
         };
+
+        let config = match config_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+        };
+
+        if !config.allow_content_editing {
+            return Err(Error::Forbidden(String::from("Editing is disabled on this instance")))
+        }
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
@@ -746,11 +756,6 @@ pub mod Media {
 
             match media {
                 Some(media) => {
-                    let config = match config_store.lock() {
-                        Ok(result) => result,
-                        Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
-                    };
-
                     let mut edited_media = media;
                     
                     if let Some(name) = name {

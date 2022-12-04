@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::apis::media::Media::ContentType;
 
-// TODO: Media tags
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Media {
      // Main key
