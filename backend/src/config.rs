@@ -3,19 +3,15 @@ use std::{io::BufReader, path::Path, fs::{File, self}};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
+    // TODO: Better config naming
+
     pub content_directory: Option<String>,
     pub content_id_length: i32,
     pub content_name_length: i32,
-    // TODO: -->
-    // pub content_compression: bool,
-    // // Eg.. 80 = 80% of the original size, 60% of the original size
-    // pub content_compression_target: i32,
-    // // In the form of mb's 1 = 1mb
     pub content_max_size: i32,
     pub allow_content_editing: bool,
     pub allow_custom_tags: bool,
     pub custom_tag_length: i32,
-    
     pub use_invite_keys: bool,
     pub allow_user_registration: bool,
     pub first_user_admin: bool,
@@ -26,7 +22,6 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        // content_compression: true, content_compression_target: 75
         Config { 
             content_directory: None,
             content_id_length: 8,

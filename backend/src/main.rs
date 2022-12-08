@@ -63,9 +63,9 @@ use crate::config::Config;
         Service::domains
     ),
     components(
-        schemas(Media::Media, Media::UploadParam, Media::ContentType, Media::ContentInfo),
+        schemas(Media::Media, Media::UploadParam, Media::ContentType, Media::ContentInfo, Media::ContentFound, Media::ContentId, Media::ContentTags),
         schemas(Stats::MediaStats, Stats::UserStats),
-        schemas(User::InviteInfo),
+        schemas(User::InviteInfo, User::UserInvite, User::UserKey, User::UserList),
         schemas(Service::DomainInfo),
         schemas(Error)
     ),

@@ -41,6 +41,24 @@ pub mod User {
         used: bool
     }
 
+    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
+    pub struct UserInvite {
+        #[schema(example = "Uniquely generated user invite key")]
+        invite: String
+    }
+
+    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
+    pub struct UserKey {
+        #[schema(example = "User media key")]
+        key: String
+    }
+
+    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
+    pub struct UserList {
+        #[schema(example = "List of users")]
+        users: Vec<String>
+    }
+
     /// Create's a user account
     #[utoipa::path(
         post,
@@ -224,7 +242,7 @@ pub mod User {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         username: String,
         password: String
-    ) -> Result<String, Error> {
+    ) -> Result<Json<UserKey>, Error> {
         let user_vec = match database_store.lock() {
             Ok(database) => {
                 match database.open_tree("user") {
@@ -257,7 +275,11 @@ pub mod User {
 
         return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
             Ok(_) => {
-                Ok(user.api_key)
+                let user_key = UserKey {
+                    key: user.api_key
+                };
+
+                Ok(Json(user_key))
             },
             Err(_) => Err(Error::Forbidden(String::from("Password or username is not correct")))
         };
@@ -556,7 +578,7 @@ pub mod User {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         username: String,
         password: String
-    ) -> Result<String, Error> {
+    ) -> Result<Json<UserInvite>, Error> {
         let config = match config_store.lock() {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
@@ -626,7 +648,11 @@ pub mod User {
 
                 match user_database.flush() {
                     Ok(_) => {
-                        Ok(invite.key)
+                        let user_invite = UserInvite {
+                            invite: invite.key
+                        };
+
+                        Ok(Json(user_invite))
                     }
                     Err(_) => Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 }
@@ -699,7 +725,7 @@ pub mod User {
     pub async fn list(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>
-    ) -> Result<Json<Vec<String>>, Error> {
+    ) -> Result<Json<UserList>, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
@@ -719,6 +745,10 @@ pub mod User {
             .map(|user: User| user.username)
             .collect::<Vec<String>>();
 
-        Ok(Json(usernames))
+        let user_list = UserList {
+            users: usernames
+        };
+
+        Ok(Json(user_list))
     }
 }

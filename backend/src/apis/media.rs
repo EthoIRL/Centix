@@ -61,6 +61,24 @@ pub mod Media {
         tags: Option<Vec<String>>
     }
 
+    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
+    pub struct ContentFound {
+        #[schema(example = "List of ids found")]
+        ids: Vec<String>
+    }
+
+    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
+    pub struct ContentId {
+        #[schema(example = "HilrvkpJ")]
+        id: String
+    }
+
+    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
+    pub struct ContentTags {
+        #[schema(example = "List of all in use tags")]
+        tags: Vec<String>
+    }
+
     #[derive(Serialize, Deserialize, FromFormField, ToSchema, PartialEq, Eq, Clone, Debug)]
     pub enum ContentType {
         Video,
@@ -226,7 +244,7 @@ pub mod Media {
         content_type: Option<ContentType>,
         api_key: Option<String>,
         tags: Option<Vec<String>>
-    ) -> Result<Json<Vec<String>>, Error> {
+    ) -> Result<Json<ContentFound>, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
@@ -346,7 +364,11 @@ pub mod Media {
             })
             .map(|media| media.id)
             .collect();
-        Ok(Json(medias))
+
+        let found_content = ContentFound {
+            ids: medias
+        };
+        Ok(Json(found_content))
     }
 
     /// Uploads media to a user's account
@@ -373,7 +395,7 @@ pub mod Media {
         upload: UploadParam,
         body_data: Json<String>,
         api_key: String
-    ) -> Result<String, Error> {
+    ) -> Result<Json<ContentId>, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
@@ -568,7 +590,11 @@ pub mod Media {
                             return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                         }
 
-                        Ok(media_id)
+                        let content_id = ContentId {
+                            id: media_id
+                        };
+                        
+                        Ok(Json(content_id))
                     },
                     Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
                 }
@@ -834,7 +860,7 @@ pub mod Media {
     pub async fn tags(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-    ) -> Result<Json<Vec<String>>, Error> {
+    ) -> Result<Json<ContentTags>, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
@@ -859,7 +885,11 @@ pub mod Media {
             .flatten()
             .unique()
             .collect();
+
+        let content_tags = ContentTags {
+            tags: media_tags
+        };
         
-        Ok(Json(media_tags))
+        Ok(Json(content_tags))
     }
 }
