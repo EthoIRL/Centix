@@ -59,6 +59,15 @@ pub mod User {
         users: Vec<String>
     }
 
+    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
+    pub struct UserInfo {
+        username: String,
+        creation_date: DateTime::<Utc>,
+        uploads: Vec<String>,
+        admin: bool,
+        invite_key: Option<String>
+    }
+
     /// Create's a user account
     #[utoipa::path(
         post,
@@ -750,5 +759,67 @@ pub mod User {
         };
 
         Ok(Json(user_list))
+    }
+
+    /// Grabs information from a user's account
+    /// based on media key's
+    #[utoipa::path(
+        get,
+        context_path = "/user",
+        responses(
+            (status = 200, description = "Successfully grabbed user info"),
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
+        )
+    )]
+    #[get("/info?<api_key>")]
+    pub async fn info(
+        _config_store: &State<Arc<Mutex<Config>>>,
+        database_store: &State<Arc<Mutex<sled::Db>>>,
+        api_key: String
+    ) -> Result<Json<UserInfo>, Error> {
+        let database = match database_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
+        };
+
+        let user_database = match database.open_tree("user") {
+            Ok(result) => result,
+            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+        };
+
+        let user = user_database.iter()
+            .filter_map(|item| item.ok())
+            .map(|item| {
+                let result: User = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                    Ok(result) => result,
+                    Err(_) => return None
+                };
+                Some(result)
+            }).find_map(|user| {
+                match user {
+                    Some(result) => {
+                        if result.api_key == api_key {
+                            return Some(result)
+                        }
+                        None
+                    },
+                    None => None
+                }
+            });
+
+        return match user {
+            Some(user) => {
+                let user_info = UserInfo {
+                    username: user.username,
+                    creation_date: user.creation_date,
+                    uploads: user.uploads,
+                    admin: user.admin,
+                    invite_key: user.invite_key
+                };
+
+                Ok(Json(user_info))
+            }
+            None => Err(Error::Unauthorized(String::from("Api key not valid and or does not exist!")))
+        };
     }
 }

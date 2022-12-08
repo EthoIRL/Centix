@@ -58,6 +58,7 @@ use crate::config::Config;
         User::generate_invite,
         User::invite_info,
         User::list,
+        User::info,
         Stats::media,
         Stats::user,
         Service::domains
@@ -65,7 +66,7 @@ use crate::config::Config;
     components(
         schemas(Media::Media, Media::UploadParam, Media::ContentType, Media::ContentInfo, Media::ContentFound, Media::ContentId, Media::ContentTags),
         schemas(Stats::MediaStats, Stats::UserStats),
-        schemas(User::InviteInfo, User::UserInvite, User::UserKey, User::UserList),
+        schemas(User::InviteInfo, User::UserInvite, User::UserKey, User::UserList, User::UserInfo),
         schemas(Service::DomainInfo),
         schemas(Error)
     ),
@@ -152,7 +153,8 @@ fn rocket() -> Rocket<Build> {
                 User::update_password,
                 User::generate_invite,
                 User::invite_info,
-                User::list
+                User::list,
+                User::info
             ]
         )
         .mount(

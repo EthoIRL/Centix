@@ -696,7 +696,7 @@ pub mod Media {
                     Err(Error::Unauthorized(String::from("Media does not belong to associated api key!")))
                 }
             },
-            None => Err(Error::Unauthorized(String::from("Api key is invalid and does not exist")))
+            None => Err(Error::Unauthorized(String::from("Api key not valid and or does not exist!")))
         }
     }
 
@@ -843,7 +843,7 @@ pub mod Media {
                 None => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
             }
         } else {
-            return Err(Error::Unauthorized(String::from("Api key is invalid and does not exist")))
+            return Err(Error::Unauthorized(String::from("Api key not valid and or does not exist!")))
         }
     }
 
