@@ -27,9 +27,6 @@ cargo run --release
 ```
 Swagger interface should be acessiable at ``localhost:8000/swagger/#/``
 
-## App
-Built using .NET Maui (.NET 6 LTS)
-
 ## NOTE
 This is similar to my previous project (https://github.com/StrateimTech/Open-MediaServer) which is an all-in-one solution hosting both the backend and frontend in the same application.
 
