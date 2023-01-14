@@ -100,7 +100,7 @@ pub enum Error {
 
 #[rocket::launch]
 fn rocket() -> Rocket<Build> {
-    env_logger::init();
+    // env_logger::init();
 
     let config = config::grab_config();
 
