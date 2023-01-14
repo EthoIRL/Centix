@@ -1,6 +1,6 @@
 #[allow(non_snake_case)]
 pub mod Media {
-    use std::{sync::{Arc, Mutex}, path::Path, fs::{self, File}, io::{Write, Read}};
+    use std::{sync::{Arc, Mutex}, path::Path, fs::{self, File}, io::{Write, Read, Cursor}};
 
     use crate::{Error, Config};
     use crate::database::database::{User, Media as DBMedia};
@@ -9,11 +9,12 @@ pub mod Media {
     use itertools::Itertools;
     use rocket::{
         get, 
-        http::{Status, Header},
+        http::Status,
         serde::json::Json,
         FromForm, State,
         FromFormField, post,
-        response::Responder, delete
+        response::Responder, delete,
+        Response
     };
     use serde::{Deserialize, Serialize};
     use utoipa::{IntoParams, ToSchema};
@@ -86,17 +87,18 @@ pub mod Media {
         Other
     }
 
-    #[derive(Responder)]
-    pub struct FileResponder<T> {
-        inner: T,
-        content_disposition: Header<'static>,
+    #[derive(Debug, Serialize)]
+    pub struct FileResponse {
+        data: Vec<u8>,
+        content_disposition: String
     }
-    impl<'r, 'o: 'r, T: Responder<'r, 'o>> FileResponder<T> {
-        pub fn new(inner: T, file_disposition: String) -> Self {
-            FileResponder {
-                inner,
-                content_disposition: Header::new("content-disposition", file_disposition),
-            }
+
+    impl<'r> Responder<'r, 'static> for FileResponse {
+        fn respond_to(self, _: &'r rocket::Request<'_>) -> rocket::response::Result<'static> {
+            Response::build()
+                .sized_body(self.data.len(), Cursor::new(self.data))
+                .raw_header("content-disposition", self.content_disposition)
+                .ok()
         }
     }
 
@@ -171,7 +173,7 @@ pub mod Media {
         _config: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         id: String,
-    ) -> Result<FileResponder<Vec<u8>>, Error> {
+    ) -> Result<FileResponse, Error> {
         let database = match database_store.lock() {
             Ok(result) => result,
             Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
@@ -220,7 +222,12 @@ pub mod Media {
             };
 
             let filename_extension = format!("{}.{}", media.name, media.extension);
-            Ok(FileResponder::new(data, format!(r#"attachment; filename={};"#, filename_extension)))
+            Ok(
+                FileResponse {
+                    data: data,
+                    content_disposition: format!(r#"attachment; filename={};"#, filename_extension),
+                }
+            )
         } else {
             Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
         }
