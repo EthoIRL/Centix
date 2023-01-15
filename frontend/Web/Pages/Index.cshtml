@@ -1,4 +1,7 @@
 ﻿@page
+@using frontend
+@using frontend.Api
+@using frontend.Api.Models
 @model frontend.Web.Pages.Index
 
 @{
@@ -13,7 +16,18 @@
 </head>
 <body>
 <div>
-    test
+    Test
+    @{
+        ModelMediaStats? x = await ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
+        if (x != null)
+        {
+            Console.WriteLine($"Values: {x.media_count} {x.media_storage_usage}");
+        }
+        else
+        {
+            Console.WriteLine("Failed");
+        }
+    }
 </div>
 </body>
 </html>
