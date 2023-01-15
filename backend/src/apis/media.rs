@@ -105,7 +105,7 @@ pub mod Media {
     /// Returns useful media information  
     #[utoipa::path(
         get,
-        context_path = "/media",
+        context_path = "/api/media",
         responses(
             (status = 200, description = "Successfully grabbed media information"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
@@ -160,6 +160,7 @@ pub mod Media {
     /// Returns file-disposition based file download
     #[utoipa::path(
         get,
+        context_path = "/api/media",
         responses(
             (status = 200, description = "Successfully found media"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
@@ -168,8 +169,8 @@ pub mod Media {
             ("id", example = "HilrvkpJ")
         )
     )]
-    #[get("/<id>")]
-    pub async fn grab(
+    #[get("/download/<id>")]
+    pub async fn download(
         _config: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         id: String,
@@ -237,7 +238,7 @@ pub mod Media {
     /// based on optional queries patterns
     #[utoipa::path(
         get,
-        context_path = "/media",
+        context_path = "/api/media",
         responses(
             (status = 200, description = "Successfully found all media"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
@@ -383,7 +384,7 @@ pub mod Media {
     /// Media data should be in the form of base64 string inside the body 
     #[utoipa::path(
         post,
-        context_path = "/media",
+        context_path = "/api/media",
         responses(
             (status = 200, description = "Successfully uploaded media"),
             (status = 400, description = "Server received malformed client request", body = Error),
@@ -615,7 +616,7 @@ pub mod Media {
     /// Permanently deletes media from instance
     #[utoipa::path(
         delete,
-        context_path = "/media",
+        context_path = "/api/media",
         responses(
             (status = 200, description = "Successfully deleted media"),
             (status = 401, description = "Unauthorized deletion", body = Error),
@@ -711,7 +712,7 @@ pub mod Media {
     /// such as name, privatizing, and tags
     #[utoipa::path(
         post,
-        context_path = "/media",
+        context_path = "/api/media",
         responses(
             (status = 200, description = "Successfully edited media"),
             (status = 400, description = "Server received malformed client request", body = Error),
@@ -857,7 +858,7 @@ pub mod Media {
     /// Grabs all media related tags in use on the instance
     #[utoipa::path(
         get,
-        context_path = "/media",
+        context_path = "/api/media",
         responses(
             (status = 200, description = "Successfully grabbed all in use tags"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
