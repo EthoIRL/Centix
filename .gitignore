@@ -6,6 +6,7 @@
 
 **.vscode
 **.mp4
+**.idea
 /backend/content/
 
 **/bin/
