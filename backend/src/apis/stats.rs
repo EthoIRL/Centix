@@ -31,7 +31,7 @@ pub mod Stats {
     /// such as total media count and storage usage regarding media.
     #[utoipa::path(
         get,
-        context_path = "/stats",
+        context_path = "/api/stats",
         responses(
             (status = 200, description = "Successfully grabbed media stats"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
@@ -74,7 +74,7 @@ pub mod Stats {
     /// such as total user accounts.
     #[utoipa::path(
         get,
-        context_path = "/stats",
+        context_path = "/api/stats",
         responses(
             (status = 200, description = "Successfully grabbed user stats"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)

@@ -71,7 +71,7 @@ pub mod User {
     /// Create's a user account
     #[utoipa::path(
         post,
-        context_path = "/user",
+        context_path = "/api/user",
         responses(
             (status = 200, description = "Successfully registered account"),
             (status = 401, description = "An unauthorized request has been attempted", body = Error),
@@ -238,7 +238,7 @@ pub mod User {
     /// Grabs media api-key for a user account
     #[utoipa::path(
         get,
-        context_path = "/user",
+        context_path = "/api/user",
         responses(
             (status = 200, description = "Successfully logged in account"),
             (status = 403, description = "An internal issue has occurred when attempting to register an account", body = Error),
@@ -298,7 +298,7 @@ pub mod User {
     /// along with all media on the instance
     #[utoipa::path(
         delete,
-        context_path = "/user",
+        context_path = "/api/user",
         responses(
             (status = 200, description = "Successfully deleted account"),
             (status = 403, description = "An authentication issue has occurred when attempting to delete an account", body = Error),
@@ -383,7 +383,7 @@ pub mod User {
     /// Change or update a user's associated username
     #[utoipa::path(
         put,
-        context_path = "/user",
+        context_path = "/api/user",
         responses(
             (status = 200, description = "Successfully updated account username"),
             (status = 400, description = "The Client has sent a badly formed request", body = Error),
@@ -479,7 +479,7 @@ pub mod User {
     /// Change or update a user's associated password
     #[utoipa::path(
         put,
-        context_path = "/user",
+        context_path = "/api/user",
         responses(
             (status = 200, description = "Successfully updated account's password"),
             (status = 403, description = "An authentication issue has occurred when attempting to update account username", body = Error),
@@ -573,7 +573,7 @@ pub mod User {
     /// to be used when registering for a account
     #[utoipa::path(
         post,
-        context_path = "/user",
+        context_path = "/api/user",
         responses(
             (status = 200, description = "Successfully created an invite"),
             (status = 403, description = "A issue has occurred when attempting to create an invite", body = Error),
@@ -675,7 +675,7 @@ pub mod User {
     /// such as author, creation date, used status, and invitee name/date
     #[utoipa::path(
         get,
-        context_path = "/user",
+        context_path = "/api/user",
         responses(
             (status = 200, description = "Successfully grabbed invite information"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
@@ -724,7 +724,7 @@ pub mod User {
     /// Lists all users on this instance
     #[utoipa::path(
         get,
-        context_path = "/user",
+        context_path = "/api/user",
         responses(
             (status = 200, description = "Successfully grabbed all users"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)

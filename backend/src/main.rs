@@ -44,7 +44,7 @@ use crate::config::Config;
 #[openapi(
     paths(
         Media::info,
-        Media::grab,
+        Media::download,
         Media::find,
         Media::upload,
         Media::delete,
@@ -127,9 +127,10 @@ fn rocket() -> Rocket<Build> {
             SwaggerUi::new("/swagger/<_..>").url("/api-doc/openapi.json", doc.to_owned()),
         )
         .mount(
-            "/media",
+            "/api/media",
             routes![
                 Media::info,
+                Media::download,
                 Media::find,
                 Media::upload,
                 Media::delete,
@@ -138,13 +139,7 @@ fn rocket() -> Rocket<Build> {
             ]
         )
         .mount(
-            "/",
-            routes![
-                Media::grab
-            ]
-        )
-        .mount(
-            "/user", 
+            "/api/user", 
             routes![
                 User::register,
                 User::login,
@@ -158,14 +153,14 @@ fn rocket() -> Rocket<Build> {
             ]
         )
         .mount(
-            "/stats", 
+            "/api/stats", 
             routes![
                 Stats::media,
                 Stats::user
             ]
         )
         .mount(
-            "/services", 
+            "/api/services", 
             routes![
                 Service::domains
             ]

@@ -20,7 +20,7 @@ pub mod Service {
     /// Grabs domains pointing to this Centix instance
     #[utoipa::path(
         get,
-        context_path = "/services",
+        context_path = "/api/services",
         responses(
             (status = 200, description = "Successfully grabbed all available domains pointing to Centix instance"),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error::InternalError)
