@@ -2,31 +2,55 @@
 @using frontend
 @using frontend.Api
 @using frontend.Api.Models
+@using frontend.Utils
 @model frontend.Web.Pages.Index
 
 @{
-    Layout = null;
+    Layout = "_Layout.cshtml";
+    
+    ModelMediaStats? mediaStats = await ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
+    ModelUserStats? userStats = await ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
+
+    int totalContentCount = 0;
+    string totalContentSize = "0 MB";
+    
+    if (mediaStats != null)
+    {
+        totalContentCount = mediaStats.media_count;
+        totalContentSize = StringUtils.FormatBytesWithIdentifier(mediaStats.media_storage_usage);
+    }
+
+    int totalUserCount = 0;
+
+    if (userStats != null)
+    {
+        totalUserCount = userStats.user_count;
+    }
+
+    bool apiDown = mediaStats == null && userStats == null;
+}
+
+@section AdditionalHead
+{
+    <title>Home</title>
+    <link rel="stylesheet" href="~/Web/Assets/css/Index/Index.css">
 }
 
 <!DOCTYPE html>
 
-<html>
-<head>
-    <title></title>
-</head>
+<html lang="en">
 <body>
 <div>
     Test
     @{
-        ModelMediaStats? x = await ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
-        if (x != null)
-        {
-            Console.WriteLine($"Values: {x.media_count} {x.media_storage_usage}");
-        }
-        else
-        {
-            Console.WriteLine("Failed");
-        }
+        // if (x != null)
+        // {
+        //     Console.WriteLine($"Values: {x.media_count} {x.media_storage_usage}");
+        // }
+        // else
+        // {
+        //     Console.WriteLine("Failed");
+        // }
     }
 </div>
 </body>
