@@ -1,0 +1,25 @@
+﻿@namespace frontend.Web.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="~/Web/Assets/favicon.ico">
+    <link rel="stylesheet" href="~/Web/Assets/css/Layout/layout.css">
+    <link rel="stylesheet" href="~/Web/Assets/font/Font.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    @await RenderSectionAsync("AdditionalHead", false)
+</head>
+
+<body>
+
+@RenderBody()
+
+</body>
+</html>

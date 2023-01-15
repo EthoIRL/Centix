@@ -46,16 +46,18 @@ public class FrontendServer
         // }
 
         app.UseStaticFiles();
+        
+        Console.WriteLine($"Path: {app.Environment.ContentRootPath}");
 
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(
-                Path.Combine(app.Environment.ContentRootPath, "Assets")),
+                Path.Combine(app.Environment.ContentRootPath, "Web/Assets")),
             RequestPath = "/Web/Assets"
         });
 
         app.UseRouting();
-
+    
         app.UseStatusCodePagesWithRedirects("/404");
 
         app.UseAuthorization();

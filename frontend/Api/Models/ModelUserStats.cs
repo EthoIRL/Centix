@@ -2,5 +2,5 @@
 
 public class ModelUserStats
 {
-    public string? user_count { get; set; }
+    public int user_count { get; set; }
 }
