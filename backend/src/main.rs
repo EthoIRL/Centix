@@ -61,14 +61,13 @@ use crate::config::Config;
         User::info,
         Stats::media,
         Stats::user,
-        Service::domains
+        Service::config
     ),
     components(
         schemas(Media::Media, Media::UploadParam, Media::ContentType, Media::ContentInfo, Media::ContentFound, Media::ContentId, Media::ContentTags),
         schemas(Stats::MediaStats, Stats::UserStats),
         schemas(User::InviteInfo, User::UserInvite, User::UserKey, User::UserList, User::UserInfo),
-        schemas(Service::DomainInfo),
-        schemas(Error)
+        schemas(Error, Config)
     ),
     tags(
         (name = "Media", description = "All media management related api endpoints."),
@@ -162,7 +161,7 @@ fn rocket() -> Rocket<Build> {
         .mount(
             "/api/services", 
             routes![
-                Service::domains
+                Service::config
             ]
         )
 }

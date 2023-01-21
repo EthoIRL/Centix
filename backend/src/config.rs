@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::{io::BufReader, path::Path, fs::{File, self}};
+use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, ToSchema, Clone)]
 pub struct Config {
     // TODO: Better config naming
 
+    #[serde(skip_serializing)]
     pub content_directory: Option<String>,
     pub content_id_length: i32,
     pub content_name_length: i32,
@@ -14,6 +16,7 @@ pub struct Config {
     pub custom_tag_length: i32,
     pub use_invite_keys: bool,
     pub allow_user_registration: bool,
+    #[serde(skip_serializing)]
     pub first_user_admin: bool,
     pub store_compressed: bool,
     pub domains: Vec<String>,
