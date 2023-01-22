@@ -10,7 +10,8 @@
     
     ModelMediaStats? mediaStats = await ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
     ModelUserStats? userStats = await ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
-
+    ModelConfig? config = await ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+        
     int totalContentCount = 0;
     string totalContentSize = "0 MB";
     
@@ -27,7 +28,7 @@
         totalUserCount = userStats.user_count;
     }
 
-    bool apiDown = mediaStats == null && userStats == null;
+    bool apiDown = mediaStats == null && userStats == null && config == null;
 }
 
 @section AdditionalHead
@@ -41,17 +42,35 @@
 <html lang="en">
 <body>
 <div>
-    Test
-    @{
-        // if (x != null)
-        // {
-        //     Console.WriteLine($"Values: {x.media_count} {x.media_storage_usage}");
-        // }
-        // else
-        // {
-        //     Console.WriteLine("Failed");
-        // }
-    }
+    Test<br/>
+    <br/>
+    <div>
+        API down?: @apiDown<br/>
+        media count: @totalContentCount<br/>
+        user count: @totalUserCount<br/>
+        content size: @totalContentSize<br/>
+    </div>
+    <br/>
+    <div>
+        Custom tags: @config?.allow_custom_tags<br/>
+        Allow registering: @config?.allow_user_registration<br/>
+        Requires invite keys: @config?.use_invite_keys<br/>
+        Content Editing: @config?.allow_content_editing<br/>
+        Max file size: @config?.content_max_size mbs<br/>
+        Max name length: @config?.content_name_length<br/>
+        Max upload limit: @config?.user_upload_limit mb<br/>
+        Content id length: @config?.content_id_length<br/>
+        Custom tag max length: @config?.custom_tag_length<br/>
+        Domains: [@{
+            if (config != null)
+            {
+                foreach (var domain in config.domains)
+                {
+                    <text>@domain</text>
+                }
+            }
+        }]
+    </div>
 </div>
 </body>
 </html>
