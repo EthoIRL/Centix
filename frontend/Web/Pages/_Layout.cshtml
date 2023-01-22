@@ -7,7 +7,7 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" class="expand-height">
 
 <head>
     <link rel="icon" type="image/x-icon" href="~/Web/Assets/favicon.ico">
@@ -18,7 +18,7 @@
     @await RenderSectionAsync("AdditionalHead", false)
 </head>
 
-<body class="no-style global-background">
+<body class="no-style global-background expand-height">
 
 <div class="navigation-bar">
     <div class="navigation-bar-left">
@@ -47,10 +47,17 @@
                 LOGIN
             </a>
         </div>
+        @* <div class="navigation-bar-item navigation-item-button"> *@
+        @*     <a href="/account/"> *@
+        @*         $1$ username #1# *@
+        @*     </a> *@
+        @* </div> *@
     </div>
 </div>
 
-@RenderBody()
+<div class="render-body">
+    @RenderBody()
+</div>
 
 </body>
 </html>

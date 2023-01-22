@@ -1,7 +1,18 @@
+@import url("../other.css");
+
 .no-style {
-    all: unset;
+    margin: 0;
+    padding: 0;
 }
 
 .global-background {
     background-color: var(--dark-background);
+}
+
+.expand-height {
+    height: 100%;
+}
+
+.render-body {
+    height: calc(100% - var(--navbar-height));
 }
