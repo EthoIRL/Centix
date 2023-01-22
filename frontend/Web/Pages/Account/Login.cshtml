@@ -1,0 +1,40 @@
+﻿@page "/login"
+@model frontend.Models.Account.LoginModel
+
+@{
+    Layout = "../_Layout.cshtml";
+}
+
+@section AdditionalHead
+{
+    <title>Login</title>
+    <link rel="stylesheet" href="~/Web/Assets/css/Account/Login/Login.css">
+}
+
+<!DOCTYPE html>
+
+<html>
+<body>
+<div class="login-container">
+    <form class="login-form-container">
+        <div class="login-form-text-container">
+            <div class="login-form-input">
+                <label>Username</label>
+                <input type="text" placeholder="Type your username" required/>
+            </div>
+            <div class="login-form-input">
+                <label>Password</label>
+                <input type="text" placeholder="Type your password" required/>
+            </div>
+        </div>
+        <label class="login-form-signup">
+            Don't have an account? Try 
+            <a href="/signup">
+                signing up!
+            </a>
+        </label>
+        <button>Login</button>
+    </form>
+</div>
+</body>
+</html>

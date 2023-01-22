@@ -4,4 +4,7 @@
     
     --primary-blue: rgb(0, 111, 137);
     --primary-light-blue: rgb(0, 143, 179);
+    
+    --primary-text-color: white;
+    --secondary-text-color: rgb(224, 224, 224);
 }

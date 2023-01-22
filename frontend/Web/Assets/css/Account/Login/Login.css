@@ -1,0 +1,103 @@
+@import url("../../color.css");
+
+.login-container {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+}
+
+@media screen and (max-width: 500px) {
+    .login-container {
+        align-items: normal;
+        height: auto;
+    }
+}
+
+.login-form-container {
+    max-width: 500px;
+    
+    width: 100%;
+    height: auto;
+
+    border-radius: 8px;
+    border: 2px var(--dark-foreground) solid;
+    padding: 16px;
+    
+    margin: 16px;
+}
+
+.login-form-text-container {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+}
+
+.login-form-input {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.login-form-input > label {
+    margin: 0;
+    padding: 0;
+
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    color: var(--secondary-text-color);
+}
+
+.login-form-input > input {
+    padding: 4px 0 4px 0;
+    margin-bottom: 8px;
+
+    border: none;
+    border-radius: 0;
+
+    border-bottom: 1px solid white;
+
+    text-decoration: none;
+    outline: none;
+
+    font-size: 16px;
+    font-family: 'Lato Light', sans-serif;
+    
+    color: var(--primary-text-color);
+    background-color: var(--dark-background);
+}
+
+.login-form-signup {
+    margin: 24px 0 12px 0;
+    
+    display: block;
+    width: 100%;
+
+    text-align: center;
+    font-size: 16px;
+    font-family: 'Lato Light', sans-serif;
+    
+    color: var(--primary-text-color);
+}
+
+.login-form-signup > a {
+    font-size: 16px;
+    font-family: 'Lato Light', sans-serif;
+    color: var(--primary-text-color);
+}
+
+.login-form-container > button {
+    padding: 4px;
+    width: 100%;
+
+    border: none;
+    border-radius: 12px;
+
+    font-size: 16px;
+    font-family: sans-serif;
+}
