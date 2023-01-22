@@ -1,6 +1,4 @@
-﻿using System.Net.Sockets;
-
-namespace frontend.Api;
+﻿namespace frontend.Api;
 
 public class ApiUtils
 {
