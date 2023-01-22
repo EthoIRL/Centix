@@ -1,12 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::{io::BufReader, path::Path, fs::{File, self}};
-use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize, ToSchema, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
     // TODO: Better config naming
 
-    #[serde(skip_serializing)]
     pub content_directory: Option<String>,
     pub content_id_length: i32,
     pub content_name_length: i32,
@@ -16,11 +14,13 @@ pub struct Config {
     pub custom_tag_length: i32,
     pub use_invite_keys: bool,
     pub allow_user_registration: bool,
-    #[serde(skip_serializing)]
     pub first_user_admin: bool,
     pub store_compressed: bool,
     pub domains: Vec<String>,
-    pub tags: Vec<String>
+    pub tags: Vec<String>,
+    // In the form of megabytes (100 mb)
+    // TODO: Implement
+    pub user_upload_limit: i32
 }
 
 impl Default for Config {
@@ -39,7 +39,8 @@ impl Default for Config {
             store_compressed: true,
             domains: Vec::new(),
             // TODO: Implement good list of basic tags (Must be lowercase)
-            tags: vec![String::from("funny"), String::from("meme"), String::from("nsfw"), String::from("clip")]
+            tags: vec![String::from("funny"), String::from("meme"), String::from("nsfw"), String::from("clip")],
+            user_upload_limit: 100
         }
     }
 }
