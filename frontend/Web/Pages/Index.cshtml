@@ -1,6 +1,5 @@
 ﻿@page
 @using frontend
-@using frontend.Api
 @using frontend.Api.Models
 @using frontend.Utils
 @model frontend.Web.Pages.Index
@@ -8,9 +7,9 @@
 @{
     Layout = "_Layout.cshtml";
     
-    ModelMediaStats? mediaStats = await ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
-    ModelUserStats? userStats = await ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
-    ModelConfig? config = await ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+    ModelMediaStats? mediaStats = await Program.ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
+    ModelUserStats? userStats = await Program.ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
+    ModelConfig? config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
         
     int totalContentCount = 0;
     string totalContentSize = "0 MB";

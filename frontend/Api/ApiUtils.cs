@@ -1,16 +1,28 @@
 ﻿namespace frontend.Api;
 
-public static class ApiUtils
+public class ApiUtils
 {
-    static readonly HttpClient Client = new();
+    private readonly HttpClient _client;
+
+    public ApiUtils()
+    {
+        var socketsHandler = new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = Timeout.InfiniteTimeSpan,
+            PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan
+        };
+
+        _client = new HttpClient(socketsHandler);
+    }
+
     
-    public static async Task<T?> GetModelAsync<T>(string path)
+    public async Task<T?> GetModelAsync<T>(string path)
     {
         T? model = default(T);
         
         Console.WriteLine($"Requesting model URL: \"{path}\"");
         
-        HttpResponseMessage response = await Client.GetAsync(path);
+        HttpResponseMessage response = await _client.GetAsync(path);
         if (response.IsSuccessStatusCode)
         {
             model = await response.Content.ReadAsAsync<T>();
