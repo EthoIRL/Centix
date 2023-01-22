@@ -1,4 +1,6 @@
-﻿namespace frontend.Api;
+﻿using System.Net.Sockets;
+
+namespace frontend.Api;
 
 public class ApiUtils
 {
@@ -21,11 +23,21 @@ public class ApiUtils
         T? model = default(T);
         
         Console.WriteLine($"Requesting model URL: \"{path}\"");
-        
-        HttpResponseMessage response = await _client.GetAsync(path);
-        if (response.IsSuccessStatusCode)
+
+        try
         {
-            model = await response.Content.ReadAsAsync<T>();
+            HttpResponseMessage response = await _client.GetAsync(path);
+            if (response.IsSuccessStatusCode)
+            {
+                model = await response.Content.ReadAsAsync<T>();
+            }
+        }
+        catch (Exception exception)
+        {
+            if (exception is not HttpRequestException)
+            {
+                Console.WriteLine(exception);
+            }
         }
         
         return model;
