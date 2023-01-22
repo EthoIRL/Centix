@@ -68,7 +68,7 @@ use crate::config::Config;
         schemas(Media::Media, Media::UploadParam, Media::ContentType, Media::ContentInfo, Media::ContentFound, Media::ContentId, Media::ContentTags),
         schemas(Stats::MediaStats, Stats::UserStats),
         schemas(User::InviteInfo, User::UserInvite, User::UserKey, User::UserList, User::UserInfo),
-        schemas(Error, Config)
+        schemas(Error, Service::ApiConfig)
     ),
     tags(
         (name = "Media", description = "All media management related api endpoints."),
