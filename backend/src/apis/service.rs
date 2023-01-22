@@ -21,7 +21,8 @@ pub mod Service {
         pub custom_tag_length: i32,
         pub use_invite_keys: bool,
         pub allow_user_registration: bool,
-        // In the form of megabytes (100 mb)
+        // TODO: Implement this
+        // In the form of megabytes (100 mb) or 0 for unlimited
         pub user_upload_limit: i32,
         pub domains: Vec<String>
     }
