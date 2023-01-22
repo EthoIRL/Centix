@@ -3,11 +3,12 @@ use std::{
 };
 
 use rocket::{
+    serde::{Serialize, Deserialize},
+    Responder,
     routes, Build,
-    Rocket,
-    serde::Serialize,
-    Responder
+    Rocket
 };
+
 
 use utoipa::{
     OpenApi,
@@ -45,7 +46,7 @@ use crate::config::Config;
     paths(
         Media::info,
         Media::download,
-        Media::find,
+        Media::search,
         Media::upload,
         Media::delete,
         Media::edit,
@@ -79,22 +80,9 @@ use crate::config::Config;
 )]
 struct ApiDoc;
 
-#[derive(Serialize, ToSchema, Responder, Debug)]
-pub enum Error {
-    #[response(status = 400)]
-    BadRequest(String),
-
-    #[response(status = 401)]
-    Unauthorized(String),
-
-    #[response(status = 403)]
-    Forbidden(String),
-
-    #[response(status = 405)]
-    NotAllowed(String),
-
-    #[response(status = 500)]
-    InternalError(String)
+#[derive(Serialize, Deserialize, ToSchema, Responder, Debug)]
+pub struct Error {
+    pub error: String,
 }
 
 #[rocket::launch]
@@ -130,7 +118,7 @@ fn rocket() -> Rocket<Build> {
             routes![
                 Media::info,
                 Media::download,
-                Media::find,
+                Media::search,
                 Media::upload,
                 Media::delete,
                 Media::edit,

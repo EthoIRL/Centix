@@ -5,7 +5,7 @@ pub mod Stats {
     use crate::{Config, Error};
     use rocket::{
         get,
-        State, serde::json::Json
+        State, serde::json::Json, response::status, http::Status
     };
 
     use serde::{Serialize, Deserialize};
@@ -15,15 +15,15 @@ pub mod Stats {
 
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
     pub struct MediaStats {
-        #[schema(example = "Total media uploaded to the service")]
+        /// Total uploads on the instance
         media_count: i32,
-        #[schema(example = "Total byte size of all media uploaded")]
+        /// Total byte size of all uploads
         media_storage_usage: i32
     }
 
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
     pub struct UserStats {
-        #[schema(example = "Total user accounts")]
+        /// Total user accounts
         user_count: i32
     }
 
@@ -33,7 +33,7 @@ pub mod Stats {
         get,
         context_path = "/api/stats",
         responses(
-            (status = 200, description = "Successfully grabbed media stats"),
+            (status = 200, description = "Successfully grabbed media stats", body = MediaStats),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
@@ -41,15 +41,19 @@ pub mod Stats {
     pub async fn media(
         _config: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-    ) -> Result<Json<MediaStats>, Error> {
+    ) -> Result<Json<MediaStats>, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
+                error: String::from("Failed to access backend database")
+            }))
         };
 
         let media_database = match database.open_tree("media") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
+                error: String::from("An internal error on the server's end has occurred")
+            }))
         };
 
         let media_count: Vec<i32> = media_database.iter()
@@ -76,7 +80,7 @@ pub mod Stats {
         get,
         context_path = "/api/stats",
         responses(
-            (status = 200, description = "Successfully grabbed user stats"),
+            (status = 200, description = "Successfully grabbed user stats", body = UserStats),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
@@ -84,15 +88,19 @@ pub mod Stats {
     pub async fn user(
         _config: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-    ) -> Result<Json<UserStats>, Error> {
+    ) -> Result<Json<UserStats>, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("Failed to access backend database")))
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
+                error: String::from("Failed to access backend database")
+            }))
         };
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
-            Err(_) => return Err(Error::InternalError(String::from("An internal error on the server's end has occurred")))
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
+                error: String::from("An internal error on the server's end has occurred")
+            }))
         };
 
         let users: i32 = user_database.iter()
