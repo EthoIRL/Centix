@@ -1,0 +1,7 @@
+.no-style {
+    all: unset;
+}
+
+.global-background {
+    background-color: var(--dark-background);
+}

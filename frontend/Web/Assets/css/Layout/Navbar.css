@@ -1,0 +1,8 @@
+@import url("../color.css");
+
+.navigation-bar {
+    height: 48px;
+    width: 100%;
+    
+    background-color: var(--dark-foreground);
+}
