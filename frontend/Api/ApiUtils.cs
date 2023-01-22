@@ -8,6 +8,8 @@ public static class ApiUtils
     {
         T? model = default(T);
         
+        Console.WriteLine($"Requesting model URL: \"{path}\"");
+        
         HttpResponseMessage response = await Client.GetAsync(path);
         if (response.IsSuccessStatusCode)
         {
