@@ -65,9 +65,11 @@ use crate::config::Config;
         Service::config
     ),
     components(
-        schemas(Media::Media, Media::UploadParam, Media::ContentType, Media::ContentInfo, Media::ContentFound, Media::ContentId, Media::ContentTags),
+        schemas(Media::Media, Media::ContentType, Media::ContentInfo, Media::ContentFound, Media::ContentTags,
+            Media::SearchQuery, Media::UploadMedia, Media::DeleteMedia, Media::EditMedia),
         schemas(Stats::MediaStats, Stats::UserStats),
-        schemas(User::InviteInfo, User::UserInvite, User::UserKey, User::UserList, User::UserInfo),
+        schemas(User::InviteInfo, User::UserInvite, User::UserApiKey, User::UserList, User::UserInfo, User::UserCredentials, User::UserRegistration,
+            User::UserUpdateUsername, User::UserUpdatePassword, User::InviteInfoRequest),
         schemas(Error, Service::ApiConfig)
     ),
     tags(
