@@ -47,12 +47,12 @@ pub mod Service {
     pub async fn config(
         config_store: &State<Arc<Mutex<Config>>>,
         _database_store: &State<Arc<Mutex<sled::Db>>>,
-    ) -> Result<Json<ApiConfig>, status::Custom<Error>> {
+    ) -> Result<Json<ApiConfig>, status::Custom<Json<Error>>> {
         let config = match config_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
                 error: String::from("An internal error on the server's end has occurred")
-            }))
+            })))
         };
 
         Ok(Json(

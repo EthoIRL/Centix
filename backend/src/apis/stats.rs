@@ -41,19 +41,19 @@ pub mod Stats {
     pub async fn media(
         _config: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-    ) -> Result<Json<MediaStats>, status::Custom<Error>> {
+    ) -> Result<Json<MediaStats>, status::Custom<Json<Error>>> {
         let database = match database_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
                 error: String::from("Failed to access backend database")
-            }))
+            })))
         };
 
         let media_database = match database.open_tree("media") {
             Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
                 error: String::from("An internal error on the server's end has occurred")
-            }))
+            })))
         };
 
         let media_count: Vec<i32> = media_database.iter()
@@ -88,19 +88,19 @@ pub mod Stats {
     pub async fn user(
         _config: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-    ) -> Result<Json<UserStats>, status::Custom<Error>> {
+    ) -> Result<Json<UserStats>, status::Custom<Json<Error>>> {
         let database = match database_store.lock() {
             Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
                 error: String::from("Failed to access backend database")
-            }))
+            })))
         };
 
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
                 error: String::from("An internal error on the server's end has occurred")
-            }))
+            })))
         };
 
         let users: i32 = user_database.iter()
