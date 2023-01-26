@@ -36,17 +36,6 @@ pub mod Media {
         id: String
     }
 
-    #[derive(Serialize, Deserialize, FromForm, IntoParams, ToSchema, Clone)]
-    pub struct UploadParam {
-        #[schema(example = "Funny cat video")]
-        /// Upload's file name
-        name: String,
-        /// Hide's upload from being listed in /all/ endpoint
-        private: Option<bool>,
-        /// Tags relating to the upload
-        tags: Option<Vec<String>>
-    }
-
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
     pub struct ContentInfo {
         #[schema(example = "Etho")]
@@ -59,6 +48,7 @@ pub mod Media {
         #[schema(example = "582000")]
         content_size: i32,
         /// When the media was uploaded in UTC Format
+        #[schema(value_type = String)]
         upload_date: DateTime::<Utc>,
         /// Whether the upload is unlisted from /all/ endpoint or not
         private: bool,
@@ -73,12 +63,6 @@ pub mod Media {
     }
 
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
-    pub struct ContentId {
-        #[schema(example = "HilrvkpJ")]
-        id: String
-    }
-
-    #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
     pub struct ContentTags {
         /// List of all in use tags
         tags: Vec<String>
@@ -89,6 +73,59 @@ pub mod Media {
         Video,
         Image,
         Other
+    }
+
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct SearchQuery {
+        /// Only show id's pertaining to a user
+        username: Option<String>,
+        /// Only return content of certain type such as a video
+        content_type: Option<ContentType>,
+        /// Allows search to include the user's privated videos in query filtering
+        api_key: Option<String>,
+        /// Only show id's that have specific tags
+        tags: Option<Vec<String>>
+    }
+
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct UploadMedia {
+        #[schema(example = "Funny cat video")]
+        /// Upload's file name
+        name: String,
+        /// Hide's upload from being listed in /all/ endpoint
+        private: Option<bool>,
+        /// Tags relating to the upload
+        tags: Option<Vec<String>>,
+        /// Base64 encoded string containing the file contents
+        upload_data: String,
+        /// User's api key
+        api_key: String
+    }
+
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct DeleteMedia {
+        /// Id pointing to media
+        #[schema(example = "HilrvkpJ")]
+        id: String,
+        /// User's api key
+        api_key: String
+    }
+
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct EditMedia {
+        /// Id pointing to media
+        #[schema(example = "HilrvkpJ")]
+        id: String,
+        /// User's api key
+        api_key: String,
+        /// Media's new name, leave as unset to maintain previous value
+        name: Option<String>,
+        /// Media's new private, leave as unset to maintain previous value
+        private: Option<bool>,
+        /// Media's new list of string tags, requires that edit_tags is enabled
+        tags: Option<Vec<String>>,
+        /// Whether or not to enable tag editing
+        edit_tags: Option<bool>
     }
 
     #[derive(Debug, Serialize)]
@@ -115,14 +152,14 @@ pub mod Media {
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         ),
         params(
-            ("id", example = "HilrvkpJ")
+            Media
         )
     )]
-    #[get("/info/<id>")]
+    #[get("/info?<identification..>")]
     pub async fn info(
         _config: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        id: String,
+        identification: Media
     ) -> Result<Json<ContentInfo>, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -139,7 +176,7 @@ pub mod Media {
             }))
         };
 
-        let media_vec: IVec = match media_database.get(id) {
+        let media_vec: IVec = match media_database.get(&identification.id) {
             Ok(result) => {
                 match result {
                     Some(result) => {
@@ -181,14 +218,14 @@ pub mod Media {
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         ),
         params(
-            ("id", example = "HilrvkpJ")
+            Media
         )
     )]
-    #[get("/download/<id>")]
+    #[get("/download?<identification..>")]
     pub async fn download(
         _config: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        id: String,
+        identification: Media
     ) -> Result<FileResponse, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -213,7 +250,7 @@ pub mod Media {
                 };
                 Some(result)
             })
-            .find(|media| media.id == id);
+            .find(|media| media.id == identification.id);
 
         if let Some(media) = media {
             let mut file = match File::open(media.data_path) {
@@ -266,21 +303,19 @@ pub mod Media {
     /// Searches all media id's in the form of a list
     /// based on optional queries patterns
     #[utoipa::path(
-        get,
+        post,
         context_path = "/api/media",
+        request_body = SearchQuery,
         responses(
             (status = 200, description = "Successfully found all media pertaining to the search query", body = ContentFound),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[get("/search?<username>&<content_type>&<api_key>&<tags>")]
+    #[post("/search", data = "<search>")]
     pub async fn search(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        username: Option<String>,
-        content_type: Option<ContentType>,
-        api_key: Option<String>,
-        tags: Option<Vec<String>>
+        search: Json<SearchQuery>
     ) -> Result<Json<ContentFound>, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -303,7 +338,7 @@ pub mod Media {
             }))
         };
 
-        let user: Option<User> = if api_key.is_some() {
+        let user: Option<User> = if search.api_key.is_some() {
             user_database
                 .iter()
                 .filter_map(|item| item.ok())
@@ -317,7 +352,7 @@ pub mod Media {
                 .find_map(|user| {
                     match user {
                         Some(result) => {
-                            match &api_key {
+                            match &search.api_key {
                                 Some(key) => {
                                     if &result.api_key == key {
                                         return Some(result)
@@ -345,21 +380,21 @@ pub mod Media {
                 Some(result)
             })
             .filter(|media| {
-                if username.is_none() {
+                if search.username.is_none() {
                     return true;
                 }
 
-                if let Some(username) = &username {
+                if let Some(username) = &search.username {
                     return &media.author_username == username
                 }
                 false
             })
             .filter(|media| {
-                if content_type.is_none() {
+                if search.content_type.is_none() {
                     return true;
                 }
 
-                if let Some(content) = &content_type {
+                if let Some(content) = &search.content_type {
                     if content == &media.data_type {
                         return true
                     }
@@ -374,11 +409,11 @@ pub mod Media {
                 !media.private
             })
             .filter(|media| {
-                if tags.is_none() {
+                if search.tags.is_none() {
                     return true
                 }
 
-                if let Some(tags) = &tags {
+                if let Some(tags) = &search.tags {
                     if tags.is_empty() {
                         return true;
                     }
@@ -420,25 +455,20 @@ pub mod Media {
     #[utoipa::path(
         post,
         context_path = "/api/media",
+        request_body = Upload,
         responses(
-            (status = 200, description = "Successfully uploaded media", body = ContentId),
+            (status = 200, description = "Successfully uploaded media", body = Media),
             (status = 400, description = "Server received malformed client request", body = Error),
             (status = 401, description = "An authentication issue has occurred", body = Error),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
-        ),
-        params(
-            UploadParam
-        ),
-        request_body = Json<String>
+        )
     )]
-    #[post("/upload?<api_key>&<upload..>", data = "<body_data>")]
+    #[post("/upload", data = "<upload>")]
     pub async fn upload(
         config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        upload: UploadParam,
-        body_data: Json<String>,
-        api_key: String
-    ) -> Result<Json<ContentId>, status::Custom<Error>> {
+        upload: Json<UploadMedia>
+    ) -> Result<Json<Media>, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
             Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
@@ -464,7 +494,7 @@ pub mod Media {
             }).find_map(|user| {
                 match user {
                     Some(result) => {
-                        if result.api_key == api_key {
+                        if result.api_key == upload.api_key {
                             return Some(result)
                         }
                         None
@@ -488,7 +518,7 @@ pub mod Media {
                     }))
                 }
 
-                let upload_data = match decode(body_data.0) {
+                let upload_data = match decode(&upload.upload_data) {
                     Ok(result) => {
                         result
                     },
@@ -579,7 +609,7 @@ pub mod Media {
 
                 let mut safe_tags: Option<Vec<String>> = None;
 
-                if let Some(tags) = upload.tags {
+                if let Some(tags) = &upload.tags {
                     let sorted_tags: Vec<String> = tags
                     .into_iter()
                     .filter(|tag| {
@@ -605,7 +635,7 @@ pub mod Media {
 
                 let media = DBMedia {
                     id: Alphanumeric.sample_string(&mut OsRng, config.content_id_length as usize),
-                    name: upload.name,
+                    name: upload.name.clone(),
                     extension: data_type.extension().to_string(),
                     data_type: content_type,
                     data_path: content_directory,
@@ -663,7 +693,7 @@ pub mod Media {
                             }))
                         }
 
-                        let content_id = ContentId {
+                        let content_id = Media {
                             id: media_id
                         };
                         
@@ -686,18 +716,18 @@ pub mod Media {
     #[utoipa::path(
         delete,
         context_path = "/api/media",
+        request_body = Delete,
         responses(
             (status = 200, description = "Successfully deleted media"),
             (status = 401, description = "Unauthorized deletion", body = Error),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error),
         )
     )]
-    #[delete("/delete?<api_key>&<id>")]
+    #[delete("/delete", data = "<body>")]
     pub async fn delete(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        id: String,
-        api_key: String
+        body: Json<DeleteMedia>
     ) -> Result<Status, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -724,7 +754,7 @@ pub mod Media {
             }).find_map(|user| {
                 match user {
                     Some(result) => {
-                        if result.api_key == api_key {
+                        if result.api_key == body.api_key {
                             return Some(result)
                         }
                         None
@@ -742,7 +772,7 @@ pub mod Media {
                     }))
                 };
 
-                let media_vec = match media_database.get(&id) {
+                let media_vec = match media_database.get(&body.id) {
                     Ok(result) => {
                         match result {
                             Some(result) => result,
@@ -764,9 +794,9 @@ pub mod Media {
                 };
 
                 if media.author_username == user.username {
-                    match media_database.remove(&id) {
+                    match media_database.remove(&body.id) {
                         Ok(_) => {
-                            user.uploads.retain(|upload| upload == &id);
+                            user.uploads.retain(|upload| upload == &body.id);
                             match user_database.update_and_fetch(&user.username, |_| {
                                 Some(IVec::from(match serde_json::to_vec(&user) {
                                     Ok(result) => result,
@@ -810,16 +840,11 @@ pub mod Media {
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[post("/edit?<api_key>&<id>&<name>&<private>&<tags>&<edit_tags>")]
+    #[post("/edit", data = "<body>")]
     pub async fn edit(
         config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        id: String,
-        api_key: String,
-        name: Option<String>,
-        private: Option<bool>,
-        tags: Option<Vec<String>>,
-        edit_tags: Option<bool>,
+        body: Json<EditMedia>
     ) -> Result<Status, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -859,7 +884,7 @@ pub mod Media {
             }).find_map(|user| {
                 match user {
                     Some(result) => {
-                        if result.api_key == api_key {
+                        if result.api_key == body.api_key {
                             return Some(result)
                         }
                         None
@@ -885,13 +910,13 @@ pub mod Media {
                     };
                     Some(result)
                 })
-                .find(|media| media.id == id);
+                .find(|media| media.id == body.id);
 
             match media {
                 Some(media) => {
                     let mut edited_media = media;
                     
-                    if let Some(name) = name {
+                    if let Some(name) = body.name.clone() {
                         if name.len() as i32 > config.content_name_length {
                             return Err(status::Custom(Status::BadRequest, Error {
                                 error: format!("Name length too long. Maximum of {} characters", config.content_name_length)
@@ -901,15 +926,15 @@ pub mod Media {
                         edited_media.name = name;
                     }
 
-                    if let Some(private) = private {
+                    if let Some(private) = body.private {
                         edited_media.private = private;
                     }
 
-                    if let Some(edit_tags) = edit_tags {
+                    if let Some(edit_tags) = body.edit_tags {
                         if edit_tags == true {
                             let mut safe_tags: Option<Vec<String>> = None;
 
-                            if let Some(tags) = tags {
+                            if let Some(tags) = body.tags.clone() {
                                 let sorted_tags: Vec<String> = tags
                                 .into_iter()
                                 .filter(|tag| {

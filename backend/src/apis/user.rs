@@ -32,10 +32,12 @@ pub mod User {
         /// The invited user's username
         invitee_username: Option<String>,
         /// When the invite was used
+        #[schema(value_type = String)]
         invitee_date: Option<DateTime::<Utc>>,
         /// Invite creator's username
         creator_username: String,
         /// When invite was created
+        #[schema(value_type = String)]
         creation_date: DateTime::<Utc>,
         /// Whether or not the invitation has been used
         used: bool
@@ -48,8 +50,8 @@ pub mod User {
     }
 
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
-    pub struct UserKey {
-        /// User media key
+    pub struct UserApiKey {
+        /// User media api key
         key: String
     }
 
@@ -64,6 +66,7 @@ pub mod User {
         /// User's account name
         username: String,
         /// User's account creation date
+        #[schema(value_type = String)]
         creation_date: DateTime::<Utc>,
         /// Array of upload ids uploaded by the user
         uploads: Vec<String>,
@@ -73,10 +76,51 @@ pub mod User {
         invite_key: Option<String>
     }
 
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct UserCredentials {
+        /// User's account name
+        username: String,
+        /// User's account password
+        password: String
+    }
+
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct UserRegistration {
+        /// User's credentials
+        user_credentials: UserCredentials,
+        /// User's optional invite
+        invite: Option<String>
+    }
+
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct UserUpdateUsername {
+        /// User's credentials
+        user_credentials: UserCredentials,
+        /// User's new updated name
+        newname: String
+    }
+
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct UserUpdatePassword {
+        /// User's old credentials
+        user_credentials: UserCredentials,
+        /// User's new updated password
+        new_password: String,
+        /// Whether or not to generate a new api key
+        new_api_key: Option<bool>
+    }
+
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct InviteInfoRequest {
+        /// Invite key
+        invite_key: String
+    }
+
     /// Create's a user account
     #[utoipa::path(
         post,
         context_path = "/api/user",
+        request_body = UserRegistration,
         responses(
             (status = 200, description = "Successfully registered account"),
             (status = 401, description = "An unauthorized request has been attempted", body = Error),
@@ -85,13 +129,11 @@ pub mod User {
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[post("/register?<username>&<password>&<invite>")]
+    #[post("/register", data = "<registration>")]
     pub async fn register(
         config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        username: String,
-        password: String,
-        invite: Option<String>
+        registration: Json<UserRegistration>
     ) -> Result<Status, status::Custom<Error>> {
         let config = match config_store.lock() {
             Ok(result) => result,
@@ -140,7 +182,7 @@ pub mod User {
         let mut option_invite: Option<Invite> = None;
 
         if config.use_invite_keys && !users.is_empty() {
-            let optional_invite = match invite.clone() {
+            let optional_invite = match registration.invite.clone() {
                 Some(key) => {
                     match invite_database.contains_key(&key) {
                         Ok(has_key) => {
@@ -194,14 +236,14 @@ pub mod User {
             }
         }
         
-        if users.iter().any(|user| user.username == username) {
+        if users.iter().any(|user| user.username == registration.user_credentials.username) {
             return Err(status::Custom(Status::Forbidden, Error {
                 error: String::from("Username is already in use!")
             }))
         }
         
         let salt = SaltString::generate(&mut OsRng);
-        let password_hash = match Pbkdf2.hash_password(password.as_bytes(), &salt) {
+        let password_hash = match Pbkdf2.hash_password(registration.user_credentials.password.as_bytes(), &salt) {
             Ok(result) => result,
             Err(_) => return Err(status::Custom(Status::InternalServerError, Error {
                 error: String::from("An internal error on the server's end has occurred")
@@ -209,7 +251,7 @@ pub mod User {
         }.to_string();
         
         let user = User {
-            username: username.clone(),
+            username: registration.user_credentials.username.clone(),
             creation_date: chrono::offset::Utc::now(),
             password: password_hash,
             uploads: Vec::new(),
@@ -217,7 +259,7 @@ pub mod User {
             admin: users.is_empty() && config.first_user_admin,
             invite_key: {
                 if config.use_invite_keys && !users.is_empty() {
-                    invite
+                    registration.invite.clone()
                 } else {
                     None
                 }
@@ -244,7 +286,7 @@ pub mod User {
             Ok(result) => {
                 if let Some(mut invite) = option_invite {
                     invite = Invite {
-                        invitee_username: Some(username),
+                        invitee_username: Some(registration.user_credentials.username.clone()),
                         invitee_date: Some(chrono::offset::Utc::now()),
                         used: true,
                         ..invite
@@ -280,26 +322,26 @@ pub mod User {
 
     /// Grabs media api-key for a user account
     #[utoipa::path(
-        get,
+        post,
         context_path = "/api/user",
+        request_body = UserCredentials,
         responses(
-            (status = 200, description = "Successfully logged in account", body = UserKey),
+            (status = 200, description = "Successfully logged in account", body = UserApiKey),
             (status = 403, description = "An internal issue has occurred when attempting to register an account", body = Error),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[get("/login?<username>&<password>")]
+    #[post("/login", data = "<credentials>")]
     pub async fn login(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        username: String,
-        password: String
-    ) -> Result<Json<UserKey>, status::Custom<Error>> {
+        credentials: Json<UserCredentials>
+    ) -> Result<Json<UserApiKey>, status::Custom<Error>> {
         let user_vec = match database_store.lock() {
             Ok(database) => {
                 match database.open_tree("user") {
                     Ok(user_tree) => {
-                        match user_tree.get(&username) {
+                        match user_tree.get(&credentials.username) {
                             Ok(vec) => {
                                 match vec {
                                     Some(result) => result,
@@ -338,9 +380,9 @@ pub mod User {
             }))
         };
 
-        return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
+        return match Pbkdf2.verify_password(credentials.password.as_bytes(), &password_hash) {
             Ok(_) => {
-                let user_key = UserKey {
+                let user_key = UserApiKey {
                     key: user.api_key
                 };
 
@@ -357,18 +399,18 @@ pub mod User {
     #[utoipa::path(
         delete,
         context_path = "/api/user",
+        request_body = UserCredentials,
         responses(
             (status = 200, description = "Successfully deleted account"),
             (status = 403, description = "An authentication issue has occurred when attempting to delete an account", body = Error),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[delete("/delete?<username>&<password>")]
+    #[delete("/delete", data = "<credentials>")]
     pub async fn delete(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        username: String,
-        password: String
+        credentials: Json<UserCredentials>
     ) -> Result<Status, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -384,7 +426,7 @@ pub mod User {
             }))
         };
 
-        let user_vec = match user_database.get(&username) {
+        let user_vec = match user_database.get(&credentials.username) {
             Ok(result) => {
                 match result {
                     Some(result) => result,
@@ -412,7 +454,7 @@ pub mod User {
             }))
         };
 
-        return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
+        return match Pbkdf2.verify_password(credentials.password.as_bytes(), &password_hash) {
             Ok(_) => {
                 let media_database = match database.open_tree("media") {
                     Ok(result) => result,
@@ -431,7 +473,7 @@ pub mod User {
                         };
                         Some(result)
                     })
-                    .filter(|media| media.author_username == username)
+                    .filter(|media| media.author_username == credentials.username)
                     .map(|media| media.id)
                     .collect::<Vec<_>>();
                 
@@ -441,7 +483,7 @@ pub mod User {
                     }
                 }
 
-                match user_database.remove(username) {
+                match user_database.remove(credentials.username.clone()) {
                     Ok(_) => {
                         Ok(Status::Ok)
                     },
@@ -460,6 +502,7 @@ pub mod User {
     #[utoipa::path(
         put,
         context_path = "/api/user",
+        request_body = UserUpdateUsername,
         responses(
             (status = 200, description = "Successfully updated account username"),
             (status = 400, description = "The Client has sent a badly formed request", body = Error),
@@ -467,15 +510,13 @@ pub mod User {
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[put("/update/username?<username>&<password>&<newname>")]
+    #[put("/update/username", data = "<body>")]
     pub async fn update_username(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        username: String,
-        password: String,
-        newname: String
+        body: Json<UserUpdateUsername>
     ) -> Result<Status, status::Custom<Error>> {
-        if username == newname {
+        if body.user_credentials.username == body.newname {
             return Err(status::Custom(Status::BadRequest, Error {
                 error: String::from("Invalid request, cannot change name to original name")
             }))
@@ -495,7 +536,7 @@ pub mod User {
             }))
         };
 
-        let user_vec = match user_database.get(username) {
+        let user_vec = match user_database.get(&body.user_credentials.username) {
             Ok(result) => {
                 match result {
                     Some(result) => {
@@ -525,7 +566,7 @@ pub mod User {
             }))
         };
 
-        return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
+        return match Pbkdf2.verify_password(body.user_credentials.password.as_bytes(), &password_hash) {
             Ok(_) => {
                 match user_database.remove(&user.username) {
                     Ok(_) => {
@@ -537,13 +578,13 @@ pub mod User {
                             })
                             .collect::<Vec<_>>();
 
-                        if users.iter().any(|user| user.username == newname) {
+                        if users.iter().any(|user| user.username == body.newname) {
                             return Err(status::Custom(Status::Forbidden, Error {
                                 error: String::from("Username is already in use!")
                             }))
                         }
 
-                        user.username = newname.clone();
+                        user.username = body.newname.clone();
                         
                         let user_insert_vec = match serde_json::to_vec(&user) {
                             Ok(result) => result,
@@ -552,7 +593,7 @@ pub mod User {
                             }))
                         };
 
-                        match user_database.insert(newname, user_insert_vec) {
+                        match user_database.insert(body.newname.clone(), user_insert_vec) {
                             Ok(_) => {
                                 if user_database.flush().is_err() {
                                     return Err(status::Custom(Status::InternalServerError, Error {
@@ -582,20 +623,18 @@ pub mod User {
     #[utoipa::path(
         put,
         context_path = "/api/user",
+        request_body = UserUpdatePassword,
         responses(
             (status = 200, description = "Successfully updated account's password"),
             (status = 403, description = "An authentication issue has occurred when attempting to update account username", body = Error),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[put("/update/password?<username>&<password>&<new_password>&<new_api_key>")]
+    #[put("/update/password", data = "<body>")]
     pub async fn update_password(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        username: String,
-        password: String,
-        new_password: String,
-        new_api_key: Option<bool>
+        body: Json<UserUpdatePassword>
     ) -> Result<Status, status::Custom<Error>> {
         let user_database = match database_store.lock() {
             Ok(database) => {
@@ -611,7 +650,7 @@ pub mod User {
             }))
         };
 
-        let user_vec = match user_database.get(&username) {
+        let user_vec = match user_database.get(&body.user_credentials.username) {
             Ok(result) => {
                 match result {
                     Some(result) => result,
@@ -639,7 +678,7 @@ pub mod User {
             }))
         };
 
-        return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
+        return match Pbkdf2.verify_password(body.user_credentials.password.as_bytes(), &password_hash) {
             Ok(_) => {
                 match user_database.fetch_and_update(user.username, |option_vec| {
                     let user_vec = match option_vec {
@@ -654,12 +693,12 @@ pub mod User {
                     
                     let salt = SaltString::generate(&mut OsRng);
 
-                    user.password = match Pbkdf2.hash_password(new_password.as_bytes(), &salt) {
+                    user.password = match Pbkdf2.hash_password(body.new_password.as_bytes(), &salt) {
                         Ok(result) => result.to_string(),
                         Err(_) => return None
                     };
 
-                    if let Some(new_key) = new_api_key {
+                    if let Some(new_key) = body.new_api_key {
                         if new_key {
                             user.api_key = Alphanumeric.sample_string(&mut OsRng, 48);
                         }
@@ -694,6 +733,7 @@ pub mod User {
     #[utoipa::path(
         post,
         context_path = "/api/user",
+        request_body = UserCredentials,
         responses(
             (status = 200, description = "Successfully created an invite", body = UserInvite),
             (status = 403, description = "A issue has occurred when attempting to create an invite", body = Error),
@@ -701,12 +741,11 @@ pub mod User {
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[post("/generate/invite?<username>&<password>")]
+    #[post("/generate/invite", data = "<credentials>")]
     pub async fn generate_invite(
         config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        username: String,
-        password: String
+        credentials: Json<UserCredentials>
     ) -> Result<Json<UserInvite>, status::Custom<Error>> {
         let config = match config_store.lock() {
             Ok(result) => result,
@@ -742,7 +781,7 @@ pub mod User {
             }))
         };
 
-        let user_vec = match user_database.get(&username) {
+        let user_vec = match user_database.get(&credentials.username) {
             Ok(result) => {
                 match result {
                     Some(result) => result,
@@ -770,14 +809,14 @@ pub mod User {
             }))
         };
 
-        return match Pbkdf2.verify_password(password.as_bytes(), &password_hash) {
+        return match Pbkdf2.verify_password(credentials.password.as_bytes(), &password_hash) {
             Ok(_) => {
                 let invite = Invite {
                     key: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
                     invitee_username: None,
                     invitee_date: None,
                     creation_date: chrono::offset::Utc::now(),
-                    creator_username: username,
+                    creator_username: credentials.username.clone(),
                     used: false
                 };
 
@@ -820,18 +859,19 @@ pub mod User {
     /// Grabs information about an invite
     /// such as author, creation date, used status, and invitee name/date
     #[utoipa::path(
-        get,
+        post,
         context_path = "/api/user",
+        request_body = InviteInfoRequest,
         responses(
             (status = 200, description = "Successfully grabbed invite information", body = InviteInfo),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[get("/info/invite?<invite_key>")]
+    #[post("/info/invite", data = "<body>")]
     pub async fn invite_info(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        invite_key: String
+        body: Json<InviteInfoRequest>
     ) -> Result<Json<InviteInfo>, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -847,7 +887,7 @@ pub mod User {
             }))
         };
 
-        let invite_vec = match invite_database.get(&invite_key) {
+        let invite_vec = match invite_database.get(&body.invite_key) {
             Ok(result) => {
                 match result {
                     Some(result) => result,
@@ -924,18 +964,19 @@ pub mod User {
     /// Grabs information from a user's account
     /// based on media key's
     #[utoipa::path(
-        get,
-        context_path = "/user",
+        post,
+        context_path = "/api/user",
+        request_body = InfoRequest,
         responses(
             (status = 200, description = "Successfully grabbed user info", body = UserInfo),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
         )
     )]
-    #[get("/info?<api_key>")]
+    #[post("/info", data = "<body>")]
     pub async fn info(
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
-        api_key: String
+        body: Json<UserApiKey>
     ) -> Result<Json<UserInfo>, status::Custom<Error>> {
         let database = match database_store.lock() {
             Ok(result) => result,
@@ -962,7 +1003,7 @@ pub mod User {
             }).find_map(|user| {
                 match user {
                     Some(result) => {
-                        if result.api_key == api_key {
+                        if result.api_key == body.key {
                             return Some(result)
                         }
                         None
@@ -984,7 +1025,7 @@ pub mod User {
                 Ok(Json(user_info))
             }
             None => Err(status::Custom(Status::Unauthorized, Error {
-                error: String::from("Api key not valid and or does not exist!")
+                error: String::from("Api key is not valid and or does not exist!")
             }))
         };
     }
