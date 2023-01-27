@@ -87,4 +87,30 @@ public class ApiUtils
         
         return returnModel;
     }
+    
+    /// <summary>
+    /// Sends information to a given URL and attempts an http status
+    /// </summary>
+    /// <param name="path">Path leading to backend api URL method</param>
+    /// <param name="model">Any API Model</param>
+    /// <typeparam name="T">Post model (e.g. ModelLogin) </typeparam>
+    /// <returns>HttpResponseMessage returning if it succeeded or failed</returns>
+    public async Task<HttpResponseMessage?> PostAndReceiveResponse<T>(string path, T model)
+    {
+        Console.WriteLine($"Requesting model URL: \"{path}\"");
+        
+        try
+        {
+            return await _client.PostAsJsonAsync(path, model);
+        } 
+        catch (Exception exception)
+        {
+            if (exception is not HttpRequestException)
+            {
+                Console.WriteLine(exception);
+            }
+        }
+        
+        return null;
+    }
 }
