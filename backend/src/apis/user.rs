@@ -142,10 +142,26 @@ pub mod User {
             })))
         };
         
-        if !config.allow_user_registration {
+        if !config.registration_allow {
             return Err(status::Custom(Status::MethodNotAllowed, Json(Error {
                 error: String::from("User registration is disabled on this server!")
             })))
+        }
+
+        if config.user_username_limit > 0 {
+            if registration.user_credentials.username.len() as i32 > config.user_username_limit {
+                return Err(status::Custom(Status::BadRequest, Json(Error {
+                    error: format!("Username is too long! Maximum name length of {} characters", config.user_username_limit)
+                })))
+            }
+        }
+
+        if config.user_password_limit > 0 {
+            if registration.user_credentials.password.len() as i32 > config.user_password_limit {
+                return Err(status::Custom(Status::BadRequest, Json(Error {
+                    error: format!("Password too long! Maximum name length of {} characters", config.user_password_limit)
+                })))
+            }
         }
 
         let database = match database_store.lock() {
@@ -181,7 +197,7 @@ pub mod User {
 
         let mut option_invite: Option<Invite> = None;
 
-        if config.use_invite_keys && !users.is_empty() {
+        if config.registration_use_invite_keys && !users.is_empty() {
             let optional_invite = match registration.invite.clone() {
                 Some(key) => {
                     match invite_database.contains_key(&key) {
@@ -256,9 +272,9 @@ pub mod User {
             password: password_hash,
             uploads: Vec::new(),
             api_key: Alphanumeric.sample_string(&mut OsRng, 48),
-            admin: users.is_empty() && config.first_user_admin,
+            admin: users.is_empty() && config.user_first_admin,
             invite_key: {
-                if config.use_invite_keys && !users.is_empty() {
+                if config.registration_use_invite_keys && !users.is_empty() {
                     registration.invite.clone()
                 } else {
                     None
@@ -512,7 +528,7 @@ pub mod User {
     )]
     #[put("/update/username", data = "<body>")]
     pub async fn update_username(
-        _config_store: &State<Arc<Mutex<Config>>>,
+        config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         body: Json<UserUpdateUsername>
     ) -> Result<Status, status::Custom<Json<Error>>> {
@@ -520,6 +536,21 @@ pub mod User {
             return Err(status::Custom(Status::BadRequest, Json(Error {
                 error: String::from("Invalid request, cannot change name to original name")
             })))
+        }
+
+        let config = match config_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
+                error: String::from("An internal error on the server's end has occurred")
+            })))
+        };
+
+        if config.user_username_limit > 0 {
+            if body.user_credentials.username.len() as i32 > config.user_username_limit {
+                return Err(status::Custom(Status::BadRequest, Json(Error {
+                    error: format!("Username is too long! Maximum name length of {} characters", config.user_username_limit)
+                })))
+            }
         }
 
         let user_database = match database_store.lock() {
@@ -632,10 +663,25 @@ pub mod User {
     )]
     #[put("/update/password", data = "<body>")]
     pub async fn update_password(
-        _config_store: &State<Arc<Mutex<Config>>>,
+        config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
         body: Json<UserUpdatePassword>
     ) -> Result<Status, status::Custom<Json<Error>>> {
+        let config = match config_store.lock() {
+            Ok(result) => result,
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
+                error: String::from("An internal error on the server's end has occurred")
+            })))
+        };
+
+        if config.user_password_limit > 0 {
+            if body.user_credentials.password.len() as i32 > config.user_password_limit {
+                return Err(status::Custom(Status::BadRequest, Json(Error {
+                    error: format!("Password too long! Maximum name length of {} characters", config.user_password_limit)
+                })))
+            }
+        }
+
         let user_database = match database_store.lock() {
             Ok(database) => {
                 match database.open_tree("user") {
@@ -754,7 +800,7 @@ pub mod User {
             })))
         };
         
-        if !config.use_invite_keys {
+        if !config.registration_use_invite_keys {
             return Err(status::Custom(Status::MethodNotAllowed, Json(Error {
                 error: String::from("Invitations are disabled on this server!")
             })))

@@ -167,7 +167,7 @@ impl Modify for ApiDoc {
         let mut domain_servers: Vec<Server> = Vec::new();
 
         if let Some(cfg) = config {
-            for domain in cfg.domains {
+            for domain in cfg.backend_domains {
                 let mut server = Server::new("/");
                 server.description = Some(domain);
 

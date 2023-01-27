@@ -512,10 +512,20 @@ pub mod Media {
                     })))
                 };
 
-                if upload.name.len() as i32 > config.content_name_length {
-                    return Err(status::Custom(Status::BadRequest, Json(Error {
-                        error: format!("Name length too long. Maximum of {} characters", config.content_name_length)
-                    })))
+                if config.media_max_name_length > 0 {
+                    if upload.name.len() as i32 > config.media_max_name_length {
+                        return Err(status::Custom(Status::BadRequest, Json(Error {
+                            error: format!("Name length too long. Maximum of {} characters", config.media_max_name_length)
+                        })))
+                    }
+                }
+
+                if config.user_upload_limit > 0 {
+                    if user.uploads.len() as i32 >= config.user_upload_limit {
+                        return Err(status::Custom(Status::BadRequest, Json(Error {
+                            error: format!("Maximum file uploads reached. Maximum of {} uploads per account", config.user_upload_limit)
+                        })))
+                    }
                 }
 
                 let upload_data = match decode(&upload.upload_data) {
@@ -527,12 +537,44 @@ pub mod Media {
                     })))
                 };
 
-                if config.content_max_size > 0 {
+                if config.user_upload_size_limit > 0 {
                     let mb_size = upload_data.len() as i32 / 1000000;
-                    if mb_size > config.content_max_size {
+                    if mb_size > config.user_upload_size_limit {
                         return Err(status::Custom(Status::BadRequest, Json(Error {
-                            error: format!("File size too big! Maximum of {} megabytes", config.content_max_size)
+                            error: format!("File size too big! Maximum of {} megabytes", config.user_upload_size_limit)
                         })))
+                    }
+                }
+
+                let media_database = match database.open_tree("media") {
+                    Ok(result) => result,
+                    Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
+                        error: String::from("An internal error on the server's end has occurred")
+                    })))
+                };
+
+                if config.user_total_upload_size_limit > 0 {
+                    let mb_size = upload_data.len() as i32 / 1000000;
+
+                    let media_total_size: Option<i32> = media_database.iter()
+                        .filter_map(|item| item.ok())
+                        .filter_map(|item| {
+                            let result: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                                Ok(result) => result,
+                                Err(_) => return None
+                            };
+                            Some(result)
+                        })
+                        .map(|media| media.data_size)
+                        .sum1();
+                    if let Some(media_total_size) = media_total_size {
+                        let mb_total_size = media_total_size / 1000000;
+                        let potential_overflow = mb_total_size + mb_size;
+                        if potential_overflow > config.user_total_upload_size_limit {
+                            return Err(status::Custom(Status::BadRequest, Json(Error {
+                                error: format!("User has reached maximum amount of file storage. Maximum file uploads {} megabytes", config.user_total_upload_size_limit)
+                            })))
+                        }
                     }
                 }
 
@@ -545,7 +587,7 @@ pub mod Media {
                     })))
                 };
 
-                let data: (Vec<u8>, bool) = if config.store_compressed {
+                let data: (Vec<u8>, bool) = if config.backend_store_compressed {
                     let zlib_encoder = ZlibEncoder::new(upload_data.clone(), Compression::best());
                     match zlib_encoder.finish() {
                         Ok(result) => { 
@@ -561,7 +603,7 @@ pub mod Media {
                     (upload_data, false)
                 };
 
-                let content_path = match &config.content_directory {
+                let content_path = match &config.backend_media_directory {
                     Some(result) => {
                         Path::new(result)
                     },
@@ -613,10 +655,10 @@ pub mod Media {
                     let sorted_tags: Vec<String> = tags
                     .into_iter()
                     .filter(|tag| {
-                        let contains = config.tags.contains(&tag.to_lowercase());
+                        let contains = config.tags_default.contains(&tag.to_lowercase());
                         if !contains {
-                            if config.allow_custom_tags {
-                                if tag.chars().count() as i32 > config.custom_tag_length {
+                            if config.tags_allow_custom {
+                                if tag.chars().count() as i32 > config.tags_max_name_length {
                                     return false
                                 }
                                 return true
@@ -634,7 +676,7 @@ pub mod Media {
                 }
 
                 let media = DBMedia {
-                    id: Alphanumeric.sample_string(&mut OsRng, config.content_id_length as usize),
+                    id: Alphanumeric.sample_string(&mut OsRng, config.media_dynamic_id_length as usize),
                     name: upload.name.clone(),
                     extension: data_type.extension().to_string(),
                     data_type: content_type,
@@ -648,13 +690,6 @@ pub mod Media {
                 };
 
                 println!("Media: {:#?}", media);
-
-                let media_database = match database.open_tree("media") {
-                    Ok(result) => result,
-                    Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                        error: String::from("An internal error on the server's end has occurred")
-                    })))
-                };
 
                 let media_vec = match serde_json::to_vec(&media) {
                     Ok(result) => result,
@@ -861,7 +896,7 @@ pub mod Media {
             })))
         };
 
-        if !config.allow_content_editing {
+        if !config.media_allow_editing {
             return Err(status::Custom(Status::Forbidden, Json(Error {
                 error: String::from("Editing is disabled on this instance")
             })))
@@ -918,9 +953,9 @@ pub mod Media {
                     let mut edited_media = media;
                     
                     if let Some(name) = body.name.clone() {
-                        if name.len() as i32 > config.content_name_length {
+                        if name.len() as i32 > config.media_max_name_length {
                             return Err(status::Custom(Status::BadRequest, Json(Error {
-                                error: format!("Name length too long. Maximum of {} characters", config.content_name_length)
+                                error: format!("Name length too long. Maximum of {} characters", config.media_max_name_length)
                             })))
                         }
                         
@@ -939,10 +974,10 @@ pub mod Media {
                                 let sorted_tags: Vec<String> = tags
                                 .into_iter()
                                 .filter(|tag| {
-                                    let contains = config.tags.contains(&tag.to_lowercase());
+                                    let contains = config.tags_default.contains(&tag.to_lowercase());
                                     if !contains {
-                                        if config.allow_custom_tags {
-                                            if tag.chars().count() as i32 > config.custom_tag_length {
+                                        if config.tags_allow_custom {
+                                            if tag.chars().count() as i32 > config.tags_max_name_length {
                                                 return false
                                             }
                                             return true
