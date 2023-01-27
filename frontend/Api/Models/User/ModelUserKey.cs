@@ -1,4 +1,4 @@
-﻿namespace frontend.Api.Models;
+﻿namespace frontend.Api.Models.User;
 
 public class ModelUserKey
 {

@@ -1,7 +1,14 @@
 ﻿@page "/login"
+@using frontend
+@using frontend.Utils
 @model frontend.Models.Account.LoginModel
 
 @{
+    if (await CookieUtils.IsCookieValid(Program.ApiUtils, Request, Response))
+    {
+        Response.Redirect("/account");
+        return;
+    }
     Layout = "../_Layout.cshtml";
 }
 
@@ -16,25 +23,31 @@
 <html>
 <body>
 <div class="login-container">
-    <form class="login-form-container">
+    @using (Html.BeginForm("Login", "Login", FormMethod.Post, new { @class = "login-form-container"}))
+    {
+        @Html.AntiForgeryToken()
+        
         <div class="login-form-text-container">
             <div class="login-form-input">
                 <label>Username</label>
-                <input type="text" placeholder="Type your username" required/>
+                @Html.TextBoxFor(model => model.username, null, new { placeholder = "Type your username", autocomplete = "off", required = "required"})
             </div>
             <div class="login-form-input">
                 <label>Password</label>
-                <input type="text" placeholder="Type your password" required/>
+                @Html.TextBoxFor(model => model.password, null, new { placeholder = "Type your password", autocomplete = "off", required = "required"})
             </div>
         </div>
+        <label class="login-form-error">
+            @Html.ValidationMessage("Error")
+        </label>
         <label class="login-form-signup">
-            Don't have an account? Try 
+            Don't have an account? Try
             <a href="/signup">
                 signing up!
             </a>
         </label>
         <button>Login</button>
-    </form>
+    }
 </div>
 </body>
 </html>
