@@ -64,22 +64,22 @@
         Username max length: @config?.user_username_limit<br/>
         Password max length: @config?.user_password_limit<br/>
         
-        Tags: [@{
+        Tags: [<br/>@{
             if (config != null)
             {
                 foreach (var tag in config.tags_default)
                 {
-                    <text>@tag</text>
+                    <text>@tag<br/></text>
                 }
             }
         }]<br/>
         
-        Domains: [@{
+        Domains: [<br/>@{
             if (config != null)
             {
                 foreach (var domain in config.backend_domains)
                 {
-                    <text>@domain</text>
+                    <text>@domain<br/></text>
                 }
             }
         }]
