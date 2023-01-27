@@ -75,7 +75,7 @@ public static class CookieUtils
         return false;
     }
 
-    private static bool IsCookieReal(HttpRequest request, HttpResponse response)
+    public static bool IsCookieReal(HttpRequest request, HttpResponse response)
     {
         // if auth cookie does not exist
         if (request.Cookies[CookieName] == null)
