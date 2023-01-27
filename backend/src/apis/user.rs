@@ -966,7 +966,7 @@ pub mod User {
     #[utoipa::path(
         post,
         context_path = "/api/user",
-        request_body = InfoRequest,
+        request_body = UserApiKey,
         responses(
             (status = 200, description = "Successfully grabbed user info", body = UserInfo),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)

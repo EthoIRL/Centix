@@ -455,7 +455,7 @@ pub mod Media {
     #[utoipa::path(
         post,
         context_path = "/api/media",
-        request_body = Upload,
+        request_body = UploadMedia,
         responses(
             (status = 200, description = "Successfully uploaded media", body = Media),
             (status = 400, description = "Server received malformed client request", body = Error),
@@ -716,7 +716,7 @@ pub mod Media {
     #[utoipa::path(
         delete,
         context_path = "/api/media",
-        request_body = Delete,
+        request_body = DeleteMedia,
         responses(
             (status = 200, description = "Successfully deleted media"),
             (status = 401, description = "Unauthorized deletion", body = Error),
@@ -832,6 +832,7 @@ pub mod Media {
     #[utoipa::path(
         post,
         context_path = "/api/media",
+        request_body = EditMedia,
         responses(
             (status = 200, description = "Successfully edited media"),
             (status = 400, description = "Server received malformed client request", body = Error),
