@@ -52,19 +52,32 @@
     </div>
     <br/>
     <div>
-        Custom tags: @config?.allow_custom_tags<br/>
-        Allow registering: @config?.allow_user_registration<br/>
-        Requires invite keys: @config?.use_invite_keys<br/>
-        Content Editing: @config?.allow_content_editing<br/>
-        Max file size: @config?.content_max_size mbs<br/>
-        Max name length: @config?.content_name_length<br/>
-        Max upload limit: @config?.user_upload_limit mb<br/>
-        Content id length: @config?.content_id_length<br/>
-        Custom tag max length: @config?.custom_tag_length<br/>
+        Allow media editing: @config?.media_allow_editing<br/>
+        Media max name length: @config?.media_max_name_length<br/>
+        Allow custom tags: @config?.tags_allow_custom<br/>
+        Tags max name length: @config?.tags_max_name_length<br/>
+        Allow registration: @config?.registration_allow<br/>
+        Use invite keys: @config?.registration_use_invite_keys<br/>
+        User upload total limit: @config?.user_upload_limit<br/>
+        User upload size limit: @config?.user_upload_size_limit mb<br/>
+        User total account size limit: @config?.user_total_upload_size_limit mb<br/>
+        Username max length: @config?.user_username_limit<br/>
+        Password max length: @config?.user_password_limit<br/>
+        
+        Tags: [@{
+            if (config != null)
+            {
+                foreach (var tag in config.tags_default)
+                {
+                    <text>@tag</text>
+                }
+            }
+        }]<br/>
+        
         Domains: [@{
             if (config != null)
             {
-                foreach (var domain in config.domains)
+                foreach (var domain in config.backend_domains)
                 {
                     <text>@domain</text>
                 }

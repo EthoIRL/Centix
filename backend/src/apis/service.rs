@@ -13,18 +13,32 @@ pub mod Service {
     
     #[derive(Serialize, Deserialize, ToSchema, Clone)]
     pub struct ApiConfig {
-        pub content_id_length: i32,
-        pub content_name_length: i32,
-        pub content_max_size: i32,
-        pub allow_content_editing: bool,
-        pub allow_custom_tags: bool,
-        pub custom_tag_length: i32,
-        pub use_invite_keys: bool,
-        pub allow_user_registration: bool,
-        // TODO: Implement this
-        // In the form of megabytes (100 mb) or 0 for unlimited
+        // Media related
+        pub media_allow_editing: bool,
+        pub media_max_name_length: i32,
+        
+        // Service related
+        pub backend_domains: Vec<String>,
+
+        // Media tags
+        pub tags_default: Vec<String>,
+        pub tags_allow_custom: bool,
+        pub tags_max_name_length: i32,
+
+        // Registration related
+        pub registration_allow: bool,
+        pub registration_use_invite_keys: bool,
+
+        // User related
+        // 60 individual content pieces (Ignore if admin, or if value = 0)
         pub user_upload_limit: i32,
-        pub domains: Vec<String>
+        // 12 mb per content piece (Ignore if admin, or if value = 0)
+        pub user_upload_size_limit: i32, 
+        // 120 mb total per account (Ignore if admin. or if value = 0)
+        pub user_total_upload_size_limit: i32, 
+
+        pub user_username_limit: i32,
+        pub user_password_limit: i32
     }
 
     impl From<cfg::Config> for ApiConfig {

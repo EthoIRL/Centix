@@ -3,44 +3,60 @@ use std::{io::BufReader, path::Path, fs::{File, self}};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
-    // TODO: Better config naming
+    // Media related
+    pub media_allow_editing: bool,
+    pub media_max_name_length: i32,
+    pub media_dynamic_id_length: i32,
+    
+    // Service related
+    pub backend_store_compressed: bool,
+    pub backend_domains: Vec<String>,
+    pub backend_media_directory: Option<String>,
 
-    pub content_directory: Option<String>,
-    pub content_id_length: i32,
-    pub content_name_length: i32,
-    pub content_max_size: i32,
-    pub allow_content_editing: bool,
-    pub allow_custom_tags: bool,
-    pub custom_tag_length: i32,
-    pub use_invite_keys: bool,
-    pub allow_user_registration: bool,
-    pub first_user_admin: bool,
-    pub store_compressed: bool,
-    pub domains: Vec<String>,
-    pub tags: Vec<String>,
-    // In the form of megabytes (100 mb)
-    // TODO: Implement
-    pub user_upload_limit: i32
+    // Media tags
+    pub tags_default: Vec<String>,
+    pub tags_allow_custom: bool,
+    pub tags_max_name_length: i32,
+
+    // Registration related
+    pub registration_allow: bool,
+    pub registration_use_invite_keys: bool,
+
+    // User related
+    // 60 individual content pieces (Ignore if admin, or if value = 0)
+    pub user_upload_limit: i32,
+    // 12 mb per content piece (Ignore if admin, or if value = 0)
+    pub user_upload_size_limit: i32, 
+    // 120 mb total per account (Ignore if admin. or if value = 0)
+    pub user_total_upload_size_limit: i32, 
+
+    pub user_username_limit: i32,
+    pub user_password_limit: i32,
+    pub user_first_admin: bool
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Config { 
-            content_directory: None,
-            content_id_length: 8,
-            content_name_length: 32,
-            content_max_size: 24,
-            allow_content_editing: true,
-            allow_custom_tags: false,
-            custom_tag_length: 16,
-            use_invite_keys: false,
-            allow_user_registration: true,
-            first_user_admin: true,
-            store_compressed: true,
-            domains: Vec::new(),
-            // TODO: Implement good list of basic tags (Must be lowercase)
-            tags: vec![String::from("funny"), String::from("meme"), String::from("nsfw"), String::from("clip")],
-            user_upload_limit: 100
+        Config {
+            media_allow_editing: true,
+            media_max_name_length: 32, 
+            media_dynamic_id_length: 4, // Maybe go to 6
+            
+            backend_store_compressed: true,
+            backend_domains: Vec::new(),
+            backend_media_directory: None,
+            // TODO: Replace this with a "good" default list of tags
+            tags_default: vec![String::from("funny"), String::from("meme"), String::from("nsfw"), String::from("clip")],
+            tags_allow_custom: false,
+            tags_max_name_length: 16,
+            registration_allow: true,
+            registration_use_invite_keys: false,
+            user_upload_limit: 60,
+            user_upload_size_limit: 12,
+            user_total_upload_size_limit: 120,
+            user_username_limit: 24,
+            user_password_limit: 128,
+            user_first_admin: true
         }
     }
 }
