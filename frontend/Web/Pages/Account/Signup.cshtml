@@ -1,19 +1,79 @@
 ﻿@page "/signup"
-@model frontend.Web.Pages.Account.Signup
+@using frontend
+@using frontend.Api.Models
+@using frontend.Utils
+@model frontend.Models.Account.SignupModel
 
 @{
-    Layout = null;
+    ModelConfig? config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+
+    if (config is {registration_allow: false })
+    {
+        Response.Redirect("/login");
+        return;
+    }
+    
+    if (await CookieUtils.IsCookieValid(Program.ApiUtils, Request, Response))
+    {
+        Response.Redirect("/account");
+        return;
+    }
+    Layout = "../_Layout.cshtml";
+}
+
+
+@section AdditionalHead
+{
+    <title>Signup</title>
+    <link rel="stylesheet" href="~/Web/Assets/css/Account/Signup/Signup.css">
 }
 
 <!DOCTYPE html>
 
 <html>
-<head>
-    <title></title>
-</head>
 <body>
-<div>
-    
+<div class="signup-container">
+    @using (Html.BeginForm("signup", "signup", FormMethod.Post, new { @class = "signup-form-container"}))
+    {
+        @Html.AntiForgeryToken()
+        
+        <div class="signup-form-text-container">
+            <div class="signup-form-input">
+                <label>Username</label>
+                @Html.TextBoxFor(model => model.username, null, new { placeholder = "Type your username", autocomplete = "off", required = "required"})
+            </div>
+            <div class="signup-form-input">
+                <label>Password</label>
+                @Html.TextBoxFor(model => model.password, null, new { placeholder = "Type your password", autocomplete = "off", required = "required"})
+            </div>
+            
+            @{
+                if (config is {registration_use_invite_keys: true })
+                {
+                    <div class="signup-form-input">
+                        <label>
+                            Invite<label style="color: red">*</label>
+                        </label>
+                        @Html.TextBoxFor(model => model.invite, null, new { placeholder = "Type your invite key", autocomplete = "off", required = "required"})
+                    </div>
+                }
+                else
+                {
+                    @Html.TextBoxFor(model => model.invite, null, new { required = "required", type = "hidden"})
+                }
+            }
+        </div>
+        <label class="signup-form-error">
+            @Html.ValidationMessage("Error")
+        </label>
+        <label class="signup-form-signup">
+            Already have an account? Try
+            <a href="/login">
+                logging in!
+            </a>
+        </label>
+        <button>Signup</button>
+    }
 </div>
 </body>
 </html>
