@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.FileProviders;
+﻿using frontend.Utils;
+using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.Extensions.FileProviders;
 
 namespace frontend.Web;
 
@@ -16,6 +18,8 @@ public class FrontendServer
         });
         //     // ContentRootPath = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Web{Path.DirectorySeparatorChar}",
         
+        builder.Services.AddControllers();
+        
         builder.WebHost.UseKestrel(options =>
         {
             // options.ListenAnyIP(Program.ConfigManager.Config.FrontendPorts.http);
@@ -32,6 +36,11 @@ public class FrontendServer
         
         builder.Services.AddRazorPages(options => { options.RootDirectory = "/Web/Pages"; });
 
+        builder.Services.Configure<RazorViewEngineOptions>(configure =>
+        {
+            configure.ViewLocationExpanders.Add(new ViewLocationExpansion());
+        });
+        
         var app = builder.Build();
 
         if (!app.Environment.IsDevelopment())
