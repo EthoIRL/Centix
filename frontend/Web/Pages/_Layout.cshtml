@@ -1,8 +1,22 @@
-﻿@namespace frontend.Web.Pages
+﻿@using frontend.Api.Models.User
+@using frontend.Utils
+@namespace frontend.Web.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 @{
     Layout = null;
+
+    ModelUserInfo? userInfo = null;
+    if (CookieUtils.IsCookieReal(Context.Request, Context.Response))
+    {
+        var userCredentials = new ModelUserKey
+        {
+            key = Context.Request.Cookies[CookieUtils.CookieName]
+        };
+
+        userInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
+            Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
+    }
 }
 
 <!DOCTYPE html>
@@ -41,22 +55,39 @@
     </div>
 
     <div class="navigation-bar-right">
-        <div class="navigation-bar-item navigation-item-button">
-            <a href="/signup/">
-                SIGNUP
-            </a>
-        </div>
+        @{
+            if (userInfo == null)
+            {
+                <div class="navigation-bar-item navigation-item-button">
+                    <a href="/signup/">
+                        SIGNUP
+                    </a>
+                </div>
 
-        <div class="navigation-bar-item navigation-item-button">
-            <a href="/login/">
-                LOGIN
-            </a>
-        </div>
-        @* <div class="navigation-bar-item navigation-item-button"> *@
-        @*     <a href="/account/"> *@
-        @*         $1$ username #1# *@
-        @*     </a> *@
-        @* </div> *@
+                <div class="navigation-bar-item navigation-item-button">
+                    <a href="/login/">
+                        LOGIN
+                    </a>
+                </div>
+            }
+            else
+            {
+                if (userInfo.admin)
+                {
+                    <div class="navigation-bar-item navigation-item-button">
+                        <a href="/admin/">
+                            ADMIN
+                        </a>
+                    </div>
+                }
+
+                <div class="navigation-bar-item navigation-item-button">
+                    <a href="/account/">
+                        @userInfo.username.ToUpper()
+                    </a>
+                </div>
+            }
+        }
     </div>
 </div>
 
