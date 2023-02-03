@@ -27,6 +27,8 @@ pub mod User {
 
     use chrono::{DateTime, Utc};
 
+    use itertools::Itertools;
+
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
     pub struct InviteInfo {
         /// The invited user's username
@@ -70,6 +72,8 @@ pub mod User {
         creation_date: DateTime::<Utc>,
         /// Array of upload ids uploaded by the user
         uploads: Vec<String>,
+        /// Combines all upload's file size into singular value
+        total_upload_size: i32,
         /// Whether the user is an admin or not 
         admin: bool,
         /// Invite key used to invite the user
@@ -1038,6 +1042,13 @@ pub mod User {
             })))
         };
 
+        let media_database = match database.open_tree("media") {
+            Ok(result) => result,
+            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
+                error: String::from("An internal error on the server's end has occurred")
+            })))
+        };
+
         let user = user_database.iter()
             .filter_map(|item| item.ok())
             .map(|item| {
@@ -1057,6 +1068,19 @@ pub mod User {
                     None => None
                 }
             });
+        
+        let uploads_total_size: i32 = media_database.iter()
+            .filter_map(|item| item.ok())
+            .filter_map(|item| {
+                let result: Media = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                    Ok(result) => result,
+                    Err(_) => return None
+                };
+                Some(result)
+            })
+            .map(|media| media.data_size)
+            .sum1()
+            .unwrap_or(0);
 
         return match user {
             Some(user) => {
@@ -1064,6 +1088,7 @@ pub mod User {
                     username: user.username,
                     creation_date: user.creation_date,
                     uploads: user.uploads,
+                    total_upload_size: uploads_total_size,
                     admin: user.admin,
                     invite_key: user.invite_key
                 };

@@ -1,0 +1,35 @@
+@import url("../color.css");
+
+.stats-video-container {
+    width: 100%;
+    height: 100%;
+    
+    display: flex;
+    
+    gap: 8px;
+}
+
+.video-container {
+    flex: 70%;
+    
+    margin: 8px 8px 8px 0;
+    padding: 8px;
+    background-color: var(--dark-foreground);
+    
+    border-radius: 8px;
+}
+
+
+@media screen and (max-width: 840px) {
+    .video-container {
+        margin: 8px;
+    }
+    
+    .stats-container {
+        display: none;
+    }
+}
+
+.video-inner-container {
+    
+}

@@ -7,3 +7,18 @@
     font-family: 'Lato Light';
     src: url('Lato/Lato-Light.ttf') format('truetype');
 }
+
+@font-face {
+    font-family: 'OpenSans Light';
+    src: url('OpenSans/OpenSans-Light.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'OpenSans';
+    src: url('OpenSans/OpenSans-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'OpenSans Italic';
+    src: url('OpenSans/OpenSans-Italic.ttf') format('truetype');
+}

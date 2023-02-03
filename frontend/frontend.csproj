@@ -74,6 +74,7 @@
 
     <ItemGroup>
       <Folder Include="Web\Assets\css\" />
+      <Folder Include="Web\Assets\font\OpenSans" />
     </ItemGroup>
 
 </Project>

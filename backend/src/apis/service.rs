@@ -39,6 +39,8 @@ pub mod Service {
 
         pub user_username_limit: i32,
         pub user_password_limit: i32
+
+        // TODO: Ignore certain settings if user is an admin
     }
 
     impl From<cfg::Config> for ApiConfig {
