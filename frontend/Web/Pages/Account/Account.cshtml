@@ -1,19 +1,43 @@
 ﻿@page "/account"
+@using frontend
+@using frontend.Api.Models.User
+@using frontend.Utils
 @model frontend.Web.Pages.Account.Account
 
 @{
-    Layout = null;
+    Layout = "../_Layout.cshtml";
+    
+    ModelUserInfo userInfo;
+    if (CookieUtils.IsCookieReal(Request, Response))
+    {
+        var userCredentials = new ModelUserKey
+        {
+            key = Request.Cookies[CookieUtils.CookieName]
+        };
+
+        var receivedUserInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
+            Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
+        if (receivedUserInfo == null)
+        {
+            Response.Redirect("/login");
+            return;
+        }
+
+        userInfo = receivedUserInfo;
+    }
+}
+
+@section AdditionalHead
+{
+    <title>Account</title>
+    <link rel="stylesheet" href="~/Web/Assets/css/Account/Account.css">
 }
 
 <!DOCTYPE html>
 
 <html>
-<head>
-    <title></title>
-</head>
 <body>
-<div>
-    
-</div>
+
+
 </body>
 </html>

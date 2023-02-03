@@ -63,7 +63,7 @@
 .navigation-form-search > input {
     width: 100%;
     
-    min-width: 100px;
+    min-width: 60px;
     
     text-decoration: none;
     outline: none;

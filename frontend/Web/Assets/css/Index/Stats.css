@@ -1,0 +1,105 @@
+﻿@import url("../color.css");
+
+.stats-container {
+    flex: 30%;
+    max-width: 240px;
+
+    margin: 8px 0 8px 8px;
+    padding: 8px;
+
+    background-color: var(--dark-foreground);
+
+    border-radius: 8px;
+}
+
+.stats-inner-container {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    
+    overflow-y: visible;
+    overflow-x: hidden;
+
+    scrollbar-width: none;
+}
+
+.stats-inner-container::-webkit-scrollbar {
+    display: none;
+}
+
+.stats-header {
+    font-size: 24px;
+    font-family: 'OpenSans Italic', sans-serif;
+    color: var(--primary-text-color);
+}
+
+.stats-footer-text {
+    display: flex;
+    flex-direction: column;
+
+    text-align: center;
+    font-size: 12px;
+    font-family: 'OpenSans Italic', sans-serif;
+    color: var(--primary-text-color);
+}
+
+.stats-footer-text > text >  a {
+    color: white;
+}
+
+.stats-info-container {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+}
+
+.stats-backend-container {
+    margin-top: auto;
+}
+
+.stats-list {
+    list-style-type: none;
+    
+    text-align: center;
+    font-size: 16px;
+    font-family: "Fugaz One", sans-serif;
+    color: var(--primary-text-color);
+
+    padding: 0;
+    margin: 8px 0 8px 0;
+}
+
+.stats-list > ul {
+    display: none;
+}
+
+.stats-domain-container {
+    width: 100%;
+    background-color: var(--dark-background);
+    
+    border-radius: 8px;
+    padding: 12px 0 12px 0;
+}
+
+.domain-header {
+    display: block;
+    width: 100%;
+    
+    text-align: center;
+    font-size: 16px;
+    font-family: "Fugaz One", sans-serif;
+    color: var(--primary-text-color);
+}
+
+.domain-list {
+    font-size: 12px;
+    font-family: "OpenSans", sans-serif;
+    color: var(--primary-text-color);
+
+    padding: 0;
+    margin: 0 0 0 24px;
+}
