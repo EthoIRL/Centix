@@ -17,7 +17,8 @@ pub struct Media {
     pub upload_date: DateTime::<Utc>,
     pub author_username: String,
     pub private: bool,
-    pub tags: Option<Vec<String>>
+    pub tags: Option<Vec<String>>,
+    pub downloads: i64
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
