@@ -51,7 +51,7 @@ pub mod Media {
         #[schema(value_type = String)]
         upload_date: DateTime::<Utc>,
         /// Whether the upload is unlisted from /all/ endpoint or not
-        private: bool,
+        unlisted: bool,
         /// Tags associated to upload
         tags: Option<Vec<String>>,
         /// Total downloads pertaining to the upload
@@ -83,11 +83,11 @@ pub mod Media {
         username: Option<String>,
         /// Only return content of certain type such as a video
         content_type: Option<ContentType>,
-        /// Allows search to include the user's privated videos in query filtering
+        /// Allows search to include the user's unlisted videos in query filtering
         api_key: Option<String>,
         /// Only show id's that have specific tags
         tags: Option<Vec<String>>,
-        /// Whether to sort by total downloads
+        /// Sort in descending order by total downloads
         downloads: Option<bool>
     }
 
@@ -97,7 +97,7 @@ pub mod Media {
         /// Upload's file name
         name: String,
         /// Hide's upload from being listed in /all/ endpoint
-        private: Option<bool>,
+        unlisted: Option<bool>,
         /// Tags relating to the upload
         tags: Option<Vec<String>>,
         /// Base64 encoded string containing the file contents
@@ -124,8 +124,8 @@ pub mod Media {
         api_key: String,
         /// Media's new name, leave as unset to maintain previous value
         name: Option<String>,
-        /// Media's new private, leave as unset to maintain previous value
-        private: Option<bool>,
+        /// Media's new unlisted, leave as unset to maintain previous value
+        unlisted: Option<bool>,
         /// Media's new list of string tags, requires that edit_tags is enabled
         tags: Option<Vec<String>>,
         /// Whether or not to enable tag editing
@@ -208,7 +208,7 @@ pub mod Media {
             content_name: media.name,
             content_size: media.data_size,
             upload_date: media.upload_date,
-            private: media.private,
+            unlisted: media.unlisted,
             tags: media.tags,
             downloads: media.downloads
         }))
@@ -425,7 +425,7 @@ pub mod Media {
                     return true;
                 }
 
-                !media.private
+                !media.unlisted
             })
             .filter(|media| {
                 if search.tags.is_none() {
@@ -720,7 +720,7 @@ pub mod Media {
                     upload_date: chrono::offset::Utc::now(),
                     data_compressed: data.1,
                     author_username: user.username.clone(),
-                    private: upload.private.unwrap_or(false),
+                    unlisted: upload.unlisted.unwrap_or(false),
                     tags: safe_tags,
                     downloads: 0
                 };
@@ -899,7 +899,7 @@ pub mod Media {
     }
 
     /// Edit media information
-    /// such as name, privatizing, and tags
+    /// such as name, unlistings, and tags
     #[utoipa::path(
         post,
         context_path = "/api/media",
@@ -998,8 +998,8 @@ pub mod Media {
                         edited_media.name = name;
                     }
 
-                    if let Some(private) = body.private {
-                        edited_media.private = private;
+                    if let Some(unlisted) = body.unlisted {
+                        edited_media.unlisted = unlisted;
                     }
 
                     if let Some(edit_tags) = body.edit_tags {

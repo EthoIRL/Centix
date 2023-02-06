@@ -1,4 +1,4 @@
-﻿namespace frontend.Api.Models.User;
+﻿namespace frontend.Api.Models.Stats;
 
 public class ModelUserStats
 {

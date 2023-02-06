@@ -16,7 +16,7 @@ pub struct Media {
     pub data_compressed: bool,
     pub upload_date: DateTime::<Utc>,
     pub author_username: String,
-    pub private: bool,
+    pub unlisted: bool,
     pub tags: Option<Vec<String>>,
     pub downloads: i64
 }
