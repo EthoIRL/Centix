@@ -1,0 +1,66 @@
+﻿@import url("../color.css");
+
+.content-container {
+    padding: 8px;
+    border-radius: 8px;
+    background-color: var(--dark-foreground);
+
+    overflow-y: visible;
+    overflow-x: hidden;
+
+    scrollbar-width: none;
+}
+
+.content-container::-webkit-scrollbar {
+    display: none;
+}
+
+.content-header {
+    font-size: 16px;
+    font-family: "OpenSans", sans-serif;
+
+    color: var(--primary-text-color);
+    
+    margin-bottom: 4px;
+}
+
+.content-flex-list {
+    align-items: center;
+    justify-content: center;
+
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    
+    gap: 8px;
+}
+
+.content-item {
+    flex-shrink: 1;
+    flex-grow: 1;
+    flex-basis: 30%;
+    
+    min-width: 240px;
+}
+
+.content-img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.content-item-text {
+    font-size: 12px;
+    font-family: "OpenSans", sans-serif;
+
+    color: var(--primary-text-color);
+}
+
+@media screen and (max-width: 1280px) {
+    .content-container {
+        flex-direction: column;
+    }
+    
+    .content-item {
+        /*max-width: 240px;*/
+    }
+}
