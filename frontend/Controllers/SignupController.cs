@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using frontend.Api.Models;
 using frontend.Api.Models.User;
 using frontend.Models.Account;
 using Microsoft.AspNetCore.Mvc;
