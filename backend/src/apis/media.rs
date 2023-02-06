@@ -53,7 +53,9 @@ pub mod Media {
         /// Whether the upload is unlisted from /all/ endpoint or not
         private: bool,
         /// Tags associated to upload
-        tags: Option<Vec<String>>
+        tags: Option<Vec<String>>,
+        /// Total downloads pertaining to the upload
+        downloads: i64
     }
 
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
@@ -84,7 +86,9 @@ pub mod Media {
         /// Allows search to include the user's privated videos in query filtering
         api_key: Option<String>,
         /// Only show id's that have specific tags
-        tags: Option<Vec<String>>
+        tags: Option<Vec<String>>,
+        /// Whether to sort by total downloads
+        downloads: Option<bool>
     }
 
     #[derive(Serialize, Deserialize, ToSchema, Clone)]
@@ -205,7 +209,8 @@ pub mod Media {
             content_size: media.data_size,
             upload_date: media.upload_date,
             private: media.private,
-            tags: media.tags
+            tags: media.tags,
+            downloads: media.downloads
         }))
     }
 
@@ -253,7 +258,7 @@ pub mod Media {
             .find(|media| media.id == identification.id);
 
         if let Some(media) = media {
-            let mut file = match File::open(media.data_path) {
+            let mut file = match File::open(&media.data_path) {
                 Ok(result) => result,
                 Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
                     error: String::from("An internal error on the server's end has occurred")
@@ -285,6 +290,20 @@ pub mod Media {
             } else {
                 upload_data
             };
+
+            let mut edited_media = media.clone();
+            edited_media.downloads += 1;
+
+            if let Err(_) = media_database.update_and_fetch(&media.id, |_| {
+                Some(IVec::from(match serde_json::to_vec(&edited_media) {
+                    Ok(result) => result,
+                    Err(_) => return None
+                }))
+            }) {
+                return Err(status::Custom(Status::InternalServerError, Json(Error {
+                    error: String::from("An internal error on the server's end has occurred")
+                })))
+            }
 
             let filename_extension = format!("{}.{}", media.name, media.extension);
             Ok(
@@ -369,7 +388,7 @@ pub mod Media {
             None
         };
 
-        let medias: Vec<String> = media_database
+        let medias_filtered: Vec<DBMedia> = media_database
             .iter()
             .filter_map(|item| item.ok())
             .filter_map(|item| {
@@ -440,13 +459,29 @@ pub mod Media {
                 }
                 false
             })
-            .map(|media| media.id)
             .collect();
+        
+        let mut medias: Option<Vec<String>> = None;
+        if let Some(downloads_sort) = &search.downloads {
+            if downloads_sort == &true {
+                medias = Some(medias_filtered.iter().sorted_by(|a, b| Ord::cmp(&b.downloads, &a.downloads)).map(|media| media.id.clone()).collect());
+            }
+        }
 
-        let found_content = ContentFound {
-            ids: medias
-        };
-        Ok(Json(found_content))
+        if medias.is_none() {
+            medias = Some(medias_filtered.iter().map(|media| media.id.clone()).collect());
+        }
+
+        if let Some(media) = medias {
+            let found_content = ContentFound {
+                ids: media
+            };
+            Ok(Json(found_content))
+        } else {
+            return Err(status::Custom(Status::InternalServerError, Json(Error {
+                error: String::from("An internal error on the server's end has occurred")
+            })))
+        }
     }
 
     /// Uploads media to a user's account
@@ -686,7 +721,8 @@ pub mod Media {
                     data_compressed: data.1,
                     author_username: user.username.clone(),
                     private: upload.private.unwrap_or(false),
-                    tags: safe_tags
+                    tags: safe_tags,
+                    downloads: 0
                 };
 
                 println!("Media: {:#?}", media);
