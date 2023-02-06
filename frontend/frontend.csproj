@@ -77,4 +77,8 @@
       <Folder Include="Web\Assets\font\OpenSans" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="Web\Assets\scaled.png" />
+    </ItemGroup>
+
 </Project>
