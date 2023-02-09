@@ -79,10 +79,13 @@
 
 .stats-domain-container {
     width: 100%;
+    max-width: 240px;
     background-color: var(--dark-background);
     
     border-radius: 8px;
     padding: 12px 0 12px 0;
+    
+    align-self: center;
 }
 
 .domain-header {
@@ -102,4 +105,31 @@
 
     padding: 0;
     margin: 0 0 0 24px;
+}
+
+@media screen and (max-width: 840px) {
+    .stats-container {
+        max-width: 100%;
+        margin: 8px;
+    }
+
+    .stats-inner-container {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .stats-info-container {
+        flex: 50%;
+        align-items: normal;
+        text-align: center;
+        width: auto;
+    }
+    
+    .domain-list > li {
+        text-align: left;
+    }
+
+    .stats-backend-container {
+        display: none;
+    }
 }
