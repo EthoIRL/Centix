@@ -33,6 +33,13 @@
     flex-direction: row;
     
     gap: 8px;
+
+    scrollbar-width: none;
+    overflow-y: hidden;
+}
+
+.content-flex-list::-webkit-scrollbar {
+    display: none;
 }
 
 .content-item {
@@ -86,6 +93,7 @@
 @media screen and (max-width: 1280px) {
     .content-container {
         flex-direction: column;
+        margin: 0 8px 8px 8px;
     }
     
     .content-item {
