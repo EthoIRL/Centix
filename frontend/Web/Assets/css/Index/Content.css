@@ -90,7 +90,7 @@
     color: var(--primary-text-color);
 }
 
-@media screen and (max-width: 1280px) {
+@media screen and (max-width: 840px) {
     .content-container {
         flex-direction: column;
         margin: 0 8px 8px 8px;
