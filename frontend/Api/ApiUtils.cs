@@ -118,6 +118,37 @@ public class ApiUtils
         
         return returnModel;
     }
+    
+    /// <summary>
+    /// Gets URL and attempts to receive response
+    /// </summary>
+    /// <param name="path">Post url with either a query param or none</param>
+    /// <typeparam name="TB">Expected return json type</typeparam>
+    /// <returns>Returns type expected in formatted class</returns>
+    public async Task<byte[]?> GetAndReceiveByteArray(string path)
+    {
+        byte[]? returnModel = null;
+        
+        Console.WriteLine($"Requesting model URL: \"{path}\"");
+        
+        try
+        {
+            HttpResponseMessage response = await _client.GetAsync(path);
+            if (response.IsSuccessStatusCode)
+            {
+                returnModel = await response.Content.ReadAsByteArrayAsync();
+            }
+        } 
+        catch (Exception exception)
+        {
+            if (exception is not HttpRequestException)
+            {
+                Console.WriteLine(exception);
+            }
+        }
+        
+        return returnModel;
+    }
 
     /// <summary>
     /// Sends information to a given URL and attempts an http status

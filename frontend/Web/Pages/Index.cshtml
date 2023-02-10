@@ -173,7 +173,7 @@
                                 if (contentInfo != null)
                                 {
                                     <a class="content-item" href="/@id">
-                                        <img src="~/Web/Assets/scaled.png" class="content-img"/>
+                                        <img src="@Url.Action("Thumbnail", "Thumbnail", new { id = id })" class="content-img"/>
                                         @{
                                             if (contentInfo.tags != null)
                                             {
