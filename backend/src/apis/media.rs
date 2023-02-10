@@ -47,6 +47,8 @@ pub mod Media {
         /// Upload's size in the form of bytes
         #[schema(example = "582000")]
         content_size: i32,
+        /// Upload's content type (e.g. video or image)
+        content_type: ContentType,
         /// When the media was uploaded in UTC Format
         #[schema(value_type = String)]
         upload_date: DateTime::<Utc>,
@@ -207,6 +209,7 @@ pub mod Media {
             author_username: media.author_username,
             content_name: media.name,
             content_size: media.data_size,
+            content_type: media.data_type,
             upload_date: media.upload_date,
             unlisted: media.unlisted,
             tags: media.tags,
