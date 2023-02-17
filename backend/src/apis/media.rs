@@ -93,6 +93,8 @@ pub mod Media {
         downloads: Option<bool>
     }
 
+    // TODO: Replace base64 encoding with either openapi file upload, or direct string byte array instead of using base64?
+
     #[derive(Serialize, Deserialize, ToSchema, Clone)]
     pub struct UploadMedia {
         #[schema(example = "Funny cat video")]
@@ -105,7 +107,10 @@ pub mod Media {
         /// Base64 encoded string containing the file contents
         upload_data: String,
         /// User's api key
-        api_key: String
+        api_key: String,
+        
+        #[schema(value_type = String, format = Binary)]
+        test_data: Option<String>
     }
 
     #[derive(Serialize, Deserialize, ToSchema, Clone)]
@@ -327,7 +332,7 @@ pub mod Media {
     #[utoipa::path(
         post,
         context_path = "/api/media",
-        request_body = SearchQuery,
+        request_body(content = SearchQuery, content_type = "multipart/mixed"),
         responses(
             (status = 200, description = "Successfully found all media pertaining to the search query", body = ContentFound),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
@@ -493,7 +498,7 @@ pub mod Media {
     #[utoipa::path(
         post,
         context_path = "/api/media",
-        request_body = UploadMedia,
+        request_body(content = UploadMedia, content_type = "multipart/form-data"),
         responses(
             (status = 200, description = "Successfully uploaded media", body = Media),
             (status = 400, description = "Server received malformed client request", body = Error),
@@ -790,7 +795,7 @@ pub mod Media {
     #[utoipa::path(
         delete,
         context_path = "/api/media",
-        request_body = DeleteMedia,
+        request_body(content = DeleteMedia, content_type = "multipart/mixed"),
         responses(
             (status = 200, description = "Successfully deleted media"),
             (status = 401, description = "Unauthorized deletion", body = Error),
@@ -906,7 +911,7 @@ pub mod Media {
     #[utoipa::path(
         post,
         context_path = "/api/media",
-        request_body = EditMedia,
+        request_body(content = EditMedia, content_type = "multipart/mixed"),
         responses(
             (status = 200, description = "Successfully edited media"),
             (status = 400, description = "Server received malformed client request", body = Error),
