@@ -6,7 +6,7 @@ use rocket::{
     serde::{Serialize, Deserialize},
     Responder,
     routes, Build,
-    Rocket
+    Rocket, data::{Limits, ByteUnit}
 };
 
 
@@ -108,7 +108,14 @@ fn rocket() -> Rocket<Build> {
     let doc = &mut ApiDoc::openapi();
     ApiDoc::modify(&ApiDoc, doc);
 
+    let limits = Limits::new()
+        .limit("json", ByteUnit::max_value());
+
+    let figment = rocket::Config::figment()
+        .merge(("limits", limits));
+
     rocket::build()
+        .configure(figment)
         .manage(config_arc)
         .manage(database_arc)
         .mount(

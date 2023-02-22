@@ -108,9 +108,6 @@ pub mod Media {
         upload_data: String,
         /// User's api key
         api_key: String,
-        
-        #[schema(value_type = String, format = Binary)]
-        test_data: Option<String>
     }
 
     #[derive(Serialize, Deserialize, ToSchema, Clone)]
@@ -498,7 +495,7 @@ pub mod Media {
     #[utoipa::path(
         post,
         context_path = "/api/media",
-        request_body(content = UploadMedia, content_type = "multipart/form-data"),
+        request_body = UploadMedia,
         responses(
             (status = 200, description = "Successfully uploaded media", body = Media),
             (status = 400, description = "Server received malformed client request", body = Error),
