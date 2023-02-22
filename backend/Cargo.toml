@@ -35,3 +35,5 @@ infer = { version = "0.12.0", default-features = false }
 flate2 = "1.0.25"
 # Iterator tools
 itertools = "0.10.5"
+# Git Information
+git-version = "0.3.5"
