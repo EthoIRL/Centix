@@ -167,34 +167,43 @@
                     </div>
                     <div class="content-flex-list">
                         @{
-                            for (int b = 0; b < Math.Min(10, mediaFound.ids.Length); b++)
-                            {   
-                                var id = mediaFound.ids[b];
-                                ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
-                                if (contentInfo != null)
-                                {
-                                    <a class="content-item" href="/@id">
-                                        <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="content-img"/>
-                                        <div class="content-tags-container">
-                                            <div class="content-tag">
-                                                @contentInfo.content_type
-                                            </div>
-                                            @{
-                                                if (contentInfo.tags != null)
-                                                {
-                                                    for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++)
+                            if (mediaFound.ids.Length > 0)
+                            {
+                                for (int b = 0; b < Math.Min(10, mediaFound.ids.Length); b++)
+                                {   
+                                    var id = mediaFound.ids[b];
+                                    ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
+                                    if (contentInfo != null)
+                                    {
+                                        <a class="content-item" href="/@id">
+                                            <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="content-img"/>
+                                            <div class="content-tags-container">
+                                                <div class="content-tag">
+                                                    @contentInfo.content_type
+                                                </div>
+                                                @{
+                                                    if (contentInfo.tags != null)
                                                     {
-                                                        string tag = contentInfo.tags[i];
-                                                        <div class="content-tag">@tag</div>
+                                                        for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++)
+                                                        {
+                                                            string tag = contentInfo.tags[i];
+                                                            <div class="content-tag">@tag</div>
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        </div>
-                                        <div class="content-item-text">
-                                            @contentInfo.content_name • @contentInfo.author_username
-                                        </div>
-                                    </a>
+                                            </div>
+                                            <div class="content-item-text">
+                                                @contentInfo.content_name • @contentInfo.author_username
+                                            </div>
+                                        </a>
+                                    }
                                 }
+                            }
+                            else
+                            {
+                                <div class="content-no-available">
+                                    No content found! Become the first person to upload!
+                                </div>
                             }
                         }
                     </div>
