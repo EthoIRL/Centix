@@ -111,6 +111,8 @@
     .stats-container {
         max-width: 100%;
         margin: 8px;
+        
+        max-height: 250px;
     }
 
     .stats-inner-container {
