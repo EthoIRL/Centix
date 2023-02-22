@@ -13,6 +13,7 @@
     ModelMediaStats? mediaStats = await Program.ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
     ModelUserStats? userStats = await Program.ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
     ModelConfig? config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+    ModelInformation? information = await Program.ApiUtils.GetModelAsync<ModelInformation>(Program.ConfigManager.Config.BackendApiUri + "/services/information");
 
     int totalContentCount = 0;
     string totalContentSize = "0 MB";
@@ -146,12 +147,10 @@
 
             <div class="stats-backend-container">
                 <div class="stats-footer-text">
-                    @* // TODO: Implement both frontend & backend Short SHA git commit versioning *@
                     <text>
-                        Backend build - <a href="https://github.com/EthoIRL/Centix">e6c587c</a>
-                    </text>
-                    <text>
-                        Frontend build - <a href="https://github.com/EthoIRL/Centix">e6c587c</a>
+                        Build - <a href="https://github.com/EthoIRL/Centix">
+                            @(information != null ? information.git_version : "Unknown")
+                        </a>
                     </text>
                 </div>
             </div>

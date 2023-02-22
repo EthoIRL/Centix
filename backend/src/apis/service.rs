@@ -10,7 +10,10 @@ pub mod Service {
         serde::{Serialize, Deserialize}
     };
     use utoipa::ToSchema;
-    
+
+    use git_version::git_version;
+    const GIT_VERSION: &str = git_version!();
+
     #[derive(Serialize, Deserialize, ToSchema, Clone)]
     pub struct ApiConfig {
         // Media related
@@ -41,6 +44,11 @@ pub mod Service {
         pub user_password_limit: i32
 
         // TODO: Ignore certain settings if user is an admin
+    }
+
+    #[derive(Serialize, Deserialize, ToSchema, Clone)]
+    pub struct Information {
+        pub git_version: String
     }
 
     impl From<cfg::Config> for ApiConfig {
@@ -74,5 +82,24 @@ pub mod Service {
         Ok(Json(
             ApiConfig::from(config.clone())
         ))
+    }
+
+    /// Grabs information about the Centix instance
+    #[utoipa::path(
+        get,
+        context_path = "/api/services",
+        responses(
+            (status = 200, description = "Successfully grabbed centix instance's information", body = Information),
+            (status = 500, description = "An internal error on the server's end has occurred", body = Error)
+        )
+    )]
+    #[get("/information")]
+    pub async fn info(
+        _config_store: &State<Arc<Mutex<Config>>>,
+        _database_store: &State<Arc<Mutex<sled::Db>>>,
+    ) -> Result<Json<Information>, status::Custom<Json<Error>>> {
+        Ok(Json(Information{
+            git_version: GIT_VERSION.to_string()
+        }))
     }
 }
