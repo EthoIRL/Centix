@@ -21,11 +21,10 @@
 
     color: var(--primary-text-color);
     
-    margin-bottom: 4px;
+    margin-bottom: 8px;
 }
 
 .content-flex-list {
-    align-items: center;
     justify-content: center;
 
     display: flex;
@@ -48,18 +47,21 @@
     flex-basis: 30%;
     
     min-width: 240px;
+    max-width: 300px;
     
     text-decoration: none;
 }
 
 .content-img {
     width: 100%;
+    aspect-ratio: 16 / 9;
     border-radius: 8px;
 }
 
 .content-tags-container {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     
     gap: 8px;
 }
@@ -94,9 +96,5 @@
     .content-container {
         flex-direction: column;
         margin: 0 8px 8px 8px;
-    }
-    
-    .content-item {
-        /*max-width: 240px;*/
     }
 }
