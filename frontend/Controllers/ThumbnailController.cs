@@ -33,8 +33,8 @@ public class ThumbnailController : Controller
                 var content = await Program.ApiUtils.GetAndReceiveByteArray(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/download?id=", model.id));
                 if (content != null)
                 {
-                    var thumbnail = await GetThumbnail(content, 1920, WebpFormat.Instance, contentInfo.content_type);
-                
+                    var thumbnail = await GetThumbnail(content, 480, WebpFormat.Instance, contentInfo.content_type);
+
                     SaveThumbnail(model.id, thumbnail);
                     
                     var file = $"{model.id}.{WebpFormat.Instance.FileExtensions.First()}"; 
@@ -110,8 +110,14 @@ public class ThumbnailController : Controller
                 break;
         }
 
-        image.Mutate(x => x.Resize(width, image.Height / image.Width * width));
-
+        var resizeOptions = new ResizeOptions
+        {
+            Mode = ResizeMode.Pad,
+            PadColor = Color.Black,
+            Size = new Size(width, image.Height / image.Width * width)
+        };
+        image.Mutate(x => x.Resize(resizeOptions));
+        
         await using var ms = new MemoryStream();
         await image.SaveAsync(ms, format);
         return ms.ToArray();
