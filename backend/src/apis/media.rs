@@ -329,7 +329,7 @@ pub mod Media {
     #[utoipa::path(
         post,
         context_path = "/api/media",
-        request_body(content = SearchQuery, content_type = "multipart/mixed"),
+        request_body = SearchQuery,
         responses(
             (status = 200, description = "Successfully found all media pertaining to the search query", body = ContentFound),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
@@ -792,7 +792,7 @@ pub mod Media {
     #[utoipa::path(
         delete,
         context_path = "/api/media",
-        request_body(content = DeleteMedia, content_type = "multipart/mixed"),
+        request_body = DeleteMedia,
         responses(
             (status = 200, description = "Successfully deleted media"),
             (status = 401, description = "Unauthorized deletion", body = Error),
@@ -908,7 +908,7 @@ pub mod Media {
     #[utoipa::path(
         post,
         context_path = "/api/media",
-        request_body(content = EditMedia, content_type = "multipart/mixed"),
+        request_body = EditMedia,
         responses(
             (status = 200, description = "Successfully edited media"),
             (status = 400, description = "Server received malformed client request", body = Error),

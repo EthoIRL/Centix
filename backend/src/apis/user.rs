@@ -124,7 +124,7 @@ pub mod User {
     #[utoipa::path(
         post,
         context_path = "/api/user",
-        request_body(content = UserRegistration, content_type = "multipart/mixed"),
+        request_body = UserRegistration,
         responses(
             (status = 200, description = "Successfully registered account"),
             (status = 401, description = "An unauthorized request has been attempted", body = Error),
@@ -344,7 +344,7 @@ pub mod User {
     #[utoipa::path(
         post,
         context_path = "/api/user",
-        request_body(content = UserCredentials, content_type = "multipart/mixed"),
+        request_body = UserCredentials,
         responses(
             (status = 200, description = "Successfully logged in account", body = UserApiKey),
             (status = 403, description = "An internal issue has occurred when attempting to register an account", body = Error),
@@ -419,7 +419,7 @@ pub mod User {
     #[utoipa::path(
         delete,
         context_path = "/api/user",
-        request_body(content = UserCredentials, content_type = "multipart/mixed"),
+        request_body = UserCredentials,
         responses(
             (status = 200, description = "Successfully deleted account"),
             (status = 403, description = "An authentication issue has occurred when attempting to delete an account", body = Error),
@@ -522,7 +522,7 @@ pub mod User {
     #[utoipa::path(
         put,
         context_path = "/api/user",
-        request_body(content = UserUpdateUsername, content_type = "multipart/mixed"),
+        request_body = UserUpdateUsername,
         responses(
             (status = 200, description = "Successfully updated account username"),
             (status = 400, description = "The Client has sent a badly formed request", body = Error),
@@ -658,7 +658,7 @@ pub mod User {
     #[utoipa::path(
         put,
         context_path = "/api/user",
-        request_body(content = UserUpdatePassword, content_type = "multipart/mixed"),
+        request_body = UserUpdatePassword,
         responses(
             (status = 200, description = "Successfully updated account's password"),
             (status = 403, description = "An authentication issue has occurred when attempting to update account username", body = Error),
@@ -783,7 +783,7 @@ pub mod User {
     #[utoipa::path(
         post,
         context_path = "/api/user",
-        request_body(content = UserCredentials, content_type = "multipart/mixed"),
+        request_body = UserCredentials,
         responses(
             (status = 200, description = "Successfully created an invite", body = UserInvite),
             (status = 403, description = "A issue has occurred when attempting to create an invite", body = Error),
@@ -911,7 +911,7 @@ pub mod User {
     #[utoipa::path(
         post,
         context_path = "/api/user",
-        request_body(content = InviteInfoRequest, content_type = "multipart/mixed"),
+        request_body = InviteInfoRequest,
         responses(
             (status = 200, description = "Successfully grabbed invite information", body = InviteInfo),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
@@ -1016,7 +1016,7 @@ pub mod User {
     #[utoipa::path(
         post,
         context_path = "/api/user",
-        request_body(content = UserApiKey, content_type = "multipart/mixed"),
+        request_body = UserApiKey,
         responses(
             (status = 200, description = "Successfully grabbed user info", body = UserInfo),
             (status = 500, description = "An internal error on the server's end has occurred", body = Error)
