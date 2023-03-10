@@ -1,3 +1,4 @@
+// TODO: Remove Extra fluff surrounding files
 #[allow(non_snake_case)]
 pub mod User {
     use std::sync::{Arc, Mutex};

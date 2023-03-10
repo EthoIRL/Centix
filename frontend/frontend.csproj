@@ -82,7 +82,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="Web\Assets\scaled.png" />
+      <Content Include="Web\Assets\imgs\Index\download.png" />
+      <Content Include="Web\Assets\imgs\scaled.png" />
     </ItemGroup>
 
 </Project>
