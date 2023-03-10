@@ -175,7 +175,7 @@
                                     if (contentInfo != null)
                                     {
                                         <a class="content-item" href="/@id">
-                                            <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="content-img"/>
+                                            <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="content-img" loading="lazy"/>
                                             <div class="content-tags-container">
                                                 <div class="content-tag">
                                                     @contentInfo.content_type
@@ -192,7 +192,15 @@
                                                 }
                                             </div>
                                             <div class="content-item-text">
-                                                @contentInfo.content_name • @contentInfo.author_username
+                                                @{
+                                                    <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text>
+                                                    if (contentInfo.content_name.Length > 16)
+                                                    {
+                                                        <text>...</text>
+                                                    }
+                                                }
+                                                • @contentInfo.author_username • @contentInfo.downloads
+                                                <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/>
                                             </div>
                                         </a>
                                     }
