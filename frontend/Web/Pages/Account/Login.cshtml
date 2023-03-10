@@ -23,18 +23,21 @@
 <html>
 <body>
 <div class="login-container">
-    @using (Html.BeginForm("Login", "Login", FormMethod.Post, new { @class = "login-form-container"}))
+    @using (Html.BeginForm("Login", "Login", FormMethod.Post, new {@class = "login-form-container"}))
     {
         @Html.AntiForgeryToken()
         
+        <div class="login-container-text">
+            Login
+        </div>
         <div class="login-form-text-container">
             <div class="login-form-input">
                 <label>Username</label>
-                @Html.TextBoxFor(model => model.username, null, new { placeholder = "Type your username", autocomplete = "off", required = "required"})
+                @Html.TextBoxFor(model => model.username, null, new {placeholder = "Type your username", autocomplete = "off", required = "required"})
             </div>
             <div class="login-form-input">
                 <label>Password</label>
-                @Html.TextBoxFor(model => model.password, null, new { placeholder = "Type your password", autocomplete = "off", required = "required"})
+                @Html.TextBoxFor(model => model.password, null, new {placeholder = "Type your password", autocomplete = "off", required = "required"})
             </div>
         </div>
         <label class="login-form-error">
