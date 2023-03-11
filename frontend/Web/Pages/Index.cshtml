@@ -12,9 +12,9 @@
 
     ModelMediaStats? mediaStats = await Program.ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
     ModelUserStats? userStats = await Program.ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
-    ModelConfig? config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
-    ModelInformation? information = await Program.ApiUtils.GetModelAsync<ModelInformation>(Program.ConfigManager.Config.BackendApiUri + "/services/information");
-
+    
+    bool apiDown = mediaStats == null && userStats == null;
+    
     int totalContentCount = 0;
     string totalContentSize = "0 MB";
 
@@ -31,26 +31,34 @@
         totalUserCount = userStats.user_count;
     }
 
-    bool apiDown = mediaStats == null && userStats == null && config == null;
-
+    ModelMediaFound? mediaFound = null;
+    ModelInformation? information = null;
+    ModelConfig? config = null;
+    
     ModelUserInfo? userInfo = null;
-    if (!apiDown && CookieUtils.IsCookieReal(Request, Response))
+    if (!apiDown)
     {
-        var userCredentials = new ModelUserKey
+        information = await Program.ApiUtils.GetModelAsync<ModelInformation>(Program.ConfigManager.Config.BackendApiUri + "/services/information");
+        config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+
+        if (CookieUtils.IsCookieReal(Request, Response))
         {
-            key = Request.Cookies[CookieUtils.CookieName]
+            var userCredentials = new ModelUserKey
+            {
+                key = Request.Cookies[CookieUtils.CookieName]
+            };
+
+            userInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
+                Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
+        }
+        
+        var searchModel = new ModelMediaSearch
+        {
+            downloads = true
         };
 
-        userInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
-            Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
+        mediaFound = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", searchModel);
     }
-
-    var searchModel = new ModelMediaSearch
-    {
-        downloads = true
-    };
-
-    ModelMediaFound? mediaFound = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", searchModel);
 }
 
 @section AdditionalHead
