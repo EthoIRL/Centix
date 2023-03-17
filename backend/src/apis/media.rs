@@ -324,6 +324,9 @@ pub mod Media {
         }
     }
 
+    // TODO: Add maximum return id's
+    // E.g. Limit amount of id's returned. This could be a problem when the database grows exponentially.
+
     /// Searches all media id's in the form of a list
     /// based on optional queries patterns
     #[utoipa::path(
