@@ -2,7 +2,7 @@
 
 namespace frontend.Web.Pages;
 
-public class Uploads : PageModel
+public class Posts : PageModel
 {
     public void OnGet()
     {
