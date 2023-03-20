@@ -1,0 +1,93 @@
+﻿@import url("../color.css");
+
+.large-post-container {
+    justify-content: center;
+
+    overflow-y: visible;
+}
+
+.post-item-large {
+    flex: 0 0 300px;
+
+    height: 350px;
+
+    background-color: var(--dark-background);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px darkgray solid;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.post-large-image {
+    flex-basis: 55%;
+
+    align-items: center;
+    justify-content: center;
+
+    height: 200px;
+    overflow: hidden;
+
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+}
+
+.post-large-info-container {
+    flex-basis: 35%;
+
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    height: auto;
+}
+
+.post-large-info-horizontal-child {
+    flex-basis: 50%;
+
+    display: flex;
+    flex-direction: row;
+
+    width: 100%;
+}
+
+.post-large-info {
+    flex-basis: 50%;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    font-family: "Lato", sans-serif;
+    font-size: 16px;
+    color: var(--primary-text-color);
+}
+
+.post-large-info > div {
+    color: var(--secondary-text-color);
+}
+
+.post-large-info > br {
+    margin-bottom: 4px;
+}
+
+.post-large-info-container > div {
+    flex: 0 0 50%;
+
+    width: 100%;
+    height: 100%;
+}
+
+.post-item-large-name {
+    text-align: center;
+
+    margin: 8px 0 4px 0;
+
+    font-family: "OpenSans", sans-serif;
+    font-size: 16px;
+    color: var(--primary-text-color);
+}
