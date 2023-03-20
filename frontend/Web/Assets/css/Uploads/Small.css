@@ -1,0 +1,45 @@
+﻿@import url("../color.css");
+
+.small-post-container {
+    justify-content: space-evenly;
+}
+
+@media screen and (max-width: 1320px) {
+    .small-post-container {
+        justify-content: center;
+    }
+}
+
+.post-item-small {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.post-small-image {
+    align-items: center;
+    justify-content: center;
+    width: 240px;
+
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+}
+
+.post-small-item-text {
+    display: flex;
+    flex-direction: row;
+    font-size: 12px;
+    font-family: "OpenSans", sans-serif;
+
+    align-items: center;
+
+    color: var(--primary-text-color);
+}
+
+.post-small-item-text > img {
+    height: 12px;
+    width: 12px;
+
+    margin: 0 2px 0 2px;
+}

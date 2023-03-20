@@ -37,7 +37,7 @@
     flex-wrap: wrap;
     flex-direction: row;
     
-    justify-content: space-between;
+    justify-content: space-evenly;
     gap: 12px;
 
     scrollbar-width: none;
