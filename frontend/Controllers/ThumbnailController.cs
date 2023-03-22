@@ -33,7 +33,9 @@ public class ThumbnailController : Controller
                 var content = await Program.ApiUtils.GetAndReceiveByteArray(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/download?id=", model.id));
                 if (content != null)
                 {
-                    var thumbnail = await GetThumbnail(content, 480, WebpFormat.Instance, contentInfo.content_type);
+                    // TODO: Optional config feature
+                    bool? blur = contentInfo.tags?.Contains("nsfw");
+                    var thumbnail = await GetThumbnail(content, 480, WebpFormat.Instance, contentInfo.content_type, blur ?? false);
 
                     SaveThumbnail(model.id, thumbnail);
                     
@@ -118,7 +120,7 @@ public class ThumbnailController : Controller
         }
     }
 
-    private static async Task<byte[]> GetThumbnail(byte[] data, int width, IImageFormat format, ModelContentInfo.ContentType contentType)
+    private static async Task<byte[]> GetThumbnail(byte[] data, int width, IImageFormat format, ModelContentInfo.ContentType contentType, bool blur = false)
     {
         Image<Rgba32> image;
         switch (contentType)
@@ -139,6 +141,10 @@ public class ThumbnailController : Controller
             Size = new Size(width, image.Height / image.Width * width)
         };
         image.Mutate(x => x.Resize(resizeOptions));
+        if (blur)
+        {
+            image.Mutate(x => x.GaussianBlur(12));
+        }
         
         await using var ms = new MemoryStream();
         await image.SaveAsync(ms, format);
