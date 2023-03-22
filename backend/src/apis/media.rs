@@ -24,7 +24,7 @@ pub mod Media {
 
     use base64::decode;
 
-    use infer::{MatcherType, Type, Matcher};
+    use infer::{MatcherType, Type};
 
     use sled::IVec;
 

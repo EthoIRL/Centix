@@ -28,7 +28,7 @@ public class ThumbnailController : Controller
         else
         {
             ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", model.id));
-            if (contentInfo != null)
+            if (contentInfo != null && contentInfo.content_type != ModelContentInfo.ContentType.Other)
             {
                 var content = await Program.ApiUtils.GetAndReceiveByteArray(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/download?id=", model.id));
                 if (content != null)
@@ -43,13 +43,35 @@ public class ThumbnailController : Controller
             }
         }
         
-        return Ok();
+        var placeholderThumbnail = await GetPlaceholderThumbnail();
+        if (placeholderThumbnail != null)
+        {
+            var placeholderFile = $"{model.id}.{WebpFormat.Instance.FileExtensions.First()}"; 
+            return File(placeholderThumbnail, WebpFormat.Instance.DefaultMimeType, placeholderFile);
+        }
+        return BadRequest();
     }
 
     public async Task<byte[]?> GetThumbnail(string id)
     {
         var directory = Path.Join(Environment.CurrentDirectory, "cache");
         var filePath = Path.Join(directory, id);
+
+        if (Directory.Exists(directory))
+        {
+            if (System.IO.File.Exists(filePath))
+            {
+                return await System.IO.File.ReadAllBytesAsync(filePath);
+            }
+        }
+
+        return null;
+    }
+    
+    public async Task<byte[]?> GetPlaceholderThumbnail()
+    {
+        var directory = Path.Join(Environment.CurrentDirectory, "Web", "Assets", "imgs");
+        var filePath = Path.Join(directory, "placeholder.webp");
 
         if (Directory.Exists(directory))
         {
