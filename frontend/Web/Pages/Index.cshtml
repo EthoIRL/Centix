@@ -182,7 +182,7 @@
                                     ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
                                     if (contentInfo != null)
                                     {
-                                        <a class="content-item" href="/@id">
+                                        <a class="content-item" href="/post/@id">
                                             <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="content-img" loading="lazy"/>
                                             <div class="content-tags-container">
                                                 <div class="content-tag">

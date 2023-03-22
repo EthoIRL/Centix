@@ -1,22 +1,105 @@
 ﻿@page "/post/{id}/"
+@using frontend
+@using frontend.Api.Models.Media
+@using frontend.Utils
 @model frontend.Web.Pages.Post
 
 @{
     Layout = "_Layout.cshtml";
+
+    var id = RouteData.Values["id"];
+    ModelContentInfo? postInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
 }
 
 @section AdditionalHead
 {
     <title>Post - @RouteData.Values["id"]</title>
-    @* <link rel="stylesheet" href="~/Web/Assets/css/Index/Index.css"> *@
-    @* <link rel="stylesheet" href="~/Web/Assets/css/Index/Stats.css"> *@
-    @* <link rel="stylesheet" href="~/Web/Assets/css/Index/Content.css"> *@
+    <link rel="stylesheet" href="~/Web/Assets/css/Post/Post.css">
 }
 
 <!DOCTYPE html>
 
 <html>
 <body>
-    @* Todo *@
+@{
+    if (postInfo != null)
+    {
+        <div class="post-container">
+            <div class="post-container-child">
+                <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" loading="lazy"/>
+                <div class="child-information">
+                    <div>
+                        Name<br/>
+                        @postInfo.content_name
+                    </div>
+                    <div>
+                        Author<br/>
+                        @postInfo.author_username
+                    </div>
+                    <div>
+                        Size<br/>
+                        @StringUtils.FormatBytesWithIdentifier(postInfo.content_size)
+                    </div>
+                    <div>
+                        Uploaded on<br>
+                        @DateTime.Parse(postInfo.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy HH:MM")
+                    </div>
+                    <div>
+                        Public<br/>
+                        @postInfo.unlisted
+                    </div>
+                    <div>
+                        Downloads<br/>
+                        @postInfo.downloads
+                    </div>
+                    <div class="child-information-tag">
+                        Tags<br/>
+                        <div class="child-tag-container">
+                            <div class="child-tag">
+                                @postInfo.content_type
+                            </div>
+                            @{
+                                if (postInfo.tags != null)
+                                {
+                                    foreach (var tag in postInfo.tags)
+                                    {
+                                        <div class="child-tag">
+                                            @tag
+                                        </div>
+                                    }
+                                }
+                            }
+                        </div>
+                    </div>
+                    <a href="@Url.Action("Download", "Download", new {id = id})" class="child-download">
+                        Download
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="error-container">
+            <div class="post-error">
+                An error occured while grabbing the content :/<br/>
+                @{
+                    if (id != null)
+                    {
+                        <text>
+                            Id: @id, Try refreshing!
+                        </text>
+                    }
+                    else
+                    {
+                        <text>
+                            Try refreshing!
+                        </text>
+                    }
+                }
+            </div>
+        </div>
+    }
+}
 </body>
 </html>
