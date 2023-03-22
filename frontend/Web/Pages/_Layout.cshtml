@@ -1,4 +1,5 @@
-﻿@using frontend.Api.Models.User
+﻿@using frontend.Api.Models
+@using frontend.Api.Models.User
 @using frontend.Utils
 @namespace frontend.Web.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
@@ -17,6 +18,8 @@
         userInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
             Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
     }
+    
+    ModelConfig? config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
 }
 
 <!DOCTYPE html>
@@ -46,6 +49,16 @@
                 POSTS
             </a>
         </div>
+        @{
+            if (userInfo != null)
+            {
+                <div class="navigation-bar-item">
+                    <a href="/upload">
+                        UPLOAD
+                    </a>
+                </div>
+            }
+        }
     </div>
 
     <div class="navigation-bar-search">
@@ -72,6 +85,15 @@
             }
             else
             {
+                if (config is {registration_use_invite_keys: false })
+                {
+                    <div class="navigation-bar-item navigation-item-button">
+                        <a href="/invite/">
+                            INVITE
+                        </a>
+                    </div>
+                }
+                
                 if (userInfo.admin)
                 {
                     <div class="navigation-bar-item navigation-item-button">

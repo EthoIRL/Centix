@@ -9,6 +9,8 @@
 
     var id = RouteData.Values["id"];
     ModelContentInfo? postInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
+    
+    // TODO: Add meta tags for discord & twitter
 }
 
 @section AdditionalHead
