@@ -24,7 +24,7 @@ pub mod Media {
 
     use base64::decode;
 
-    use infer::{MatcherType};
+    use infer::{MatcherType, Type, Matcher};
 
     use sled::IVec;
 
@@ -576,7 +576,7 @@ pub mod Media {
                         result
                     },
                     Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                        error: String::from("An internal error on the server's end has occurred")
+                        error: String::from("An internal error on the server's end has occurred while decoding")
                     })))
                 };
 
@@ -625,9 +625,8 @@ pub mod Media {
                     Some(result) => {
                         result
                     }
-                    None => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                        error: String::from("An internal error on the server's end has occurred")
-                    })))
+                    None => Type::new(MatcherType::Text, "text/plain", "txt", ignore)
+                    // Hacky solution since plain text files are not supported.
                 };
 
                 let data: (Vec<u8>, bool) = if config.backend_store_compressed {
@@ -789,6 +788,10 @@ pub mod Media {
                 })))
             }
         };
+    }
+
+    pub fn ignore(_buf: &[u8]) -> bool {
+        true
     }
 
     /// Permanently deletes media from instance
