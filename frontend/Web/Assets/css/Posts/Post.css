@@ -41,3 +41,34 @@
 
     color: var(--primary-text-color);
 }
+
+.head-sort-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.sort-container {
+    display: flex;
+    flex-direction: row;
+    
+    margin-left: auto;
+    
+    gap: 4px;
+}
+
+.sort-container > a {
+    padding: 4px 8px 4px 8px;
+    
+    text-align: center;
+    
+    border-radius: 4px;
+    border: 2px var(--dark-background) solid;
+    
+    font-size: 12px;
+    font-family: "Lato", sans-serif;
+}
+
+.sort-selected {
+    background-color: var(--primary-blue);    
+}
