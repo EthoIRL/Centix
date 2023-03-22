@@ -49,6 +49,8 @@ pub mod Media {
         content_size: i32,
         /// Upload's content type (e.g. video or image)
         content_type: ContentType,
+        /// Upload's content extension (e.g. .mp4 or .txt)
+        content_extension: String,
         /// When the media was uploaded in UTC Format
         #[schema(value_type = String)]
         upload_date: DateTime::<Utc>,
@@ -212,6 +214,7 @@ pub mod Media {
             content_name: media.name,
             content_size: media.data_size,
             content_type: media.data_type,
+            content_extension: media.extension,
             upload_date: media.upload_date,
             unlisted: media.unlisted,
             tags: media.tags,

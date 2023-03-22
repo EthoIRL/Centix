@@ -9,6 +9,7 @@ public class ModelContentInfo
     public int content_size { get; set; }
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ContentType content_type { get; set; }
+    public string content_extension { get; set; }
     public string upload_date { get; set; }
     public bool unlisted { get; set; }
     public string[]? tags { get; set; }
