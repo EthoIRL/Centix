@@ -13,7 +13,8 @@ namespace frontend.Controllers;
 
 public class ThumbnailController : Controller
 {
-    // TODO: Implement caching
+    // TODO: Implement browser image caching
+    // TODO: Thumbnails could stack up infinitely causing issues since they aren't being deleted
     [HttpGet("/thumbnail/")]
     public async Task<ActionResult> Thumbnail([FromQuery] ThumbnailModel model)
     {
