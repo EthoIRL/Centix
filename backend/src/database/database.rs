@@ -1,3 +1,4 @@
+// TODO: Split the monolithic database into separate pieces (media / users)
 use std::path::{PathBuf};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
