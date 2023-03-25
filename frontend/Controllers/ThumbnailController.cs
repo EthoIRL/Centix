@@ -15,6 +15,7 @@ public class ThumbnailController : Controller
 {
     // TODO: Implement browser image caching
     // TODO: Thumbnails could stack up infinitely causing issues since they aren't being deleted
+    // (10kb~ Average per image so not really an issue)
     [HttpGet("/thumbnail/")]
     public async Task<ActionResult> Thumbnail([FromQuery] ThumbnailModel model)
     {
