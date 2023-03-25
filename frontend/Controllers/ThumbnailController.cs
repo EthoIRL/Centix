@@ -60,6 +60,7 @@ public class ThumbnailController : Controller
     {
         var directory = Path.Join(Environment.CurrentDirectory, "cache");
         var filePath = Path.Join(directory, id);
+        filePath = Path.ChangeExtension(filePath, WebpFormat.Instance.FileExtensions.First());
 
         if (Directory.Exists(directory))
         {
@@ -92,6 +93,7 @@ public class ThumbnailController : Controller
     {
         var directory = Path.Join(Environment.CurrentDirectory, "cache");
         var filePath = Path.Join(directory, id);
+        filePath = Path.ChangeExtension(filePath, WebpFormat.Instance.FileExtensions.First());
         
         if (Path.GetFullPath(filePath) != filePath)
             return false;
@@ -111,6 +113,7 @@ public class ThumbnailController : Controller
     {
         var directory = Path.Join(Environment.CurrentDirectory, "cache");
         var filePath = Path.Join(directory, id);
+        filePath = Path.ChangeExtension(filePath, WebpFormat.Instance.FileExtensions.First());
         
         if (Path.GetFullPath(filePath) != filePath)
             return;
