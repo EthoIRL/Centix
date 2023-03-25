@@ -43,11 +43,11 @@
         <div class="signup-form-text-container">
             <div class="signup-form-input">
                 <label>Username</label>
-                @Html.TextBoxFor(model => model.username, null, new { placeholder = "Type your username", autocomplete = "off", required = "required"})
+                @Html.TextBoxFor(model => model.username, null, new {placeholder = "Type your username", maxlength = config?.user_username_limit, autocomplete = "off", required = "required"})
             </div>
             <div class="signup-form-input">
                 <label>Password</label>
-                @Html.TextBoxFor(model => model.password, null, new { placeholder = "Type your password", autocomplete = "off", required = "required"})
+                @Html.PasswordFor(model => model.password, new {placeholder = "Type your password", maxlength = config?.user_password_limit, autocomplete = "off", required = "required"})
             </div>
             
             @{
