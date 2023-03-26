@@ -6,6 +6,10 @@
     overflow-y: visible;
 }
 
+.large-post-container > a {
+    max-width: 455px;
+}
+
 .post-item-large {
     flex: 0 0 300px;
 
