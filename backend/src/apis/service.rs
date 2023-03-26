@@ -44,6 +44,10 @@ pub mod Service {
         pub user_password_limit: i32
 
         // TODO: Ignore certain settings if user is an admin
+        // Ignore user_upload_limit individual uploads
+        // Ignore user_upload_size_limit
+        // Ignore user_total_upload_size_limit
+        // Ignore media_allow_editing (Auto Allow)
     }
 
     #[derive(Serialize, Deserialize, ToSchema, Clone)]

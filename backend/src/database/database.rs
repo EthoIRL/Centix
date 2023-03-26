@@ -1,4 +1,5 @@
 // TODO: Split the monolithic database into separate pieces (media / users)
+// TODO: Remote/Local backup capabilities or at least a local copy
 use std::path::{PathBuf};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
