@@ -13,6 +13,7 @@
 
 .post-container > a {
     text-decoration: none;
+    flex-grow: 1;
 }
 
 .tag-container {
@@ -67,6 +68,9 @@
     
     font-size: 12px;
     font-family: "Lato", sans-serif;
+
+    user-select: none;
+    cursor: pointer;
 }
 
 .sort-selected {
