@@ -10,7 +10,7 @@
 
     var id = RouteData.Values["id"];
     ModelContentInfo? postInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
-    
+
     // TODO: Add meta tags for discord & twitter
 }
 
@@ -32,48 +32,92 @@
                 <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" loading="lazy"/>
                 <div class="child-information">
                     <div>
-                        Name<br/>
-                        @postInfo.content_name
-                    </div>
-                    <div>
-                        Author<br/>
-                        @postInfo.author_username
-                    </div>
-                    <div>
-                        Size<br/>
-                        @StringUtils.FormatBytesWithIdentifier(postInfo.content_size)
-                    </div>
-                    <div>
-                        Uploaded on<br>
-                        @DateTime.Parse(postInfo.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy HH:MM")
-                    </div>
-                    <div>
-                        Public<br/>
-                        @postInfo.unlisted
-                    </div>
-                    <div>
-                        Downloads<br/>
-                        @postInfo.downloads
-                    </div>
-                    <div class="child-information-tag">
-                        Tags<br/>
-                        <div class="child-tag-container">
-                            <div class="child-tag">
-                                @postInfo.content_type
-                            </div>
-                            @{
-                                if (postInfo.tags != null)
-                                {
-                                    foreach (var tag in postInfo.tags)
-                                    {
-                                        <div class="child-tag">
-                                            @tag
-                                        </div>
-                                    }
-                                }
-                            }
+                        <div class="child-info-header">
+                            File Name
+                        </div>
+                        <div>
+                            @postInfo.content_name
                         </div>
                     </div>
+                    <div>
+                        <div class="child-info-header">
+                            Total Downloads
+                        </div>
+                        <div>
+                            @postInfo.downloads
+                        </div>
+                    </div>
+                    <div>
+                        <div class="child-info-header">
+                            Upload Author
+                        </div>
+                        <div>
+                            @postInfo.author_username
+                        </div>
+                    </div>
+                    <div>
+                        <div class="child-info-header">
+                            Uploaded Date
+                        </div>
+                        <div>
+                            @DateTime.Parse(postInfo.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy HH:MM")
+                        </div>
+                    </div>
+                    <div>
+                        <div class="child-info-header">
+                            Stored Size
+                        </div>
+                        <div>
+                            @StringUtils.FormatBytesWithIdentifier(postInfo.content_size)
+                        </div>
+                    </div>
+                    <div>
+                        <div class="child-info-header">
+                            Public
+                        </div>
+                        <div>
+                            @(postInfo.unlisted ? "No" : "Yes")
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="child-info-header">
+                            Type
+                        </div>
+                        <div>
+                            @postInfo.content_type.ToString()
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="child-info-header">
+                            Extension
+                        </div>
+                        <div>
+                            .@postInfo.content_extension
+                        </div>
+                    </div>
+
+                    @{
+                        if (postInfo.tags != null)
+                        {
+                            <div class="child-information-tag">
+                                <div class="child-info-header">
+                                    Tags
+                                </div>
+                                <div class="child-tag-container">
+                                    @{
+                                        foreach (var tag in postInfo.tags)
+                                        {
+                                            <div class="child-tag">
+                                                @tag
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
                     <a href="@Url.Action("Download", "Download", new {id = id})" class="child-download">
                         Download
                     </a>
