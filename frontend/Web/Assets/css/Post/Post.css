@@ -23,7 +23,7 @@
     object-fit: contain;
     
     border: 1px grey solid;
-    border-radius: 4px;
+    border-radius: 8px;
     
     background-color: var(--dark-foreground);
     
@@ -37,8 +37,14 @@
     padding: 12px;
 }
 
+@media screen and (max-width: 780px) {
+    .post-container-child {
+        flex-direction: column;
+    }
+}
+
 .post-container-child > img {
-    border-radius: 8px;
+    border-radius: 4px;
     aspect-ratio: 16 / 9;
     overflow: hidden;
 }
@@ -52,14 +58,23 @@
     
     font-size: 16px;
     font-family: "OpenSans", sans-serif;
+    
+    padding-top: 32px;
 
-    color: var(--primary-text-color);
+    color: var(--secondary-text-color);
 }
 
 .child-information > div:not(.child-download) {
     flex: 1 1 50%;
     
     text-align: center;
+}
+
+.child-info-header {
+    font-size: 24px;
+    font-family: "OpenSans", sans-serif;
+
+    color: var(--primary-text-color);
 }
 
 .child-download {
@@ -88,6 +103,7 @@ body {
     flex: 1 1 50%;
     text-align: left;
     align-self: flex-end;
+    margin-bottom: auto;
 }
 
 .child-tag-container {
