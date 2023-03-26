@@ -12,9 +12,9 @@
 
     ModelMediaStats? mediaStats = await Program.ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
     ModelUserStats? userStats = await Program.ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
-    
+
     bool apiDown = mediaStats == null && userStats == null;
-    
+
     int totalContentCount = 0;
     string totalContentSize = "0 MB";
 
@@ -34,7 +34,7 @@
     ModelMediaFound? mediaFound = null;
     ModelInformation? information = null;
     ModelConfig? config = null;
-    
+
     ModelUserInfo? userInfo = null;
     if (!apiDown)
     {
@@ -51,7 +51,7 @@
             userInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
                 Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
         }
-        
+
         var searchModel = new ModelMediaSearch
         {
             downloads = true
@@ -83,23 +83,45 @@
                         <text class="stats-header">Welcome, @userInfo.username.ToUpper()</text>
                         <ul class="stats-list">
                             <li>
-                                <text>@userInfo.uploads.Length / @config?.user_upload_limit Files Uploaded</text>
+                                @{
+                                    if (config?.user_upload_limit > 0 && !userInfo.admin)
+                                    {
+                                        <text>@userInfo.uploads.Length / @config?.user_upload_limit Files Uploaded</text>
+                                    }
+                                    else
+                                    {
+                                        <text>@userInfo.uploads.Length / Unlimited Uploads</text>
+                                    }
+                                }
                             </li>
                             <li>
                                 @{
-                                    if (config?.user_total_upload_size_limit > 0)
+                                    if (config?.user_total_upload_size_limit > 0 && !userInfo.admin)
                                     {
                                         <text>@StringUtils.FormatBytesWithIdentifier(userInfo.total_upload_size) /
                                             @{
                                         <text>@config.user_total_upload_size_limit</text>
                                             }
-                                            mb(s) Used</text>
+                                            mb(s) Stored</text>
                                     }
                                     else
                                     {
-                                        <text>0 / Unlimited</text>
+                                        <text>@StringUtils.FormatBytesWithIdentifier(userInfo.total_upload_size) / Unlimited Stored</text>
                                     }
                                 }
+                            </li>
+                            <li>
+                                @{
+                                    if (userInfo.admin)
+                                    {
+                                        <text>Unlimited</text>
+                                    }
+                                    else
+                                    {
+                                        <text>@config?.user_upload_size_limit MB</text>
+                                    }
+                                }
+                                / Upload Size
                             </li>
                         </ul>
                     </div>
@@ -131,6 +153,14 @@
                     <li>
                         Storing @totalContentSize
                     </li>
+                    @{
+                        if (config?.media_allow_editing != null)
+                        {
+                            <li>
+                                Editing @(config.media_allow_editing ? "Allowed" : "Disallowed")
+                            </li>
+                        }
+                    }
                 </ul>
 
                 @{
@@ -156,7 +186,8 @@
             <div class="stats-backend-container">
                 <div class="stats-footer-text">
                     <text>
-                        Build - <a href="https://github.com/EthoIRL/Centix">
+                        Build -
+                        <a href="https://github.com/EthoIRL/Centix">
                             @(information != null ? information.git_version : "Unknown")
                         </a>
                     </text>
@@ -177,7 +208,7 @@
                             if (mediaFound.ids.Length > 0)
                             {
                                 for (int b = 0; b < Math.Min(10, mediaFound.ids.Length); b++)
-                                {   
+                                {
                                     var id = mediaFound.ids[b];
                                     ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
                                     if (contentInfo != null)
@@ -201,7 +232,7 @@
                                             </div>
                                             <div class="content-item-text">
                                                 @{
-                                                    <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text>
+                                        <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text>
                                                     if (contentInfo.content_name.Length > 16)
                                                     {
                                                         <text>...</text>
