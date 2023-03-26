@@ -38,7 +38,7 @@ public class ThumbnailController : Controller
                 {
                     // TODO: Optional config feature
                     bool? blur = contentInfo.tags?.Contains("nsfw");
-                    var thumbnail = await GetThumbnail(content, 480, WebpFormat.Instance, contentInfo.content_type, blur ?? false);
+                    var thumbnail = await GetThumbnail(content, 450, WebpFormat.Instance, contentInfo.content_type, blur ?? false);
 
                     SaveThumbnail(model.id, thumbnail);
                     
@@ -144,7 +144,7 @@ public class ThumbnailController : Controller
         {
             Mode = ResizeMode.Pad,
             PadColor = Color.Black,
-            Size = new Size(width, image.Height / image.Width * width)
+            Size = new Size(width, 250)
         };
         image.Mutate(x => x.Resize(resizeOptions));
         if (blur)
