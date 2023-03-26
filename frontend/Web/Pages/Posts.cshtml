@@ -86,7 +86,7 @@
                             ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
                             if (contentInfo != null)
                             {
-                                <a href="/post/@id/">
+                                <a href="/p/@id/">
                                     <div class="post-item-small">
                                         <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-small-image" loading="lazy"/>
                                         <div class="tag-container">
@@ -138,7 +138,7 @@
                             ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
                             if (contentInfo != null)
                             {
-                                <a href="/post/@id/">
+                                <a href="/p/@id/">
                                     <div class="post-item-small">
                                         <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-small-image" loading="lazy"/>
                                         <div class="tag-container">
@@ -225,7 +225,7 @@
                         var contentInfo = content.Item1;
                         var id = content.Item2;
 
-                        <a href="/post/@id/">
+                        <a href="/p/@id/">
                             <div class="post-item-large">
                                 <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-large-image" loading="lazy"/>
                                 <div class="post-item-large-name">
