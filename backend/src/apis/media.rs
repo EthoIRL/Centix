@@ -566,11 +566,13 @@ pub mod Media {
                     }
                 }
 
-                if config.user_upload_limit > 0 {
-                    if user.uploads.len() as i32 >= config.user_upload_limit {
-                        return Err(status::Custom(Status::BadRequest, Json(Error {
-                            error: format!("Maximum file uploads reached. Maximum of {} uploads per account", config.user_upload_limit)
-                        })))
+                if !user.admin {
+                    if config.user_upload_limit > 0 {
+                        if user.uploads.len() as i32 >= config.user_upload_limit {
+                            return Err(status::Custom(Status::BadRequest, Json(Error {
+                                error: format!("Maximum file uploads reached. Maximum of {} uploads per account", config.user_upload_limit)
+                            })))
+                        }
                     }
                 }
 
@@ -583,12 +585,14 @@ pub mod Media {
                     })))
                 };
 
-                if config.user_upload_size_limit > 0 {
-                    let mb_size = upload_data.len() as i32 / 1000000;
-                    if mb_size > config.user_upload_size_limit {
-                        return Err(status::Custom(Status::BadRequest, Json(Error {
-                            error: format!("File size too big! Maximum of {} megabytes", config.user_upload_size_limit)
-                        })))
+                if !user.admin { 
+                    if config.user_upload_size_limit > 0 {
+                        let mb_size = upload_data.len() as i32 / 1000000;
+                        if mb_size > config.user_upload_size_limit {
+                            return Err(status::Custom(Status::BadRequest, Json(Error {
+                                error: format!("File size too big! Maximum of {} megabytes", config.user_upload_size_limit)
+                            })))
+                        }
                     }
                 }
 
@@ -599,27 +603,29 @@ pub mod Media {
                     })))
                 };
 
-                if config.user_total_upload_size_limit > 0 {
-                    let mb_size = upload_data.len() as i32 / 1000000;
-
-                    let media_total_size: Option<i32> = media_database.iter()
-                        .filter_map(|item| item.ok())
-                        .filter_map(|item| {
-                            let result: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
-                                Ok(result) => result,
-                                Err(_) => return None
-                            };
-                            Some(result)
-                        })
-                        .map(|media| media.data_size)
-                        .sum1();
-                    if let Some(media_total_size) = media_total_size {
-                        let mb_total_size = media_total_size / 1000000;
-                        let potential_overflow = mb_total_size + mb_size;
-                        if potential_overflow > config.user_total_upload_size_limit {
-                            return Err(status::Custom(Status::BadRequest, Json(Error {
-                                error: format!("User has reached maximum amount of file storage. Maximum file uploads {} megabytes", config.user_total_upload_size_limit)
-                            })))
+                if !user.admin { 
+                    if config.user_total_upload_size_limit > 0 {
+                        let mb_size = upload_data.len() as i32 / 1000000;
+    
+                        let media_total_size: Option<i32> = media_database.iter()
+                            .filter_map(|item| item.ok())
+                            .filter_map(|item| {
+                                let result: DBMedia = match serde_json::from_str(&String::from_utf8_lossy(&item.1)) {
+                                    Ok(result) => result,
+                                    Err(_) => return None
+                                };
+                                Some(result)
+                            })
+                            .map(|media| media.data_size)
+                            .sum1();
+                        if let Some(media_total_size) = media_total_size {
+                            let mb_total_size = media_total_size / 1000000;
+                            let potential_overflow = mb_total_size + mb_size;
+                            if potential_overflow > config.user_total_upload_size_limit {
+                                return Err(status::Custom(Status::BadRequest, Json(Error {
+                                    error: format!("User has reached maximum amount of file storage. Maximum file uploads {} megabytes", config.user_total_upload_size_limit)
+                                })))
+                            }
                         }
                     }
                 }
@@ -946,12 +952,6 @@ pub mod Media {
             })))
         };
 
-        if !config.media_allow_editing {
-            return Err(status::Custom(Status::Forbidden, Json(Error {
-                error: String::from("Editing is disabled on this instance")
-            })))
-        }
-
         let user_database = match database.open_tree("user") {
             Ok(result) => result,
             Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
@@ -979,7 +979,15 @@ pub mod Media {
                 }
             });
 
-        if user.is_some() {
+        if let Some(user) = user {
+            if !user.admin {
+                if !config.media_allow_editing {
+                    return Err(status::Custom(Status::Forbidden, Json(Error {
+                        error: String::from("Editing is disabled on this instance")
+                    })))
+                }
+            }
+
             let media_database = match database.open_tree("media") {
                 Ok(result) => result,
                 Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
@@ -1000,6 +1008,14 @@ pub mod Media {
 
             match media {
                 Some(media) => {
+                    if !user.admin {
+                        if media.author_username != user.username {
+                            return Err(status::Custom(Status::Unauthorized, Json(Error {
+                                error: String::from("You are unauthorized to access & edit this content")
+                            })))
+                        }
+                    }
+
                     let mut edited_media = media;
                     
                     if let Some(name) = body.name.clone() {
