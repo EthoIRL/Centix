@@ -6,8 +6,8 @@
 
 @{
     Layout = "../_Layout.cshtml";
-    
-    ModelUserInfo userInfo;
+
+    ModelUserInfo? userInfo = null;
     if (CookieUtils.IsCookieReal(Request, Response))
     {
         var userCredentials = new ModelUserKey
@@ -25,12 +25,20 @@
 
         userInfo = receivedUserInfo;
     }
+
+    if (userInfo == null)
+    {
+        Response.Redirect("/");
+        return;
+    }
 }
 
 @section AdditionalHead
 {
     <title>Account</title>
     <link rel="stylesheet" href="~/Web/Assets/css/Account/Account.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Account/Information.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Account/Posts.css">
 }
 
 <!DOCTYPE html>
@@ -38,6 +46,73 @@
 <html>
 <body>
 
+<div class="account-container">
+    <div class="account-child information-child">
+        <div class="account-container-header">
+            My Account
+        </div>
+
+        <div class="information">
+            <div class="information-header">
+                <img src="~/Web/Assets/imgs/Account/user.png"/>
+            </div>
+            <div class="information-container">
+                <div>
+                    Name
+                    <div class="information-data">
+                        @userInfo.username
+                    </div>
+                </div>
+                @{
+                    if (userInfo.admin)
+                    {
+                        <div>
+                            Admin
+                            <div class="information-data">
+                                @(userInfo.admin ? "Yes" : "No")
+                            </div>
+                        </div>
+                    }
+                }
+                <div>
+                    Creation Date
+                    <div class="information-data">
+                        @DateTime.Parse(userInfo.creation_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy HH:MM")
+                    </div>
+                </div>
+                <div>
+                    Uploads
+                    <div class="information-data">
+                        @userInfo.uploads.Length
+                    </div>
+                </div>
+                @{
+                    if (userInfo.invite_key != null)
+                    {
+                        <div>
+                            Invite
+                            <div class="information-data">
+                                @userInfo.invite_key
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+            <div class="account-action-container">
+                <button>Change Password</button>
+                <button class="action-logout">Logout</button>
+            </div>
+        </div>
+    </div>
+    <div class="account-child post-child">
+        <div class="account-container-header">
+            My Posts
+        </div>
+        <div>
+            B
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

@@ -1,0 +1,111 @@
+﻿@import url("../color.css");
+
+.information {
+    display: flex;
+    flex-direction: column;
+    
+    gap: 8px;
+    
+    width: 50%;
+    align-self: center;
+}
+
+
+.information-header {
+    align-self: center;
+}
+
+.information-container {
+    width: 100%;
+    
+    display: flex;
+    
+    flex-direction: row;
+    flex-wrap: wrap;
+    
+    gap: 8px;
+}
+
+.information-container > div {
+    flex: 1 1 15%; 
+    
+    justify-content: center;
+    
+    padding: 8px 4px 8px 4px;
+    
+    border: 1px var(--dark-background) solid;
+    border-radius: 4px;
+    
+    white-space: nowrap;
+
+    font-size: 24px;
+    font-family: "Lato", sans-serif;
+
+    color: var(--primary-text-color);
+    
+    background-color: var(--dark-background);
+    
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    
+    gap: 4px;
+    
+    align-items: center;
+}
+
+.information-data {
+    font-size: 16px;
+    font-family: "OpenSans", sans-serif;
+
+    color: var(--primary-text-color);
+    
+    padding: 0 2px 0 2px;
+    border-bottom: 1px var(--primary-blue) solid;
+}
+
+.account-action-container {
+    width: 100%;
+    
+    padding: 4px;
+    
+    display: flex;
+    flex-direction: column;
+    
+    align-items: center;
+}
+
+.account-action-container > button {
+    width: 100%;
+    max-width: 450px;
+
+    margin: 8px;
+
+    border: 1px var(--primary-light-blue) solid;
+    
+    border-radius: 4px;
+    padding: 4px;
+    
+    background-color: var(--dark-background);
+
+    font-size: 16px;
+    font-family: "OpenSans", sans-serif;
+
+    color: var(--primary-text-color);
+}
+
+.account-action-container > button:last-of-type {
+    margin: 0 8px 0 8px;
+}
+
+@media screen and (max-width: 1080px) {
+    .information {
+        width: 100%;
+    }
+
+    .account-action-container,
+    .account-action-container > button {
+        max-width: none;
+        width: 100%;
+    }
+}
