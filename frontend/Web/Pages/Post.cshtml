@@ -1,5 +1,6 @@
 ﻿@page "/p/{id}/"
 @using frontend
+@using frontend.Api.Models
 @using frontend.Api.Models.Media
 @using frontend.Utils
 @model frontend.Web.Pages.Post
@@ -11,6 +12,8 @@
     ModelContentInfo? postInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
 
     // TODO: Add meta tags for discord & twitter
+
+    ModelConfig? config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
 }
 
 @section AdditionalHead
@@ -117,9 +120,32 @@
                             </div>
                         }
                     }
-                    <a href="@Url.Action("Download", "Download", new {id = id})" class="child-download">
-                        Download
-                    </a>
+
+                    <div class="child-button-container">
+                        <a href="@Url.Action("Download", "Download", new {id = id})" class="child-button child-download">
+                            Download
+                        </a>
+                        @{
+                            if (config != null)
+                            {
+                                <button class="child-share child-button">
+                                    <div class="share-dropup">
+                                        <ul class="share-dropup-container">
+                                            @{
+                                                foreach (var domain in config.backend_domains)
+                                                {
+                                                    <li>
+                                                        <a href="//@domain/p/@id">@domain/p/@id</a>
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    </div>
+                                    Share
+                                </button>
+                            }
+                        }
+                    </div>
                 </div>
             </div>
         </div>
