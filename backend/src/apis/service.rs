@@ -48,6 +48,7 @@ pub mod Service {
         // DONE Ignore user_upload_size_limit
         // DONE Ignore user_total_upload_size_limit
         // DONE Ignore media_allow_editing (Auto Allow)
+        // DONE Ignore tags_allow_custom (Auto Allow)
     }
 
     #[derive(Serialize, Deserialize, ToSchema, Clone)]

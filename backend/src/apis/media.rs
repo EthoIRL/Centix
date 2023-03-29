@@ -708,7 +708,11 @@ pub mod Media {
                     .filter(|tag| {
                         let contains = config.tags_default.contains(&tag.to_lowercase());
                         if !contains {
-                            if config.tags_allow_custom {
+                            if config.tags_allow_custom || user.admin {
+                                if user.admin {
+                                    return true
+                                }
+                                
                                 if tag.chars().count() as i32 > config.tags_max_name_length {
                                     return false
                                 }
@@ -1042,7 +1046,11 @@ pub mod Media {
                                 .filter(|tag| {
                                     let contains = config.tags_default.contains(&tag.to_lowercase());
                                     if !contains {
-                                        if config.tags_allow_custom {
+                                        if config.tags_allow_custom || user.admin {
+                                            if user.admin {
+                                                return true
+                                            }
+                                            
                                             if tag.chars().count() as i32 > config.tags_max_name_length {
                                                 return false
                                             }
