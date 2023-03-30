@@ -67,6 +67,7 @@
     <link rel="stylesheet" href="~/Web/Assets/css/Index/Index.css">
     <link rel="stylesheet" href="~/Web/Assets/css/Index/Stats.css">
     <link rel="stylesheet" href="~/Web/Assets/css/Index/Content.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Index/Announcement.css">
 }
 
 <!DOCTYPE html>
@@ -196,11 +197,35 @@
         </div>
     </div>
     <div class="main-content-container">
+        <div class="announcement-container">
+            <div class="main-header announcement-header">
+                Announcements
+            </div>
+            
+            <div class="announcement-list">
+                @* // TODO: Figure out a way to let the admin interact with this without having to edit the class (Text file?)*@
+                @{
+                    for (int i = 0; i < 1; i++)
+                    {
+                        <div>
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                            - Mar 30 2023
+                        </div>
+                        
+                        <div>
+                            This is an invite only service! (<a href="https://discord.gg/test/">https://discord.gg/test/</a>)
+                            - Mar 30 2023
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+        
         @{
             if (mediaFound != null && mediaFound.ids.Length > 0)
             {
                 <div class="content-container">
-                    <div class="content-header">
+                    <div class="main-header">
                         Popular posts
                     </div>
                     <div class="content-flex-list">
