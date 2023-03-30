@@ -54,7 +54,7 @@
 
     <link rel="stylesheet" href="~/Web/Assets/css/Posts/Small.css">
     <link rel="stylesheet" href="~/Web/Assets/css/Posts/Large.css">
-    
+
     <script src="~/Web/Assets/js/Posts/Posts.js"></script>
 }
 
@@ -86,35 +86,33 @@
                             ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
                             if (contentInfo != null)
                             {
-                                <a href="/p/@id/">
-                                    <div class="post-item-small">
-                                        <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-small-image" loading="lazy"/>
-                                        <div class="tag-container">
-                                            <div class="tag">
-                                                @contentInfo.content_type
-                                            </div>
-                                            @{
-                                                if (contentInfo.tags != null)
+                                <a href="/p/@id/" class="post-item-small">
+                                    <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-small-image" loading="lazy"/>
+                                    <div class="tag-container">
+                                        <div class="tag">
+                                            @contentInfo.content_type
+                                        </div>
+                                        @{
+                                            if (contentInfo.tags != null)
+                                            {
+                                                for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++)
                                                 {
-                                                    for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++)
-                                                    {
-                                                        string tag = contentInfo.tags[i];
-                                                        <div class="tag">@tag</div>
-                                                    }
+                                                    string tag = contentInfo.tags[i];
+                                                    <div class="tag">@tag</div>
                                                 }
                                             }
-                                        </div>
-                                        <div class="post-small-item-text">
-                                            @{
+                                        }
+                                    </div>
+                                    <div class="post-small-item-text">
+                                        @{
                                 <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text>
-                                                if (contentInfo.content_name.Length > 16)
-                                                {
-                                                    <text>...</text>
-                                                }
+                                            if (contentInfo.content_name.Length > 16)
+                                            {
+                                                <text>...</text>
                                             }
-                                            • @contentInfo.author_username • @contentInfo.downloads
-                                            <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/>
-                                        </div>
+                                        }
+                                        • @contentInfo.author_username • @contentInfo.downloads
+                                        <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/>
                                     </div>
                                 </a>
                             }
@@ -138,35 +136,33 @@
                             ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
                             if (contentInfo != null)
                             {
-                                <a href="/p/@id/">
-                                    <div class="post-item-small">
-                                        <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-small-image" loading="lazy"/>
-                                        <div class="tag-container">
-                                            <div class="tag">
-                                                @contentInfo.content_type
-                                            </div>
-                                            @{
-                                                if (contentInfo.tags != null)
+                                <a href="/p/@id/" class="post-item-small">
+                                    <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-small-image" loading="lazy"/>
+                                    <div class="tag-container">
+                                        <div class="tag">
+                                            @contentInfo.content_type
+                                        </div>
+                                        @{
+                                            if (contentInfo.tags != null)
+                                            {
+                                                for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++)
                                                 {
-                                                    for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++)
-                                                    {
-                                                        string tag = contentInfo.tags[i];
-                                                        <div class="tag">@tag</div>
-                                                    }
+                                                    string tag = contentInfo.tags[i];
+                                                    <div class="tag">@tag</div>
                                                 }
                                             }
-                                        </div>
-                                        <div class="post-small-item-text">
-                                            @{
+                                        }
+                                    </div>
+                                    <div class="post-small-item-text">
+                                        @{
                                 <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text>
-                                                if (contentInfo.content_name.Length > 16)
-                                                {
-                                                    <text>...</text>
-                                                }
+                                            if (contentInfo.content_name.Length > 16)
+                                            {
+                                                <text>...</text>
                                             }
-                                            • @contentInfo.author_username • @contentInfo.downloads
-                                            <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/>
-                                        </div>
+                                        }
+                                        • @contentInfo.author_username • @contentInfo.downloads
+                                        <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/>
                                     </div>
                                 </a>
                             }
@@ -203,18 +199,18 @@
                             contentList.Add(new(contentInfo, id));
                         }
                     }
-                    
+
                     if (QueryUtils.IsSelectedFromSortQuery(Request.Query, "recent"))
                     {
                         contentList.Sort((content1, content2) =>
                         {
                             var date1 = DateTime.Parse(content1.Item1.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind);
                             var date2 = DateTime.Parse(content2.Item1.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind);
-                            
+
                             return DateTime.Compare(date2, date1);
                         });
                     }
-                    
+
                     if (QueryUtils.IsSelectedFromSortQuery(Request.Query, "downloads"))
                     {
                         contentList.Sort((s, s2) => s2.Item1.downloads - s.Item1.downloads);

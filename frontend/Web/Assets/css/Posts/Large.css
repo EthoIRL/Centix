@@ -11,8 +11,9 @@
 }
 
 .post-item-large {
-    flex: 0 0 300px;
+    flex: 1 0 300px;
 
+    min-width: 300px;
     height: 350px;
 
     background-color: var(--dark-background);
@@ -27,14 +28,11 @@
 .post-large-image {
     flex-basis: 55%;
 
-    align-items: center;
-    justify-content: center;
-
-    height: 200px;
-    overflow: hidden;
-
-    aspect-ratio: 16 / 9;
-    border-radius: 8px;
+    height: 100px;
+    object-fit: scale-down;
+    
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px white solid;
 }
 
 .post-large-info-container {
