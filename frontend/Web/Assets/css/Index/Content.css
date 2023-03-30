@@ -15,15 +15,6 @@
     display: none;
 }
 
-.content-header {
-    font-size: 20px;
-    font-family: "OpenSans", sans-serif;
-
-    color: var(--primary-text-color);
-    
-    margin-bottom: 8px;
-}
-
 .content-no-available {
     font-size: 20px;
     font-family: "OpenSans Italic", sans-serif;
