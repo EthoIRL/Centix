@@ -36,10 +36,29 @@ public class ThumbnailController : Controller
                 var content = await Program.ApiUtils.GetAndReceiveByteArray(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/download?id=", model.id));
                 if (content != null)
                 {
-                    // TODO: Optional config feature
-                    bool? blur = contentInfo.tags?.Contains("nsfw");
-                    var thumbnail = await GetThumbnail(content, 450, WebpFormat.Instance, contentInfo.content_type, blur ?? false);
+                    bool blur = false;
+                    
+                    if (Program.ConfigManager.Config.BlurTags.Length > 0 && contentInfo.tags != null)
+                    {
+                        foreach (var contentInfoTag in contentInfo.tags)
+                        {
+                            if (Program.ConfigManager.Config.BlurTags.ToList().ConvertAll(tag => tag.ToLower())
+                                .Any(tag => tag == contentInfoTag.ToLower()))
+                            {
+                                blur = true;
+                            }
+                        }
+                    }
+                    
+                    var thumbnailImage = GenerateThumbnail(content, 450, contentInfo.content_type);
+                    
+                    if (blur)
+                    {
+                        thumbnailImage = BlurImage(thumbnailImage);
+                    }
 
+                    var thumbnail = await SaveImage(thumbnailImage, WebpFormat.Instance);
+                    
                     SaveThumbnail(model.id, thumbnail);
                     
                     var file = $"{model.id}.{WebpFormat.Instance.FileExtensions.First()}"; 
@@ -126,7 +145,7 @@ public class ThumbnailController : Controller
         }
     }
 
-    private static async Task<byte[]> GetThumbnail(byte[] data, int width, IImageFormat format, ModelContentInfo.ContentType contentType, bool blur = false)
+    private static Image<Rgba32> LoadImage(byte[] data, ModelContentInfo.ContentType contentType)
     {
         Image<Rgba32> image;
         switch (contentType)
@@ -139,21 +158,42 @@ public class ThumbnailController : Controller
                 image = Image.Load<Rgba32>(data);
                 break;
         }
+        
+        return image;
+    }
+
+    private static Image<Rgba32> GenerateThumbnail(byte[] data, int width, ModelContentInfo.ContentType contentType)
+    {
+        Image<Rgba32> image = LoadImage(data, contentType);
+
+        var padColor = Color.Transparent;
+        if (!Program.ConfigManager.Config.TransparentThumbnailPadding)
+        {
+            padColor = Color.Black;
+        }
 
         var resizeOptions = new ResizeOptions
         {
             Mode = ResizeMode.Pad,
-            PadColor = Color.Black,
+            PadColor = padColor,
             Size = new Size(width, 250)
         };
         image.Mutate(x => x.Resize(resizeOptions));
-        if (blur)
-        {
-            image.Mutate(x => x.GaussianBlur(12));
-        }
-        
+
+        return image;
+    }
+
+    private static async Task<byte[]> SaveImage(Image<Rgba32> image, IImageFormat format)
+    {
         await using var ms = new MemoryStream();
         await image.SaveAsync(ms, format);
         return ms.ToArray();
+    }
+
+    private static Image<Rgba32> BlurImage(Image<Rgba32> image, int sigma = 16)
+    {
+        image.Mutate(x => x.GaussianBlur(sigma));
+        
+        return image;
     }
 }
