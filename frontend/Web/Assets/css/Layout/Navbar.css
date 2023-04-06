@@ -85,4 +85,8 @@
     .navigation-bar-search {
         display: none;
     }
+
+    .navigation-bar-item {
+        font-size: 14px;
+    }
 }
