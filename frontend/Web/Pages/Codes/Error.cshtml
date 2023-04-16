@@ -1,0 +1,42 @@
+﻿@page "/error/{code}"
+@model frontend.Web.Pages.Codes.NotFound
+
+@{
+    Layout = "../_Layout.cshtml";
+
+    var code = RouteData.Values["code"];
+}
+
+
+@section AdditionalHead
+{
+    <title>Error - @RouteData.Values["code"]</title>
+    <link rel="stylesheet" href="~/Web/Assets/css/Codes/Error.css">
+}
+
+<!DOCTYPE html>
+
+<html>
+<body>
+<div class="error-container">
+    <div class="text-container">
+        <div class="header-text">
+            Whoops!
+        </div>
+        <div class="lower-text">
+            An error has occurred while processing your request :/ 
+            <div class="error-code">
+                (Code @code@{
+                    switch (code)
+                    {
+                        case "404":
+                            <text>, The requested resource you were looking for could not be found</text>
+                            break;
+                    }
+                })
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
