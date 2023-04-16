@@ -1,0 +1,45 @@
+﻿.error-container {
+    display: flex;
+    
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    
+    flex-direction: column;
+}
+
+html,
+body,
+.error-container {
+    height: 100%;
+    width: 100%;
+}
+
+.text-container {
+    display: flex;
+    flex-direction: column;
+    
+    font-family: "Lato", sans-serif;
+    font-size: 20px;
+    color: white;
+    
+    margin: 20px 20px 128px 20px;
+}
+
+.header-text {
+    width: min-content;
+    
+    padding-bottom: 2px;
+    border-bottom: 1px white solid;
+    
+    font-size: 72px;
+}
+
+.lower-text {
+    padding: 8px 0 0 8px;
+}
+
+.error-code {
+    font-family: "OpenSans Italic", sans-serif;
+    font-size: 16px;
+}

@@ -67,7 +67,7 @@ public class FrontendServer
 
         app.UseRouting();
     
-        app.UseStatusCodePagesWithRedirects("/404");
+        app.UseStatusCodePagesWithRedirects("/error/{0}");
 
         app.UseAuthorization();
 
