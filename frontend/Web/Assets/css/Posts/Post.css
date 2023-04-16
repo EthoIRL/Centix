@@ -58,7 +58,7 @@
     gap: 4px;
 }
 
-.sort-container > a {
+.sort-item {
     padding: 4px 8px 4px 8px;
     
     text-align: center;
@@ -70,6 +70,9 @@
     font-family: "Lato", sans-serif;
 
     user-select: none;
+}
+
+.cursor-sort {
     cursor: pointer;
 }
 

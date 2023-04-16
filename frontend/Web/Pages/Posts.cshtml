@@ -179,7 +179,10 @@
                 </div>
 
                 <div class="sort-container">
-                    <a onclick="updateQueryURL('downloads', window);" class="@{ if (QueryUtils.IsSelectedFromSortQuery(Request.Query, "downloads")) { <text>sort-selected</text> } }">
+                    <a class="sort-item @{ if (Request.Query.Count == 0) { <text>sort-selected ignore-sort</text> } }">
+                        Recent
+                    </a>
+                    <a onclick="updateQueryURL('downloads', window);" class="sort-item cursor-sort @{ if (QueryUtils.IsSelectedFromSortQuery(Request.Query, "downloads")) { <text>sort-selected</text> } }">
                         Downloads
                     </a>
                 </div>
