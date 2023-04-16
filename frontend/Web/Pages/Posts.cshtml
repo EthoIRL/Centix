@@ -179,9 +179,6 @@
                 </div>
 
                 <div class="sort-container">
-                    <a onclick="updateQueryURL('recent', window);" class="@{ if (QueryUtils.IsSelectedFromSortQuery(Request.Query, "recent")) { <text>sort-selected</text> } }">
-                        Recent
-                    </a>
                     <a onclick="updateQueryURL('downloads', window);" class="@{ if (QueryUtils.IsSelectedFromSortQuery(Request.Query, "downloads")) { <text>sort-selected</text> } }">
                         Downloads
                     </a>
@@ -200,16 +197,13 @@
                         }
                     }
 
-                    if (QueryUtils.IsSelectedFromSortQuery(Request.Query, "recent"))
+                    contentList.Sort((content1, content2) =>
                     {
-                        contentList.Sort((content1, content2) =>
-                        {
-                            var date1 = DateTime.Parse(content1.Item1.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind);
-                            var date2 = DateTime.Parse(content2.Item1.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind);
+                        var date1 = DateTime.Parse(content1.Item1.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind);
+                        var date2 = DateTime.Parse(content2.Item1.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind);
 
-                            return DateTime.Compare(date2, date1);
-                        });
-                    }
+                        return DateTime.Compare(date2, date1);
+                    });
 
                     if (QueryUtils.IsSelectedFromSortQuery(Request.Query, "downloads"))
                     {
