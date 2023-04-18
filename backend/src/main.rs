@@ -113,7 +113,9 @@ fn rocket() -> Rocket<Build> {
     let limits = Limits::new()
         .limit("json", ByteUnit::max_value());
 
+
     let figment = rocket::Config::figment()
+        .merge(("address", "0.0.0.0"))
         .merge(("limits", limits));
 
     rocket::build()
