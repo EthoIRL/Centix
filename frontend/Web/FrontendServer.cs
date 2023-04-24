@@ -66,7 +66,7 @@ public class FrontendServer
         });
 
         app.UseRouting();
-    
+        
         app.UseStatusCodePagesWithRedirects("/error/{0}");
 
         app.UseAuthorization();
