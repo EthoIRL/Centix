@@ -7,7 +7,7 @@ public static class CookieUtils
 {
     public const string CookieName = "session_key";
 
-    public static async Task<bool> IsCookieValid(ApiUtils apiUtils, HttpRequest request, HttpResponse response)
+    public static async Task<bool> IsCookieValid(ApiUtils apiUtils, HttpRequest? request, HttpResponse response)
     {
         if (!IsCookieReal(request, response))
         {
@@ -31,7 +31,7 @@ public static class CookieUtils
         return false;
     }
 
-    public static async Task<bool> IsCookieAuthentic(ApiUtils apiUtils, HttpRequest request, HttpResponse response,
+    public static async Task<bool> IsCookieAuthentic(ApiUtils apiUtils, HttpRequest? request, HttpResponse response,
         string username)
     {
         // Check if cookie is real or not
@@ -57,7 +57,7 @@ public static class CookieUtils
         return false;
     }
 
-    private static bool ResetCookieExpire(HttpRequest request, HttpResponse response)
+    private static bool ResetCookieExpire(HttpRequest? request, HttpResponse response)
     {
         if (IsCookieReal(request, response))
         {
@@ -75,8 +75,13 @@ public static class CookieUtils
         return false;
     }
 
-    public static bool IsCookieReal(HttpRequest request, HttpResponse response)
+    public static bool IsCookieReal(HttpRequest? request, HttpResponse response)
     {
+        if (request == null || request?.Cookies == null)
+        {
+            return false;
+        }
+        
         // if auth cookie does not exist
         if (request.Cookies[CookieName] == null)
         {
