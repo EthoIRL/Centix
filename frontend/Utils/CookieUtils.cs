@@ -31,13 +31,12 @@ public static class CookieUtils
         return false;
     }
 
-    public static async Task<bool> IsCookieAuthentic(ApiUtils apiUtils, HttpRequest? request, HttpResponse response,
-        string username)
+    public static async Task<ModelUserInfo?> IsCookieUserValid(ApiUtils apiUtils, HttpRequest? request,
+        HttpResponse response)
     {
-        // Check if cookie is real or not
         if (!IsCookieReal(request, response))
         {
-            return false;
+            return null;
         }
 
         // Check authenticity server-side
@@ -49,12 +48,16 @@ public static class CookieUtils
         var userInfo =
             await apiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
                 Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
-        if (userInfo != null && userInfo.username == username)
+        
+        if (userInfo != null)
         {
-            return true;
+            if (ResetCookieExpire(request, response))
+            {
+                return userInfo;
+            }
         }
 
-        return false;
+        return null;
     }
 
     private static bool ResetCookieExpire(HttpRequest? request, HttpResponse response)
@@ -75,7 +78,7 @@ public static class CookieUtils
         return false;
     }
 
-    public static bool IsCookieReal(HttpRequest? request, HttpResponse response)
+    private static bool IsCookieReal(HttpRequest? request, HttpResponse response)
     {
         if (request == null || request?.Cookies == null)
         {

@@ -40,17 +40,7 @@
     {
         information = await Program.ApiUtils.GetModelAsync<ModelInformation>(Program.ConfigManager.Config.BackendApiUri + "/services/information");
         config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
-
-        if (CookieUtils.IsCookieReal(Request, Response))
-        {
-            var userCredentials = new ModelUserKey
-            {
-                key = Request.Cookies[CookieUtils.CookieName]
-            };
-
-            userInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
-                Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
-        }
+        userInfo = await CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
 
         var searchModel = new ModelMediaSearch
         {

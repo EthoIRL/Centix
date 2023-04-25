@@ -7,28 +7,10 @@
 @{
     Layout = "../_Layout.cshtml";
 
-    ModelUserInfo? userInfo = null;
-    if (CookieUtils.IsCookieReal(Request, Response))
-    {
-        var userCredentials = new ModelUserKey
-        {
-            key = Request.Cookies[CookieUtils.CookieName]
-        };
-
-        var receivedUserInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
-            Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
-        if (receivedUserInfo == null)
-        {
-            Response.Redirect("/login");
-            return;
-        }
-
-        userInfo = receivedUserInfo;
-    }
-
+    ModelUserInfo? userInfo = await CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
     if (userInfo == null)
     {
-        Response.Redirect("/");
+        Response.Redirect("/login");
         return;
     }
 }

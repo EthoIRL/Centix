@@ -15,24 +15,10 @@
 
     ModelMediaFound? popularSearch = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", popularSearchModel);
     ModelMediaFound? generalSearch = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", new ModelMediaSearch());
-
-    ModelUserInfo? userInfo = null;
-
-    bool realCookie = CookieUtils.IsCookieReal(Request, Response);
-
-    if (realCookie)
-    {
-        var userCredentials = new ModelUserKey
-        {
-            key = Request.Cookies[CookieUtils.CookieName]
-        };
-
-        userInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
-            Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
-    }
+    ModelUserInfo? userInfo = await CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
 
     ModelMediaFound? userSearch = null;
-    if (userInfo != null && realCookie)
+    if (userInfo != null)
     {
         var userSearchModel = new ModelMediaSearch
         {
