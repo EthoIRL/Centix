@@ -7,18 +7,7 @@
 @{
     Layout = null;
 
-    ModelUserInfo? userInfo = null;
-    if (CookieUtils.IsCookieReal(Context.Request, Context.Response))
-    {
-        var userCredentials = new ModelUserKey
-        {
-            key = Context.Request.Cookies[CookieUtils.CookieName]
-        };
-
-        userInfo = await Program.ApiUtils.PostAndReceiveModel<ModelUserKey, ModelUserInfo>(
-            Program.ConfigManager.Config.BackendApiUri + "/user/info", userCredentials);
-    }
-    
+    ModelUserInfo? userInfo = await CookieUtils.IsCookieUserValid(Program.ApiUtils, Context.Request, Context.Response);
     ModelConfig? config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
 }
 
