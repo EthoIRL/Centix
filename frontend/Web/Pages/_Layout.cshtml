@@ -7,8 +7,11 @@
 @{
     Layout = null;
 
-    ModelUserInfo? userInfo = await CookieUtils.IsCookieUserValid(Program.ApiUtils, Context.Request, Context.Response);
-    ModelConfig? config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+    var userTask = CookieUtils.IsCookieUserValid(Program.ApiUtils, Context.Request, Context.Response);
+    var userConfig = Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+    
+    ModelUserInfo? userInfo = await userTask;
+    ModelConfig? config = await userConfig;
 }
 
 <!DOCTYPE html>

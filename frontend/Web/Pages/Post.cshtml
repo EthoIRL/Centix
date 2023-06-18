@@ -9,11 +9,12 @@
     Layout = "_Layout.cshtml";
 
     var id = RouteData.Values["id"];
-    ModelContentInfo? postInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
+    var postInfoTask = Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
+    var configTask = Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+    ModelContentInfo? postInfo = await postInfoTask;
+    ModelConfig? config = await configTask;
 
     // TODO: Add meta tags for discord & twitter
-
-    ModelConfig? config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
 }
 
 @section AdditionalHead
