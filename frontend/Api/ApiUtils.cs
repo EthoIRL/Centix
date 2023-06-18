@@ -21,6 +21,8 @@ public class ApiUtils
         {
             NoCache = true
         };
+
+        _client.Timeout = TimeSpan.FromSeconds(5);
     }
 
     /// <summary>
@@ -46,10 +48,12 @@ public class ApiUtils
         }
         catch (Exception exception)
         {
-            if (exception is not HttpRequestException)
+            if (exception is HttpRequestException or TaskCanceledException)
             {
-                Console.WriteLine(exception);
+                return model;
             }
+            
+            Console.WriteLine(exception);
         }
 
         return model;
@@ -79,10 +83,12 @@ public class ApiUtils
         } 
         catch (Exception exception)
         {
-            if (exception is not HttpRequestException)
+            if (exception is HttpRequestException or TaskCanceledException)
             {
-                Console.WriteLine(exception);
+                return returnModel;
             }
+            
+            Console.WriteLine(exception);
         }
         
         return returnModel;
@@ -110,10 +116,12 @@ public class ApiUtils
         } 
         catch (Exception exception)
         {
-            if (exception is not HttpRequestException)
+            if (exception is HttpRequestException or TaskCanceledException)
             {
-                Console.WriteLine(exception);
+                return returnModel;
             }
+            
+            Console.WriteLine(exception);
         }
         
         return returnModel;
@@ -141,10 +149,12 @@ public class ApiUtils
         } 
         catch (Exception exception)
         {
-            if (exception is not HttpRequestException)
+            if (exception is HttpRequestException or TaskCanceledException)
             {
-                Console.WriteLine(exception);
+                return returnModel;
             }
+            
+            Console.WriteLine(exception);
         }
         
         return returnModel;
@@ -167,10 +177,12 @@ public class ApiUtils
         } 
         catch (Exception exception)
         {
-            if (exception is not HttpRequestException)
+            if (exception is HttpRequestException or TaskCanceledException)
             {
-                Console.WriteLine(exception);
+                return null;
             }
+            
+            Console.WriteLine(exception);
         }
         
         return null;
