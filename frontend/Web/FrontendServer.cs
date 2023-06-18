@@ -9,14 +9,14 @@ public class FrontendServer
     // TODO: Config
     public FrontendServer()
     {
-        Console.WriteLine($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Web{Path.DirectorySeparatorChar}");
+        Console.WriteLine(Path.GetFullPath($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Web{Path.DirectorySeparatorChar}"));
         
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
-            ContentRootPath = Directory.GetCurrentDirectory(),
+            EnvironmentName = Environments.Production,
+            ContentRootPath = Path.GetFullPath($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Web{Path.DirectorySeparatorChar}"),
             WebRootPath = "assets"
         });
-        //     // ContentRootPath = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Web{Path.DirectorySeparatorChar}",
         
         builder.Services.AddControllers();
         
@@ -49,11 +49,6 @@ public class FrontendServer
             app.UseHsts();
         }
 
-        // if (Program.ConfigManager.Config.ForceHttpsRedirection)
-        // {
-        //     app.UseHttpsRedirection();
-        // }
-
         app.UseStaticFiles();
         
         Console.WriteLine($"Path: {app.Environment.ContentRootPath}");
@@ -61,7 +56,7 @@ public class FrontendServer
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(
-                Path.Combine(app.Environment.ContentRootPath, "Web/Assets")),
+                Path.Combine(app.Environment.ContentRootPath, "Assets")),
             RequestPath = "/Web/Assets"
         });
 
