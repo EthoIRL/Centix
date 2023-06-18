@@ -13,9 +13,13 @@
         downloads = true
     };
 
-    ModelMediaFound? popularSearch = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", popularSearchModel);
-    ModelMediaFound? generalSearch = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", new ModelMediaSearch());
-    ModelUserInfo? userInfo = await CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
+    var popularSearchTask = Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", popularSearchModel);
+    var generalSearchTask = Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", new ModelMediaSearch());
+    var userInfoTask = CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
+
+    ModelMediaFound? popularSearch = await popularSearchTask;
+    ModelMediaFound? generalSearch = await generalSearchTask;
+    ModelUserInfo? userInfo = await userInfoTask;
 
     ModelMediaFound? userSearch = null;
     if (userInfo != null)

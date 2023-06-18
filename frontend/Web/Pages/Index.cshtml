@@ -10,9 +10,27 @@
 @{
     Layout = "_Layout.cshtml";
 
-    ModelMediaStats? mediaStats = await Program.ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
-    ModelUserStats? userStats = await Program.ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
+    var mediaTask = Program.ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
+    var userTask = Program.ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
+    
+    var searchModel = new ModelMediaSearch
+    {
+        downloads = true
+    };
+    
+    var informationTask = Program.ApiUtils.GetModelAsync<ModelInformation>(Program.ConfigManager.Config.BackendApiUri + "/services/information");
+    var configTask = Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+    var userInfoTask = CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
+    var userMediaSearchTask = Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", searchModel);
 
+    ModelMediaStats? mediaStats = await mediaTask;
+    ModelUserStats? userStats = await userTask;
+    
+    ModelInformation? information = await informationTask;
+    ModelConfig? config = await configTask;
+    ModelUserInfo? userInfo = await userInfoTask; 
+    ModelMediaFound? mediaFound = await userMediaSearchTask;
+    
     bool apiDown = mediaStats == null && userStats == null;
 
     int totalContentCount = 0;
@@ -29,25 +47,6 @@
     if (userStats != null)
     {
         totalUserCount = userStats.user_count;
-    }
-
-    ModelMediaFound? mediaFound = null;
-    ModelInformation? information = null;
-    ModelConfig? config = null;
-
-    ModelUserInfo? userInfo = null;
-    if (!apiDown)
-    {
-        information = await Program.ApiUtils.GetModelAsync<ModelInformation>(Program.ConfigManager.Config.BackendApiUri + "/services/information");
-        config = await Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
-        userInfo = await CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
-
-        var searchModel = new ModelMediaSearch
-        {
-            downloads = true
-        };
-
-        mediaFound = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", searchModel);
     }
 }
 
