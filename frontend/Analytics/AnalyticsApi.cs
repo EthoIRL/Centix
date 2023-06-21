@@ -27,7 +27,7 @@ public class AnalyticsApi
         public string framework { get; set; }
     }
 
-    public async void LogRequest(Analytics analytics)
+    public void LogRequest(Analytics analytics)
     {
         _analyticsCached.Add(analytics);
         if (_flushWatch.Elapsed.TotalSeconds > 60)
@@ -39,18 +39,18 @@ public class AnalyticsApi
                 framework = "Rocket"
             };
             
-            await SendAnalytics(payload);
+            SendAnalytics(payload);
             
             _analyticsCached.Clear();
             _flushWatch.Restart();
         }
     }
 
-    private async Task SendAnalytics(AnalyticsPayload analyticsPayload)
+    private void SendAnalytics(AnalyticsPayload analyticsPayload)
     {
         try
         {
-            await _client.PostAsJsonAsync("https://www.apianalytics-server.com/api/log-request", analyticsPayload);
+            _client.PostAsJsonAsync("https://www.apianalytics-server.com/api/log-request", analyticsPayload);
         }
         catch (Exception exception)
         {
