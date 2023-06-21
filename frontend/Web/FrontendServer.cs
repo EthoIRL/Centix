@@ -1,4 +1,5 @@
-﻿using frontend.Utils;
+﻿using frontend.Analytics;
+using frontend.Utils;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.FileProviders;
 
@@ -47,6 +48,11 @@ public class FrontendServer
         {
             app.UseExceptionHandler("/Error");
             app.UseHsts();
+        }
+
+        if (Program.ConfigManager.Config.AnalyticsApi != null)
+        {
+            app.UseAnalyticsMiddleware(Program.ConfigManager.Config.AnalyticsApi);
         }
 
         app.UseStaticFiles();
