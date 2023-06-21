@@ -12,6 +12,7 @@ pub struct Config {
     pub backend_store_compressed: bool,
     pub backend_domains: Vec<String>,
     pub backend_media_directory: Option<String>,
+    pub backend_analytics_key: Option<String>,
 
     // Media tags
     pub tags_default: Vec<String>,
@@ -47,6 +48,7 @@ impl Default for Config {
             backend_store_compressed: true,
             backend_domains: Vec::new(),
             backend_media_directory: None,
+            backend_analytics_key: None,
             // TODO: Replace this with a "good" default list of tags
             tags_default: vec![String::from("funny"), String::from("meme"), String::from("nsfw"), String::from("clip")],
             tags_allow_custom: false,

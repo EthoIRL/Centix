@@ -10,7 +10,6 @@ use rocket::{
     Rocket, data::{Limits, ByteUnit}
 };
 
-
 use utoipa::{
     OpenApi,
     openapi::{self, Server}
@@ -22,6 +21,7 @@ use utoipa::{
 };
 
 use utoipa_swagger_ui::SwaggerUi;
+use rocket_analytics::{self, Analytics};
 
 pub mod apis {
     pub mod media;
@@ -118,54 +118,108 @@ fn rocket() -> Rocket<Build> {
         .merge(("address", "0.0.0.0"))
         .merge(("limits", limits));
 
-    rocket::build()
-        .configure(figment)
-        .manage(config_arc)
-        .manage(database_arc)
-        .mount(
-            "/",
-            SwaggerUi::new("/swagger/<_..>").url("/api-doc/openapi.json", doc.to_owned()),
-        )
-        .mount(
-            "/api/media",
-            routes![
-                Media::info,
-                Media::download,
-                Media::search,
-                Media::upload,
-                Media::delete,
-                Media::edit,
-                Media::tags
-            ]
-        )
-        .mount(
-            "/api/user", 
-            routes![
-                User::register,
-                User::login,
-                User::delete,
-                User::update_username,
-                User::update_password,
-                User::generate_invite,
-                User::invite_info,
-                User::list,
-                User::info
-            ]
-        )
-        .mount(
-            "/api/stats", 
-            routes![
-                Stats::media,
-                Stats::user
-            ]
-        )
-        .mount(
-            "/api/services", 
-            routes![
-                Service::config,
-                Service::info
-            ]
-        )
+    let key = &config_arc.lock().unwrap().backend_analytics_key.clone();
+    if let Some(analytics_key) = key {
+        println!("Anal key");
+        rocket::build()
+            .configure(figment)
+            .manage(config_arc)
+            .manage(database_arc)
+            .mount(
+                "/",
+                SwaggerUi::new("/swagger/<_..>").url("/api-doc/openapi.json", doc.to_owned()),
+            )
+            .mount(
+                "/api/media",
+                routes![
+                    Media::info,
+                    Media::download,
+                    Media::search,
+                    Media::upload,
+                    Media::delete,
+                    Media::edit,
+                    Media::tags
+                ]
+            )
+            .mount(
+                "/api/user", 
+                routes![
+                    User::register,
+                    User::login,
+                    User::delete,
+                    User::update_username,
+                    User::update_password,
+                    User::generate_invite,
+                    User::invite_info,
+                    User::list,
+                    User::info
+                ]
+            )
+            .mount(
+                "/api/stats", 
+                routes![
+                    Stats::media,
+                    Stats::user
+                ]
+            )
+            .mount(
+                "/api/services", 
+                routes![
+                    Service::config,
+                    Service::info
+                ]
+            )
+            .attach(Analytics::new(analytics_key.to_string()))
+    } else {
+        rocket::build()
+            .configure(figment)
+            .manage(config_arc)
+            .manage(database_arc)
+            .mount(
+                "/",
+                SwaggerUi::new("/swagger/<_..>").url("/api-doc/openapi.json", doc.to_owned()),
+            )
+            .mount(
+                "/api/media",
+                routes![
+                    Media::info,
+                    Media::download,
+                    Media::search,
+                    Media::upload,
+                    Media::delete,
+                    Media::edit,
+                    Media::tags
+                ]
+            )
+            .mount(
+                "/api/user", 
+                routes![
+                    User::register,
+                    User::login,
+                    User::delete,
+                    User::update_username,
+                    User::update_password,
+                    User::generate_invite,
+                    User::invite_info,
+                    User::list,
+                    User::info
+                ]
+            )
+            .mount(
+                "/api/stats", 
+                routes![
+                    Stats::media,
+                    Stats::user
+                ]
+            )
+            .mount(
+                "/api/services", 
+                routes![
+                    Service::config,
+                    Service::info
+                ]
+            )
+    }
 }
 
 impl Modify for ApiDoc {    

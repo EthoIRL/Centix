@@ -37,3 +37,5 @@ flate2 = "1.0.25"
 itertools = "0.10.5"
 # Git Information
 git-version = "0.3.5"
+# Analytics
+rocket-analytics = "1.1.0"
