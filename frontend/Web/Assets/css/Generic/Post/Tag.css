@@ -1,0 +1,29 @@
+﻿@import url("../../color.css");
+
+.tag-container {
+    display: flex;
+    
+    flex-direction: row;
+    
+    gap: 4px;
+}
+
+.tag {
+    min-width: 32px;
+    width: auto;
+    height: 24px;
+    
+    padding: 0 4px 0 4px;
+    
+    background-color: var(--primary-light-blue);
+    
+    border-radius: 2px;
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-family: "OpenSans", sans-serif;
+    font-size: 12px;
+    color: white;
+}

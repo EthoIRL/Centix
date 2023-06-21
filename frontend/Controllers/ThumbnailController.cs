@@ -50,7 +50,7 @@ public class ThumbnailController : Controller
                         }
                     }
                     
-                    var thumbnailImage = GenerateThumbnail(content, 450, contentInfo.content_type);
+                    var thumbnailImage = GenerateThumbnail(content, 512, 512, contentInfo.content_type);
                     
                     if (blur)
                     {
@@ -162,7 +162,7 @@ public class ThumbnailController : Controller
         return image;
     }
 
-    private static Image<Rgba32> GenerateThumbnail(byte[] data, int width, ModelContentInfo.ContentType contentType)
+    private static Image<Rgba32> GenerateThumbnail(byte[] data, int width, int height, ModelContentInfo.ContentType contentType)
     {
         Image<Rgba32> image = LoadImage(data, contentType);
 
@@ -176,7 +176,7 @@ public class ThumbnailController : Controller
         {
             Mode = ResizeMode.Pad,
             PadColor = padColor,
-            Size = new Size(width, 250)
+            Size = new Size(width, height)
         };
         image.Mutate(x => x.Resize(resizeOptions));
 

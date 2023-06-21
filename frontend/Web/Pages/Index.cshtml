@@ -12,12 +12,12 @@
 
     var mediaTask = Program.ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
     var userTask = Program.ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
-    
+
     var searchModel = new ModelMediaSearch
     {
         downloads = true
     };
-    
+
     var informationTask = Program.ApiUtils.GetModelAsync<ModelInformation>(Program.ConfigManager.Config.BackendApiUri + "/services/information");
     var configTask = Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
     var userInfoTask = CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
@@ -25,12 +25,12 @@
 
     ModelMediaStats? mediaStats = await mediaTask;
     ModelUserStats? userStats = await userTask;
-    
+
     ModelInformation? information = await informationTask;
     ModelConfig? config = await configTask;
-    ModelUserInfo? userInfo = await userInfoTask; 
+    ModelUserInfo? userInfo = await userInfoTask;
     ModelMediaFound? mediaFound = await userMediaSearchTask;
-    
+
     bool apiDown = mediaStats == null && userStats == null;
 
     int totalContentCount = 0;
@@ -57,6 +57,10 @@
     <link rel="stylesheet" href="~/Web/Assets/css/Index/Stats.css">
     <link rel="stylesheet" href="~/Web/Assets/css/Index/Content.css">
     <link rel="stylesheet" href="~/Web/Assets/css/Index/Announcement.css">
+
+    <link rel="stylesheet" href="~/Web/Assets/css/Generic/Container.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Generic/Post/Compact.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Generic/Post/Tag.css">
 }
 
 <!DOCTYPE html>
@@ -64,211 +68,278 @@
 <html lang="en">
 <body>
 <div class="page-container">
-    <div class="stats-container">
-        <div class="stats-inner-container">
+<div class="stats-container">
+    <div class="stats-inner-container">
+        @{
+            if (userInfo != null)
+            {
+                <div class="stats-info-container">
+                    <text class="stats-header">Welcome, @userInfo.username.ToUpper()</text>
+                    <ul class="stats-list">
+                        <li>
+                            @{
+                                if (config?.user_upload_limit > 0 && !userInfo.admin)
+                                {
+                                    <text>@userInfo.uploads.Length / @config?.user_upload_limit Files Uploaded</text>
+                                }
+                                else
+                                {
+                                    <text>@userInfo.uploads.Length / Unlimited Uploads</text>
+                                }
+                            }
+                        </li>
+                        <li>
+                            @{
+                                if (config?.user_total_upload_size_limit > 0 && !userInfo.admin)
+                                {
+                                    <text>@StringUtils.FormatBytesWithIdentifier(userInfo.total_upload_size) /
+                                        @{
+                                    <text>@config.user_total_upload_size_limit</text>
+                                        }
+                                        mb(s) Stored</text>
+                                }
+                                else
+                                {
+                                    <text>@StringUtils.FormatBytesWithIdentifier(userInfo.total_upload_size) / Unlimited Stored</text>
+                                }
+                            }
+                        </li>
+                        <li>
+                            @{
+                                if (userInfo.admin)
+                                {
+                                    <text>Unlimited</text>
+                                }
+                                else
+                                {
+                                    <text>@config?.user_upload_size_limit MB</text>
+                                }
+                            }
+                            / Upload Size
+                        </li>
+                    </ul>
+                </div>
+            }
+        }
+
+        <div class="stats-info-container">
+            <text class="stats-header">Instance Stats</text>
+            <ul class="stats-list">
+                <li>
+                    Api:
+                    @{
+                        if (apiDown)
+                        {
+                            <a style="color: red">Offline</a>
+                        }
+                        else
+                        {
+                            <a style="color: green">Online</a>
+                        }
+                    }
+                </li>
+                <li>
+                    Serving @totalContentCount Uploads
+                </li>
+                <li>
+                    Handling @totalUserCount Users
+                </li>
+                <li>
+                    Storing @totalContentSize
+                </li>
+                @{
+                    if (config?.media_allow_editing != null)
+                    {
+                        <li>
+                            Editing @(config.media_allow_editing ? "Allowed" : "Disallowed")
+                        </li>
+                    }
+                }
+            </ul>
+
             @{
-                if (userInfo != null)
+                if (config?.backend_domains.Length > 1)
                 {
-                    <div class="stats-info-container">
-                        <text class="stats-header">Welcome, @userInfo.username.ToUpper()</text>
-                        <ul class="stats-list">
-                            <li>
-                                @{
-                                    if (config?.user_upload_limit > 0 && !userInfo.admin)
-                                    {
-                                        <text>@userInfo.uploads.Length / @config?.user_upload_limit Files Uploaded</text>
-                                    }
-                                    else
-                                    {
-                                        <text>@userInfo.uploads.Length / Unlimited Uploads</text>
-                                    }
+                    <div class="stats-domain-container">
+                        <text class="domain-header">AVAILABLE DOMAINS</text>
+                        <ul class="domain-list">
+                            @{
+                                foreach (var domain in config.backend_domains)
+                                {
+                                    <li>
+                                        @domain
+                                    </li>
                                 }
-                            </li>
-                            <li>
-                                @{
-                                    if (config?.user_total_upload_size_limit > 0 && !userInfo.admin)
-                                    {
-                                        <text>@StringUtils.FormatBytesWithIdentifier(userInfo.total_upload_size) /
-                                            @{
-                                        <text>@config.user_total_upload_size_limit</text>
-                                            }
-                                            mb(s) Stored</text>
-                                    }
-                                    else
-                                    {
-                                        <text>@StringUtils.FormatBytesWithIdentifier(userInfo.total_upload_size) / Unlimited Stored</text>
-                                    }
-                                }
-                            </li>
-                            <li>
-                                @{
-                                    if (userInfo.admin)
-                                    {
-                                        <text>Unlimited</text>
-                                    }
-                                    else
-                                    {
-                                        <text>@config?.user_upload_size_limit MB</text>
-                                    }
-                                }
-                                / Upload Size
-                            </li>
+                            }
                         </ul>
                     </div>
                 }
             }
+        </div>
 
-            <div class="stats-info-container">
-                <text class="stats-header">Instance Stats</text>
-                <ul class="stats-list">
-                    <li>
-                        Api:
-                        @{
-                            if (apiDown)
-                            {
-                                <a style="color: red">Offline</a>
-                            }
-                            else
-                            {
-                                <a style="color: green">Online</a>
-                            }
-                        }
-                    </li>
-                    <li>
-                        Serving @totalContentCount Uploads
-                    </li>
-                    <li>
-                        Handling @totalUserCount Users
-                    </li>
-                    <li>
-                        Storing @totalContentSize
-                    </li>
-                    @{
-                        if (config?.media_allow_editing != null)
-                        {
-                            <li>
-                                Editing @(config.media_allow_editing ? "Allowed" : "Disallowed")
-                            </li>
-                        }
-                    }
-                </ul>
-
-                @{
-                    if (config?.backend_domains.Length > 1)
-                    {
-                        <div class="stats-domain-container">
-                            <text class="domain-header">DOMAINS</text>
-                            <ul class="domain-list">
-                                @{
-                                    foreach (var domain in config.backend_domains)
-                                    {
-                                        <li>
-                                            @domain
-                                        </li>
-                                    }
-                                }
-                            </ul>
-                        </div>
-                    }
-                }
-            </div>
-
-            <div class="stats-backend-container">
-                <div class="stats-footer-text">
-                    <text>
-                        Build -
-                        <a href="https://github.com/EthoIRL/Centix">
-                            @(information != null ? information.git_version : "Unknown")
-                        </a>
-                    </text>
-                </div>
+        <div class="stats-backend-container">
+            <div class="stats-footer-text">
+                <text>
+                    Build -
+                    <a href="https://github.com/EthoIRL/Centix">
+                        @(information != null ? information.git_version : "Unknown")
+                    </a>
+                </text>
             </div>
         </div>
     </div>
-    <div class="main-content-container">
-        @{
-            if (Program.ConfigManager.Config.Announcements.Length > 0)
-            {
-                <div class="announcement-container">
-                    <div class="main-header announcement-header">
-                        Announcements
-                    </div>
-            
-                    <div class="announcement-list">
-                        @{
-                            foreach (var announcement in Program.ConfigManager.Config.Announcements)
-                            {
-                                <div>
-                                    @Html.Raw(announcement)
-                                </div>
-                            }
-                        }
-                    </div>
+</div>
+<div class="main-content-container">
+    @{
+        if (Program.ConfigManager.Config.Announcements.Length > 0)
+        {
+            <div class="announcement-container">
+                <div class="main-header announcement-header">
+                    Announcements
                 </div>
-            }
+
+                <div class="announcement-list">
+                    @{
+                        foreach (var announcement in Program.ConfigManager.Config.Announcements)
+                        {
+                            <div>
+                                @Html.Raw(announcement)
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
         }
-        
-        @{
-            if (mediaFound != null && mediaFound.ids.Length > 0)
-            {
-                <div class="content-container">
-                    <div class="main-header">
-                        Popular posts
+    }
+
+    @{
+        if (mediaFound != null && mediaFound.ids.Length > 0)
+        {
+            <div class="post-container">
+                <div class="posts-item">
+                    <div class="inline-head-container">
+                        <div class="posts-header">
+                            Popular Posts
+                        </div>
+                        
+                        <div id="more-posts">
+                            <a href="/posts/" class="more-post-item">
+                                More Posts
+                            </a>
+                        </div>
                     </div>
-                    <div class="content-flex-list">
+
+                    <div class="compact-container">
                         @{
-                            if (mediaFound.ids.Length > 0)
+                            for (int c = 0; c < Math.Min(4, mediaFound.ids.Length); c++)
                             {
-                                for (int b = 0; b < Math.Min(10, mediaFound.ids.Length); b++)
+                                var id = mediaFound.ids[c];
+                                ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
+                                if (contentInfo != null)
                                 {
-                                    var id = mediaFound.ids[b];
-                                    ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
-                                    if (contentInfo != null)
-                                    {
-                                        <a class="content-item" href="/p/@id">
-                                            <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="content-img" loading="lazy"/>
-                                            <div class="content-tags-container">
-                                                <div class="content-tag">
-                                                    @contentInfo.content_type
+                                    <a href="/p/@id/" class="compact-reference">
+                                        <div class="compact-item">
+                                            <div class="compact-thumbnail-container">
+                                                <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="compact-thumbnail"/>
+                                            </div>
+                                            <div class="compact-information-container">
+                                                <div class="compact-header-container">
+                                                    <p class="compact-header-title">@contentInfo.content_name</p>
+                                                    <p class="compact-header-data">@contentInfo.author_username • @StringUtils.FormatBytesWithIdentifier(contentInfo.content_size) • @DateTime.Parse(contentInfo.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy")</p>
+                                                    <p class="compact-header-data">Downloads • @contentInfo.downloads</p>
                                                 </div>
-                                                @{
-                                                    if (contentInfo.tags != null)
-                                                    {
-                                                        for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++)
-                                                        {
-                                                            string tag = contentInfo.tags[i];
-                                                            <div class="content-tag">@tag</div>
+                                                <div class="compact-footer-container">
+                                                    <div class="tag-container">
+                                                        <div class="tag">
+                                                            @contentInfo.content_type
+                                                        </div>
+                                                        @{
+                                                            if (contentInfo.tags != null)
+                                                            {
+                                                                for (int b = 0; b < Math.Min(4, contentInfo.tags.Length); b++)
+                                                                {
+                                                                    string tag = contentInfo.tags[b];
+                                                                    <div class="tag">
+                                                                        @tag
+                                                                    </div>
+                                                                }
+                                                            }
                                                         }
-                                                    }
-                                                }
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="content-item-text">
-                                                @{
-                                        <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text>
-                                                    if (contentInfo.content_name.Length > 16)
-                                                    {
-                                                        <text>...</text>
-                                                    }
-                                                }
-                                                • @contentInfo.author_username • @contentInfo.downloads
-                                                <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/>
-                                            </div>
-                                        </a>
-                                    }
+                                        </div>
+                                    </a>
                                 }
                             }
-                            else
-                            {
-                                <div class="content-no-available">
-                                    No content found! Become the first person to upload!
-                                </div>
-                            }
                         }
                     </div>
                 </div>
-            }
+            </div>
         }
-    </div>
+    }
+
+    @* @{ *@
+    @*     if (mediaFound != null && mediaFound.ids.Length > 0) *@
+    @*     { *@
+    @*         <div class="content-container"> *@
+    @*             <div class="main-header"> *@
+    @*                 Popular posts *@
+    @*             </div> *@
+    @*             <div class="content-flex-list"> *@
+    @*                 @{ *@
+    @*                     if (mediaFound.ids.Length > 0) *@
+    @*                     { *@
+    @*                         for (int b = 0; b < Math.Min(10, mediaFound.ids.Length); b++) *@
+    @*                         { *@
+    @*                             var id = mediaFound.ids[b]; *@
+    @*                             ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id)); *@
+    @*                             if (contentInfo != null) *@
+    @*                             { *@
+    @*                                 <a class="content-item" href="/p/@id"> *@
+    @*                                     <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="content-img" loading="lazy"/> *@
+    @*                                     <div class="content-tags-container"> *@
+    @*                                         <div class="content-tag"> *@
+    @*                                             @contentInfo.content_type *@
+    @*                                         </div> *@
+    @*                                         @{ *@
+    @*                                             if (contentInfo.tags != null) *@
+    @*                                             { *@
+    @*                                                 for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++) *@
+    @*                                                 { *@
+    @*                                                     string tag = contentInfo.tags[i]; *@
+    @*                                                     <div class="content-tag">@tag</div> *@
+    @*                                                 } *@
+    @*                                             } *@
+    @*                                         } *@
+    @*                                     </div> *@
+    @*                                     <div class="content-item-text"> *@
+    @*                                         @{ *@
+    @*                                 <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text> *@
+    @*                                             if (contentInfo.content_name.Length > 16) *@
+    @*                                             { *@
+    @*                                                 <text>...</text> *@
+    @*                                             } *@
+    @*                                         } *@
+    @*                                         • @contentInfo.author_username • @contentInfo.downloads *@
+    @*                                         <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/> *@
+    @*                                     </div> *@
+    @*                                 </a> *@
+    @*                             } *@
+    @*                         } *@
+    @*                     } *@
+    @*                     else *@
+    @*                     { *@
+    @*                         <div class="content-no-available"> *@
+    @*                             No content found! Become the first person to upload! *@
+    @*                         </div> *@
+    @*                     } *@
+    @*                 } *@
+    @*             </div> *@
+    @*         </div> *@
+    @*     } *@
+    @* } *@
+</div>
 </div>
 </body>
 </html>

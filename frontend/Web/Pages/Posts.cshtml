@@ -1,5 +1,6 @@
 ﻿@page
 @using frontend
+@using frontend.Api.Models
 @using frontend.Api.Models.Media
 @using frontend.Api.Models.User
 @using frontend.Utils
@@ -16,10 +17,13 @@
     var popularSearchTask = Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", popularSearchModel);
     var generalSearchTask = Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", new ModelMediaSearch());
     var userInfoTask = CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
+    // var userConfig = Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
+
 
     ModelMediaFound? popularSearch = await popularSearchTask;
     ModelMediaFound? generalSearch = await generalSearchTask;
     ModelUserInfo? userInfo = await userInfoTask;
+    // ModelConfig? config = await userConfig;
 
     ModelMediaFound? userSearch = null;
     if (userInfo != null)
@@ -34,16 +38,22 @@
         userSearch = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", userSearchModel);
     }
 
+    bool postsAvailable = generalSearch != null && generalSearch.ids.Length > 0;
+    bool isApiDown = popularSearch == null && generalSearch == null;
 }
 
 @section AdditionalHead
 {
     <title>Posts @(generalSearch == null ? "" : "- " + generalSearch.ids.Length)</title>
-    <link rel="stylesheet" href="~/Web/Assets/css/Posts/Uploads.css">
-    <link rel="stylesheet" href="~/Web/Assets/css/Posts/Post.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Generic/Container.css">
 
-    <link rel="stylesheet" href="~/Web/Assets/css/Posts/Small.css">
-    <link rel="stylesheet" href="~/Web/Assets/css/Posts/Large.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Generic/Post/Compact.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Generic/Post/Tag.css">
+
+    <link rel="stylesheet" href="~/Web/Assets/css/Posts/Uploads.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Posts/Sorting.css">
+
+    <link rel="stylesheet" href="~/Web/Assets/css/Posts/Posts.css">
 
     <script src="~/Web/Assets/js/Posts/Posts.js"></script>
 }
@@ -52,133 +62,168 @@
 
 <html>
 <body>
-<div class="upload-container">
+<div class="post-container">
 @{
-    if (generalSearch == null || generalSearch.ids.Length <= 0)
+    if (!isApiDown && popularSearch != null)
     {
-        <div class="no-posts-header">
-            No posts found :/
+        <div class="posts-item posts-item-margin">
+            <div class="inline-head-container">
+                <div class="posts-header">
+                    Popular Posts
+                </div>
+            </div>
+
+            <div class="compact-container">
+                @{
+                    for (int c = 0; c < Math.Min(5, popularSearch.ids.Length); c++)
+                    {
+                        var id = popularSearch.ids[c];
+                        ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
+                        if (contentInfo != null)
+                        {
+                            <a href="/p/@id/" class="compact-reference">
+                                <div class="compact-item">
+                                    <div class="compact-thumbnail-container">
+                                        <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="compact-thumbnail"/>
+                                    </div>
+                                    <div class="compact-information-container">
+                                        <div class="compact-header-container">
+                                            <p class="compact-header-title">@contentInfo.content_name</p>
+                                            <p class="compact-header-data">@contentInfo.author_username • @StringUtils.FormatBytesWithIdentifier(contentInfo.content_size) • @DateTime.Parse(contentInfo.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy")</p>
+                                            <p class="compact-header-data">Downloads • @contentInfo.downloads</p>
+                                        </div>
+                                        <div class="compact-footer-container">
+                                            <div class="tag-container">
+                                                <div class="tag">
+                                                    @contentInfo.content_type
+                                                </div>
+                                                @{
+                                                    if (contentInfo.tags != null)
+                                                    {
+                                                        for (int b = 0; b < Math.Min(4, contentInfo.tags.Length); b++)
+                                                        {
+                                                            string tag = contentInfo.tags[b];
+                                                            <div class="tag">
+                                                                @tag
+                                                            </div>
+                                                        }
+                                                    }
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    }
+                }
+            </div>
         </div>
     }
-    else
+}
+
+@{
+    if (!isApiDown && userSearch?.ids.Length > 0)
     {
-        if (popularSearch != null && popularSearch.ids.Length > 0)
-        {
-            <div class="popular-posts-container">
+        <div class="posts-item posts-item-margin">
+            <div class="inline-head-container">
                 <div class="posts-header">
-                    Popular posts
-                </div>
-                <div class="post-container small-post-container">
-                    @{
-                        for (int b = 0; b < Math.Min(6, popularSearch.ids.Length); b++)
-                        {
-                            var id = popularSearch.ids[b];
-                            ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
-                            if (contentInfo != null)
-                            {
-                                <a href="/p/@id/" class="post-item-small">
-                                    <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-small-image" loading="lazy"/>
-                                    <div class="tag-container">
-                                        <div class="tag">
-                                            @contentInfo.content_type
-                                        </div>
-                                        @{
-                                            if (contentInfo.tags != null)
-                                            {
-                                                for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++)
-                                                {
-                                                    string tag = contentInfo.tags[i];
-                                                    <div class="tag">@tag</div>
-                                                }
-                                            }
-                                        }
-                                    </div>
-                                    <div class="post-small-item-text">
-                                        @{
-                                <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text>
-                                            if (contentInfo.content_name.Length > 16)
-                                            {
-                                                <text>...</text>
-                                            }
-                                        }
-                                        • @contentInfo.author_username • @contentInfo.downloads
-                                        <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/>
-                                    </div>
-                                </a>
-                            }
-                        }
-                    }
+                    Your Popular Posts
                 </div>
             </div>
-        }
 
-        if (userInfo != null && userSearch?.ids.Length > 0)
-        {
-            <div class="posts-item">
-                <div class="posts-header">
-                    Your posts
-                </div>
-                <div class="post-container small-post-container">
-                    @{
-                        for (int b = 0; b < Math.Min(6, userSearch.ids.Length); b++)
+            <div class="compact-container">
+                @{
+                    for (int c = 0; c < Math.Min(5, userSearch.ids.Length); c++)
+                    {
+                        var id = userSearch.ids[c];
+                        ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
+                        if (contentInfo != null)
                         {
-                            var id = userSearch.ids[b];
-                            ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
-                            if (contentInfo != null)
-                            {
-                                <a href="/p/@id/" class="post-item-small">
-                                    <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-small-image" loading="lazy"/>
-                                    <div class="tag-container">
-                                        <div class="tag">
-                                            @contentInfo.content_type
+                            <a href="/p/@id/" class="compact-reference">
+                                <div class="compact-item">
+                                    <div class="compact-thumbnail-container">
+                                        <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="compact-thumbnail"/>
+                                    </div>
+                                    <div class="compact-information-container">
+                                        <div class="compact-header-container">
+                                            <p class="compact-header-title">@contentInfo.content_name</p>
+                                            <p class="compact-header-data">@contentInfo.author_username • @StringUtils.FormatBytesWithIdentifier(contentInfo.content_size) • @DateTime.Parse(contentInfo.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy")</p>
+                                            <p class="compact-header-data">Downloads • @contentInfo.downloads</p>
                                         </div>
-                                        @{
-                                            if (contentInfo.tags != null)
-                                            {
-                                                for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++)
-                                                {
-                                                    string tag = contentInfo.tags[i];
-                                                    <div class="tag">@tag</div>
+                                        <div class="compact-footer-container">
+                                            <div class="tag-container">
+                                                <div class="tag">
+                                                    @contentInfo.content_type
+                                                </div>
+                                                @{
+                                                    if (contentInfo.tags != null)
+                                                    {
+                                                        for (int b = 0; b < Math.Min(4, contentInfo.tags.Length); b++)
+                                                        {
+                                                            string tag = contentInfo.tags[b];
+                                                            <div class="tag">
+                                                                @tag
+                                                            </div>
+                                                        }
+                                                    }
                                                 }
-                                            }
-                                        }
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="post-small-item-text">
-                                        @{
-                                <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text>
-                                            if (contentInfo.content_name.Length > 16)
-                                            {
-                                                <text>...</text>
-                                            }
-                                        }
-                                        • @contentInfo.author_username • @contentInfo.downloads
-                                        <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/>
-                                    </div>
-                                </a>
-                            }
+                                </div>
+                            </a>
                         }
                     }
-                </div>
+                }
             </div>
-        }
+        </div>
+    }
+}
 
-        <div class="posts-item">
-            <div class="head-sort-container posts-header">
-                <div>
-                    All posts
-                </div>
+<div class="posts-item posts-item-margin">
+    <div class="inline-head-container">
+        <div class="posts-header">
+            Public Posts @(!postsAvailable ? "" : "- " + generalSearch!.ids.Length)
+        </div>
 
-                <div class="sort-container">
-                    <a class="sort-item @{ if (Request.Query.Count == 0) { <text>sort-selected ignore-sort</text> } }">
+        @{
+            if (postsAvailable)
+            {
+                <div id="post-sort-options">
+                    <a onclick="clearSortingParams(window);" id="default-sort" class="sort-item @{ if (Request.Query.Count == 0) { <text>sort-selected</text> } }">
                         Recent
                     </a>
                     <a onclick="updateQueryURL('downloads', window);" class="sort-item cursor-sort @{ if (QueryUtils.IsSelectedFromSortQuery(Request.Query, "downloads")) { <text>sort-selected</text> } }">
                         Downloads
                     </a>
                 </div>
-            </div>
+            }
+        }
+    </div>
 
-            <div class="post-container large-post-container">
+    @{
+        if (!postsAvailable)
+        {
+            <div id="no-posts-available">
+                @{
+                    if (isApiDown)
+                    {
+                        <p>No posts could be located due to backend connection issues... wait patiently...</p>
+                    }
+                    else
+                    {
+                        <p>No posts were found to have been publicly uploaded!</p>
+                        <p>
+                            Become the first person to <a href="/signup/">upload</a> publicly!
+                        </p>
+                    }
+                }
+            </div>
+        }
+        else
+        {
+            <div class="compact-container">
                 @{
                     List<(ModelContentInfo, string)> contentList = new List<(ModelContentInfo, string)>();
                     foreach (var id in generalSearch.ids)
@@ -208,53 +253,34 @@
                         var contentInfo = content.Item1;
                         var id = content.Item2;
 
-                        <a href="/p/@id/">
-                            <div class="post-item-large">
-                                <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="post-large-image" loading="lazy"/>
-                                <div class="post-item-large-name">
-                                    @contentInfo.content_name
+                        <a href="/p/@id/" class="compact-reference">
+                            <div class="compact-item">
+                                <div class="compact-thumbnail-container">
+                                    <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="compact-thumbnail"/>
                                 </div>
-                                <div class="post-large-info-container">
-                                    <div class="post-large-info-horizontal-child">
-                                        <div class="post-large-info">
-                                            Author <br>
-                                            <div>
-                                                @contentInfo.author_username
+                                <div class="compact-information-container">
+                                    <div class="compact-header-container">
+                                        <p class="compact-header-title">@contentInfo.content_name</p>
+                                        <p class="compact-header-data">@contentInfo.author_username • @StringUtils.FormatBytesWithIdentifier(contentInfo.content_size) • @DateTime.Parse(contentInfo.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy")</p>
+                                        <p class="compact-header-data">Downloads • @contentInfo.downloads</p>
+                                    </div>
+                                    <div class="compact-footer-container">
+                                        <div class="tag-container">
+                                            <div class="tag">
+                                                @contentInfo.content_type
                                             </div>
-                                        </div>
-                                        <div class="post-large-info">
-                                            Tags <br>
-                                            <div class="tag-container">
-                                                <div class="tag">
-                                                    @contentInfo.content_type
-                                                </div>
-                                                @{
-                                                    if (contentInfo.tags != null)
+                                            @{
+                                                if (contentInfo.tags != null)
+                                                {
+                                                    for (int b = 0; b < Math.Min(4, contentInfo.tags.Length); b++)
                                                     {
-                                                        for (int i = 0; i < Math.Min(2, contentInfo.tags.Length); i++)
-                                                        {
-                                                            string tag = contentInfo.tags[i];
-                                                            <div class="tag">
-                                                                @tag
-                                                            </div>
-                                                        }
+                                                        string tag = contentInfo.tags[b];
+                                                        <div class="tag">
+                                                            @tag
+                                                        </div>
                                                     }
                                                 }
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="post-large-info-horizontal-child">
-                                        <div class="post-large-info">
-                                            Upload Date <br>
-                                            <div>
-                                                @DateTime.Parse(contentInfo.upload_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy HH:MM")
-                                            </div>
-                                        </div>
-                                        <div class="post-large-info">
-                                            Downloads <br>
-                                            <div>
-                                                @contentInfo.downloads
-                                            </div>
+                                            }
                                         </div>
                                     </div>
                                 </div>
@@ -263,9 +289,9 @@
                     }
                 }
             </div>
-        </div>
+        }
     }
-}
+</div>
 </div>
 </body>
 </html>
