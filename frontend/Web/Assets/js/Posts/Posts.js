@@ -21,3 +21,21 @@ function updateQueryURL(query, window) {
 
     window.location.href = url;
 }
+
+function clearQueries(window) {
+    window.history.pushState({}, document.title, window.location.pathname);
+}
+
+function clearSortingParams(window) {
+    clearQueries(window);
+    const queryContainer = document.getElementById("post-sort-options");
+
+    for (const child of queryContainer.children) {
+        child.classList.remove("sort-selected");
+    }
+
+    const defaultSort = document.getElementById("default-sort");
+    defaultSort.classList.add("sort-item");
+
+    window.location.reload();
+}

@@ -33,6 +33,8 @@ pub struct Config {
     pub user_username_limit: i32,
     pub user_password_limit: i32,
     pub user_first_admin: bool
+
+    // TODO: Stats -> MediaStats, Allow user to specify whether to show unlisted upload count
 }
 
 impl Default for Config {

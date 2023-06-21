@@ -1,53 +1,19 @@
-﻿@import url("../color.css");
-
-.upload-container {
-    width: 100%;
-    height: 100%;
-
-    display: flex;
-    flex-direction: column;
-}
-
-.upload-container > div {
-    background-color: var(--dark-foreground);
-    /*border: 1px darkgray solid;*/
-
-    border-radius: 4px;
-
-    padding: 8px 8px 16px 8px;
-
-    margin: 0 8px 8px 8px;
-}
-
-.upload-container > div:first-of-type {
-    margin: 8px;
-}
-
-.popular-item {
-    min-height: 160px;
-}
-
-.posts-item {
-    height: 100%;
-
-    flex-basis: 75%;
-    flex-grow: 1;
-    flex-shrink: 1;
-}
-
-.posts-header {
-    margin-bottom: 8px;
+﻿#no-posts-available {
     color: var(--primary-text-color);
 
     font-family: 'OpenSans', sans-serif;
-    font-size: 20px;
-}
+    font-size: 16px;
 
-.no-posts-header {
-    color: var(--primary-text-color);
-
-    font-family: 'OpenSans', sans-serif;
-    font-size: 24px;
+    align-self: center;
     
-    text-align: center;
+    margin-left: 4px;
+}
+
+#no-posts-available > p {
+    padding: 0;
+    margin: 0;
+}
+
+#no-posts-available > p > a {
+    color: var(--primary-link-color);
 }

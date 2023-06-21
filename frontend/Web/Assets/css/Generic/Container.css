@@ -1,0 +1,60 @@
+﻿@import url("../color.css");
+
+.post-container {
+    width: 100%;
+    height: auto;
+
+    display: flex;
+    flex-direction: column;
+    
+    gap: 8px;
+}
+
+.post-container > div {
+    background-color: var(--dark-foreground);
+
+    border-radius: 4px;
+
+    padding: 8px;
+}
+
+.posts-item {
+    height: 100%;
+
+    flex-basis: 75%;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.posts-item-margin {
+    margin: 0 8px 0 8px;
+}
+
+.post-container > .posts-item-margin:first-of-type {
+    margin-top: 8px;
+}
+
+.post-container > .posts-item-margin:last-of-type {
+    margin-bottom: 8px;
+}
+
+.posts-header {
+    color: var(--primary-text-color);
+
+    font-family: 'OpenSans', sans-serif;
+    font-size: 20px;
+
+    align-self: center;
+
+    margin-left: 4px;
+}
+
+.inline-head-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    border-bottom: 1px white solid;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}

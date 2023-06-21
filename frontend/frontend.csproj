@@ -77,6 +77,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="cache" />
       <Folder Include="Web\Assets\css\" />
       <Folder Include="Web\Assets\font\OpenSans" />
     </ItemGroup>
