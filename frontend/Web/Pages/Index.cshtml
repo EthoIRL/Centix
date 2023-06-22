@@ -13,7 +13,7 @@
     var mediaTask = Program.ApiUtils.GetModelAsync<ModelMediaStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/media/");
     var userTask = Program.ApiUtils.GetModelAsync<ModelUserStats>(Program.ConfigManager.Config.BackendApiUri + "/stats/user/");
 
-    var searchModel = new ModelMediaSearch
+    var popularSearchModel = new ModelMediaSearch
     {
         downloads = true
     };
@@ -21,15 +21,15 @@
     var informationTask = Program.ApiUtils.GetModelAsync<ModelInformation>(Program.ConfigManager.Config.BackendApiUri + "/services/information");
     var configTask = Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
     var userInfoTask = CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
-    var userMediaSearchTask = Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", searchModel);
-
+    var popularSearchTask = Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", popularSearchModel);
+    
     ModelMediaStats? mediaStats = await mediaTask;
     ModelUserStats? userStats = await userTask;
 
     ModelInformation? information = await informationTask;
     ModelConfig? config = await configTask;
     ModelUserInfo? userInfo = await userInfoTask;
-    ModelMediaFound? mediaFound = await userMediaSearchTask;
+    ModelMediaFound? popularPosts = await popularSearchTask;
 
     bool apiDown = mediaStats == null && userStats == null;
 
@@ -191,6 +191,22 @@
 </div>
 <div class="main-content-container">
     @{
+        if (apiDown)
+        {
+            <div class="announcement-container">
+                <div class="main-header announcement-header">
+                    Service Down
+                </div>
+
+                <div class="announcement-list">
+                    <div>
+                        The backend server cannot be reached!
+                        Please refresh or comeback later if the issue persists.
+                    </div>
+                </div>
+            </div>
+        }
+        
         if (Program.ConfigManager.Config.Announcements.Length > 0)
         {
             <div class="announcement-container">
@@ -213,7 +229,7 @@
     }
 
     @{
-        if (mediaFound != null && mediaFound.ids.Length > 0)
+        if (popularPosts != null && popularPosts.ids.Length > 0)
         {
             <div class="post-container">
                 <div class="posts-item">
@@ -231,9 +247,9 @@
 
                     <div class="compact-container">
                         @{
-                            for (int c = 0; c < Math.Min(4, mediaFound.ids.Length); c++)
+                            for (int c = 0; c < Math.Min(4, popularPosts.ids.Length); c++)
                             {
-                                var id = mediaFound.ids[c];
+                                var id = popularPosts.ids[c];
                                 ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id));
                                 if (contentInfo != null)
                                 {
@@ -278,67 +294,6 @@
             </div>
         }
     }
-
-    @* @{ *@
-    @*     if (mediaFound != null && mediaFound.ids.Length > 0) *@
-    @*     { *@
-    @*         <div class="content-container"> *@
-    @*             <div class="main-header"> *@
-    @*                 Popular posts *@
-    @*             </div> *@
-    @*             <div class="content-flex-list"> *@
-    @*                 @{ *@
-    @*                     if (mediaFound.ids.Length > 0) *@
-    @*                     { *@
-    @*                         for (int b = 0; b < Math.Min(10, mediaFound.ids.Length); b++) *@
-    @*                         { *@
-    @*                             var id = mediaFound.ids[b]; *@
-    @*                             ModelContentInfo? contentInfo = await Program.ApiUtils.GetAndReceiveModel<ModelContentInfo>(Program.ConfigManager.Config.BackendApiUri + String.Concat("/media/info?id=", id)); *@
-    @*                             if (contentInfo != null) *@
-    @*                             { *@
-    @*                                 <a class="content-item" href="/p/@id"> *@
-    @*                                     <img src="@Url.Action("Thumbnail", "Thumbnail", new {id = id})" class="content-img" loading="lazy"/> *@
-    @*                                     <div class="content-tags-container"> *@
-    @*                                         <div class="content-tag"> *@
-    @*                                             @contentInfo.content_type *@
-    @*                                         </div> *@
-    @*                                         @{ *@
-    @*                                             if (contentInfo.tags != null) *@
-    @*                                             { *@
-    @*                                                 for (int i = 0; i < Math.Min(4, contentInfo.tags.Length); i++) *@
-    @*                                                 { *@
-    @*                                                     string tag = contentInfo.tags[i]; *@
-    @*                                                     <div class="content-tag">@tag</div> *@
-    @*                                                 } *@
-    @*                                             } *@
-    @*                                         } *@
-    @*                                     </div> *@
-    @*                                     <div class="content-item-text"> *@
-    @*                                         @{ *@
-    @*                                 <text>@contentInfo.content_name.Substring(0, Math.Min(16, contentInfo.content_name.Length))</text> *@
-    @*                                             if (contentInfo.content_name.Length > 16) *@
-    @*                                             { *@
-    @*                                                 <text>...</text> *@
-    @*                                             } *@
-    @*                                         } *@
-    @*                                         • @contentInfo.author_username • @contentInfo.downloads *@
-    @*                                         <img src="~/Web/Assets/imgs/Index/download.png" alt="downloads" loading="lazy"/> *@
-    @*                                     </div> *@
-    @*                                 </a> *@
-    @*                             } *@
-    @*                         } *@
-    @*                     } *@
-    @*                     else *@
-    @*                     { *@
-    @*                         <div class="content-no-available"> *@
-    @*                             No content found! Become the first person to upload! *@
-    @*                         </div> *@
-    @*                     } *@
-    @*                 } *@
-    @*             </div> *@
-    @*         </div> *@
-    @*     } *@
-    @* } *@
 </div>
 </div>
 </body>

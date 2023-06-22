@@ -7,7 +7,9 @@
     padding: 8px;
     border-radius: 8px;
     background-color: var(--dark-foreground);
+}
 
+.announcement-container:first-of-type {
     margin-top: 8px;
 }
 
