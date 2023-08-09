@@ -38,6 +38,12 @@
     margin-bottom: 8px;
 }
 
+@media screen and (max-width: 840px) {
+    .post-dynamic-margin {
+        margin: 0 8px 0 8px;
+    }
+}
+
 .posts-header {
     color: var(--primary-text-color);
 
