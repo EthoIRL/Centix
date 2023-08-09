@@ -1,5 +1,6 @@
 ﻿@page "/account"
 @using frontend
+@using frontend.Api.Models
 @using frontend.Api.Models.User
 @using frontend.Utils
 @model frontend.Web.Pages.Account.Account
@@ -7,12 +8,15 @@
 @{
     Layout = "../_Layout.cshtml";
 
+    var configTask = Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
     ModelUserInfo? userInfo = await CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
     if (userInfo == null)
     {
         Response.Redirect("/login");
         return;
     }
+
+    ModelConfig? config = await configTask;
 }
 
 @section AdditionalHead
@@ -21,6 +25,7 @@
     <link rel="stylesheet" href="~/Web/Assets/css/Account/Account.css">
     <link rel="stylesheet" href="~/Web/Assets/css/Account/Information.css">
     <link rel="stylesheet" href="~/Web/Assets/css/Account/Posts.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Account/Stats.css">
 }
 
 <!DOCTYPE html>
@@ -29,70 +34,78 @@
 <body>
 
 <div class="account-container">
-    <div class="account-child information-child">
-        <div class="account-container-header">
-            My Account
+    <div class="account-item information-container">
+        <div class="information-item">
+            <div class="account-header">
+                Settings
+            </div>
+            <div class="account-buttons">
+                <button class="account-button">Reset Username</button>
+                <button class="account-button">Reset Password</button>
+                <button class="account-button account-button-dangerous">Purge all Posts</button>
+                <button class="account-button account-button-dangerous">Delete Account</button>
+                <button class="account-button">Logout</button>
+            </div>
         </div>
+        <div class="information-item">
+            <div class="account-header">
+                Stats
+            </div>
+            <div class="stats-container">
+                @{
+                    <div class="stats-item">
+                        <p class="stats-item-name">
+                            Name
+                        </p>
+                        <p class="stats-item-data">
+                            @userInfo.username
+                        </p>
+                    </div>
 
-        <div class="information">
-            <div class="information-header">
-                <img src="~/Web/Assets/imgs/Account/user.png"/>
-            </div>
-            <div class="information-container">
-                <div>
-                    Name
-                    <div class="information-data">
-                        @userInfo.username
-                    </div>
-                </div>
-                @{
-                    if (userInfo.admin)
-                    {
-                        <div>
+                    <div class="stats-item">
+                        <p class="stats-item-name">
                             Admin
-                            <div class="information-data">
-                                @(userInfo.admin ? "Yes" : "No")
-                            </div>
-                        </div>
-                    }
-                }
-                <div>
-                    Creation Date
-                    <div class="information-data">
-                        @DateTime.Parse(userInfo.creation_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy HH:MM")
+                        </p>
+                        <p class="stats-item-data">
+                            @(userInfo.admin ? "Yes" : "No")
+                        </p>
                     </div>
-                </div>
-                <div>
-                    Uploads
-                    <div class="information-data">
-                        @userInfo.uploads.Length
+
+                    <div class="stats-item">
+                        <p class="stats-item-name">
+                            Creation Date
+                        </p>
+                        <p class="stats-item-data">
+                            @DateTime.Parse(userInfo.creation_date, null, System.Globalization.DateTimeStyles.RoundtripKind).ToString("MMM dd yyyy")
+                        </p>
                     </div>
-                </div>
-                @{
-                    if (userInfo.invite_key != null)
-                    {
-                        <div>
-                            Invite
-                            <div class="information-data">
-                                @userInfo.invite_key
-                            </div>
-                        </div>
-                    }
+
+                    <div class="stats-item">
+                        <p class="stats-item-name">
+                            Uploads
+                        </p>
+                        <p class="stats-item-data">
+                            @userInfo.uploads.Length / @config?.user_upload_limit
+                        </p>
+                    </div>
+
+                    <div class="stats-item">
+                        <p class="stats-item-name">
+                            Stored Data
+                        </p>
+                        <p class="stats-item-data">
+                            @StringUtils.FormatBytesWithIdentifier(userInfo.total_upload_size)
+                        </p>
+                    </div>
                 }
-            </div>
-            <div class="account-action-container">
-                <button>Change Password</button>
-                <button class="action-logout">Logout</button>
             </div>
         </div>
     </div>
-    <div class="account-child post-child">
-        <div class="account-container-header">
+    <div class="account-item your-post-container">
+        <div class="account-header">
             My Posts
         </div>
-        <div>
-            B
-        </div>
+
     </div>
 </div>
 
