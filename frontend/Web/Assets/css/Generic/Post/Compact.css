@@ -5,13 +5,12 @@
 }
 
 .compact-container {
-    display: flex;
+    display: grid;
+
+    grid-gap: 12px;
+    grid-template-columns: repeat(auto-fill, 360px);
     
-    flex-direction: row;
     justify-content: center;
-    flex-wrap: wrap;
-    
-    gap: 12px;
     margin-bottom: 12px;
 }
 
