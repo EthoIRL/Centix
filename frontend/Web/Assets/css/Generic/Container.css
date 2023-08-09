@@ -64,3 +64,23 @@
     padding-bottom: 8px;
     margin-bottom: 12px;
 }
+
+.no-posts {
+    color: var(--primary-text-color);
+
+    font-family: 'OpenSans', sans-serif;
+    font-size: 16px;
+
+    align-self: center;
+
+    margin-left: 4px;
+}
+
+.no-posts > p {
+    padding: 0;
+    margin: 0;
+}
+
+.no-posts > p > a {
+    color: var(--primary-link-color);
+}

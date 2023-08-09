@@ -1,6 +1,6 @@
-﻿.your-post-container {
+﻿.account-posts {
     background-color: var(--dark-foreground);
-    border-radius: 4px;
-
     padding: 8px;
+    
+    border-radius: 8px;
 }
