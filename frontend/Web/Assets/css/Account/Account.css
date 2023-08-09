@@ -16,9 +16,10 @@
 .account-header {
     color: white;
 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
-    font-size: 16px;
+    font-family: 'OpenSans', sans-serif;
+    font-size: 20px;
+    
+    margin-left: 4px;
 }
 
 .account-buttons {
