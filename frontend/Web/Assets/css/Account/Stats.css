@@ -1,0 +1,49 @@
+﻿.stats-container {
+    display: grid;
+    grid-auto-columns: auto auto auto auto;
+    grid-template-columns: repeat(auto-fill, 208px);
+    grid-gap: 16px;
+    
+    justify-content: center;
+    align-content: center;
+    
+    width: 100%;
+    height: 100%;
+}
+
+.stats-item {
+    box-sizing: border-box;
+    
+    width: 208px;
+    height: 96px;
+    
+    background-color: var(--dark-background);
+    border-radius: 8px;
+    
+    padding: 8px;
+    
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    
+    gap: 8px;
+}
+
+.stats-item > p {
+    margin: 0;
+    padding: 0;
+    
+    align-self: center;
+    
+    color: white;
+    font-family: 'OpenSans', sans-serif;
+}
+
+.stats-item-name {
+    font-size: 24px;
+}
+
+.stats-item-data {
+    font-size: 16px;
+}

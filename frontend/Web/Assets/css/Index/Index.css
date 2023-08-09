@@ -71,6 +71,8 @@ html, body {
 }
 
 .more-post-item {
+    background-color: var(--dark-background);
+    
     border-radius: 4px;
     border: 1px var(--primary-light-blue) solid;
     
