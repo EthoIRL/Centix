@@ -17,7 +17,7 @@ public class AnalyticsApi
         
         _apikey = apiKey;
         _client = new HttpClient(new SocketsHttpHandler());
-        ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+        ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls13 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
     }
 
     private struct AnalyticsPayload
