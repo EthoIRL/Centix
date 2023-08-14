@@ -1,7 +1,5 @@
 // TODO: Implement backend wide runtime tests (https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
-use std::{
-    sync::{Arc, Mutex}
-};
+use std::sync::{Arc, Mutex};
 
 use rocket::{
     serde::{Serialize, Deserialize},
@@ -120,7 +118,6 @@ fn rocket() -> Rocket<Build> {
 
     let key = &config_arc.lock().unwrap().backend_analytics_key.clone();
     if let Some(analytics_key) = key {
-        println!("Anal key");
         rocket::build()
             .configure(figment)
             .manage(config_arc)
