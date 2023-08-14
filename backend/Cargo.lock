@@ -413,6 +413,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "equivalent"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
+
+[[package]]
 name = "errno"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -654,7 +660,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http",
- "indexmap",
+ "indexmap 1.9.2",
  "slab",
  "tokio",
  "tokio-util",
@@ -666,6 +672,12 @@ name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
+
+[[package]]
+name = "hashbrown"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c6201b9ff9fd90a5a3bac2e56a830d0caa509576f0e503818ee82c181b3437a"
 
 [[package]]
 name = "hermit-abi"
@@ -809,7 +821,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1885e79c1fc4b10f0e172c475f458b7f7b93061064d98c3293e98c5ba0c8b399"
 dependencies = [
  "autocfg",
- "hashbrown",
+ "hashbrown 0.12.3",
+ "serde",
+]
+
+[[package]]
+name = "indexmap"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5477fe2230a79769d8dc68e0eabf5437907c0457a5614a9e8dddb67f65eb65d"
+dependencies = [
+ "equivalent",
+ "hashbrown 0.14.0",
  "serde",
 ]
 
@@ -1501,7 +1524,7 @@ dependencies = [
  "either",
  "figment",
  "futures",
- "indexmap",
+ "indexmap 1.9.2",
  "is-terminal",
  "log",
  "memchr",
@@ -1547,7 +1570,7 @@ checksum = "7093353f14228c744982e409259fb54878ba9563d08214f2d880d59ff2fc508b"
 dependencies = [
  "devise",
  "glob",
- "indexmap",
+ "indexmap 1.9.2",
  "proc-macro2",
  "quote",
  "rocket_http",
@@ -1566,7 +1589,7 @@ dependencies = [
  "futures",
  "http",
  "hyper",
- "indexmap",
+ "indexmap 1.9.2",
  "log",
  "memchr",
  "pear",
@@ -1584,9 +1607,9 @@ dependencies = [
 
 [[package]]
 name = "rust-embed"
-version = "6.4.2"
+version = "6.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "283ffe2f866869428c92e0d61c2f35dfb4355293cdfdc48f49e895c15f1333d1"
+checksum = "a36224c3276f8c4ebc8c20f158eca7ca4359c8db89991c4925132aaaf6702661"
 dependencies = [
  "rust-embed-impl",
  "rust-embed-utils",
@@ -1595,23 +1618,23 @@ dependencies = [
 
 [[package]]
 name = "rust-embed-impl"
-version = "6.3.1"
+version = "6.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31ab23d42d71fb9be1b643fe6765d292c5e14d46912d13f3ae2815ca048ea04d"
+checksum = "49b94b81e5b2c284684141a2fb9e2a31be90638caf040bf9afbc5a0416afe1ac"
 dependencies = [
  "proc-macro2",
  "quote",
  "rust-embed-utils",
  "shellexpand",
- "syn 1.0.107",
+ "syn 2.0.18",
  "walkdir",
 ]
 
 [[package]]
 name = "rust-embed-utils"
-version = "7.3.0"
+version = "7.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1669d81dfabd1b5f8e2856b8bbe146c6192b0ba22162edc738ac0a5de18f054"
+checksum = "9d38ff6bf570dc3bb7100fce9f7b60c33fa71d80e88da3f2580df4ff2bdded74"
 dependencies = [
  "sha2",
  "walkdir",
@@ -1901,22 +1924,22 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.38"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a9cd18aa97d5c45c6603caea1da6628790b37f7a34b6ca89522331c5180fed0"
+checksum = "978c9a314bd8dc99be594bc3c175faaa9794be04a5a5e153caba6915336cebac"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.38"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fb327af4685e4d03fa8cbcf1716380da910eeb2bb8be417e7f9fd3fb164f36f"
+checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 1.0.107",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -2209,11 +2232,11 @@ dependencies = [
 
 [[package]]
 name = "utoipa"
-version = "3.0.2"
+version = "3.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bdd08005ac3ff3aa380060bc30b2ff4a840c4405ea072deba2bad4891e404c0"
+checksum = "de634b7f8178c9c246c88ea251f3a0215c9a4d80778db2d7bd4423a78b5170ec"
 dependencies = [
- "indexmap",
+ "indexmap 2.0.0",
  "serde",
  "serde_json",
  "utoipa-gen",
@@ -2221,23 +2244,22 @@ dependencies = [
 
 [[package]]
 name = "utoipa-gen"
-version = "3.0.2"
+version = "3.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c6e78c81140a4b93470645091775e4048a57a29b6cc78add875ae60ffced17c"
+checksum = "0fcba79cb3e5020d9bcc8313cd5aadaf51d6d54a6b3fd08c3d0360ae6b3c83d0"
 dependencies = [
- "lazy_static",
  "proc-macro-error",
  "proc-macro2",
  "quote",
  "regex",
- "syn 1.0.107",
+ "syn 2.0.18",
 ]
 
 [[package]]
 name = "utoipa-swagger-ui"
-version = "3.0.2"
+version = "3.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae3d4f4da6408f0f20ff58196ed619c94306ab32635aeca3d3fa0768c0bd0de2"
+checksum = "84614caa239fb25b2bb373a52859ffd94605ceb256eeb1d63436325cf81e3653"
 dependencies = [
  "mime_guess",
  "regex",
@@ -2269,12 +2291,11 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "walkdir"
-version = "2.3.2"
+version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "808cf2735cd4b6866113f648b791c6adc5714537bc222d9347bb203386ffda56"
+checksum = "36df944cda56c7d8d8b7496af378e6b16de9284591917d307c9b4d313c44e698"
 dependencies = [
  "same-file",
- "winapi",
  "winapi-util",
 ]
 
@@ -2614,9 +2635,9 @@ checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
 
 [[package]]
 name = "zip"
-version = "0.6.3"
+version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "537ce7411d25e54e8ae21a7ce0b15840e7bfcff15b51d697ec3266cc76bdf080"
+checksum = "760394e246e4c28189f19d488c058bf16f564016aefac5d32bb1f3b51d5e9261"
 dependencies = [
  "byteorder",
  "crc32fast",
