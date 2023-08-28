@@ -8,7 +8,7 @@ use crate::apis::media::Media::ContentType;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Media {
-     // Main key
+    // Main key
     pub id: String,
     pub name: String,
     pub extension: String,

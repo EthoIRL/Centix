@@ -1,11 +1,13 @@
 // TODO: Implement backend wide runtime tests (https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
 use std::sync::{Arc, Mutex};
 
+use log::warn;
 use rocket::{
     serde::{Serialize, Deserialize},
     Responder,
     routes, Build,
-    Rocket, data::{Limits, ByteUnit}
+    Rocket, data::{Limits, ByteUnit},
+    config::{TlsConfig, CipherSuite}
 };
 
 use utoipa::{
@@ -111,10 +113,29 @@ fn rocket() -> Rocket<Build> {
     let limits = Limits::new()
         .limit("json", ByteUnit::max_value());
 
-
-    let figment = rocket::Config::figment()
+    let mut figment = rocket::Config::figment()
         .merge(("address", "0.0.0.0"))
         .merge(("limits", limits));
+
+    let tls_cert_path = &config_arc.lock().unwrap().backend_tls_cert_path.clone();
+    let tls_key_path = &config_arc.lock().unwrap().backend_tls_key_path.clone();
+
+    if tls_cert_path.is_some() && tls_key_path.is_some() {
+        let cert_path = tls_cert_path.clone().unwrap();
+        let key_path = tls_key_path.clone().unwrap();
+
+        if cert_path.is_empty() || key_path.is_empty() {
+            warn!("[TLS] Certificate or Key path is empty!")
+        } else {
+            let tls_config = TlsConfig::from_paths(tls_cert_path.clone().unwrap().as_str(), tls_key_path.clone().unwrap().as_str())
+            .with_ciphers(CipherSuite::TLS_V13_SET)
+            .with_preferred_server_cipher_order(true);
+
+            figment = figment.merge(("tls", tls_config));
+        }
+    } else {
+        warn!("[TLS] Certificate or Key path unset!")
+    }
 
     let key = &config_arc.lock().unwrap().backend_analytics_key.clone();
     if let Some(analytics_key) = key {

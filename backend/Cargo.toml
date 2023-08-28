@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies] 
 # Web framework
-rocket = { version = "0.5.0-rc.2", features = ["json"] }
+rocket = { version = "0.5.0-rc.2", features = ["json", "tls"] }
 # OpenAPI/Swagger
 utoipa = { version = "3.0.2", features = ["rocket_extras"] }
 utoipa-swagger-ui = { version = "3.0.2", features = ["rocket"] }

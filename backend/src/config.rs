@@ -13,6 +13,8 @@ pub struct Config {
     pub backend_domains: Vec<String>,
     pub backend_media_directory: Option<String>,
     pub backend_analytics_key: Option<String>,
+    pub backend_tls_cert_path: Option<String>,
+    pub backend_tls_key_path: Option<String>,
 
     // Media tags
     pub tags_default: Vec<String>,
@@ -49,6 +51,8 @@ impl Default for Config {
             backend_domains: Vec::new(),
             backend_media_directory: None,
             backend_analytics_key: None,
+            backend_tls_cert_path: None,
+            backend_tls_key_path: None,
             // TODO: Replace this with a "good" default list of tags
             tags_default: vec![String::from("funny"), String::from("meme"), String::from("nsfw"), String::from("clip")],
             tags_allow_custom: false,
