@@ -7,7 +7,7 @@ use rocket::{
     Responder,
     routes, Build,
     Rocket, data::{Limits, ByteUnit},
-    config::{TlsConfig, CipherSuite}
+    config::TlsConfig
 };
 
 use utoipa::{
@@ -127,10 +127,8 @@ fn rocket() -> Rocket<Build> {
         if cert_path.is_empty() || key_path.is_empty() {
             warn!("[TLS] Certificate or Key path is empty!")
         } else {
-            let tls_config = TlsConfig::from_paths(tls_cert_path.clone().unwrap().as_str(), tls_key_path.clone().unwrap().as_str())
-            .with_ciphers(CipherSuite::TLS_V13_SET)
-            .with_preferred_server_cipher_order(true);
-
+            let tls_config = TlsConfig::from_paths(cert_path, key_path)
+                .with_preferred_server_cipher_order(false);
             figment = figment.merge(("tls", tls_config));
         }
     } else {
@@ -160,7 +158,7 @@ fn rocket() -> Rocket<Build> {
                 ]
             )
             .mount(
-                "/api/user", 
+                "/api/user",
                 routes![
                     User::register,
                     User::login,
@@ -174,14 +172,14 @@ fn rocket() -> Rocket<Build> {
                 ]
             )
             .mount(
-                "/api/stats", 
+                "/api/stats",
                 routes![
                     Stats::media,
                     Stats::user
                 ]
             )
             .mount(
-                "/api/services", 
+                "/api/services",
                 routes![
                     Service::config,
                     Service::info
@@ -210,7 +208,7 @@ fn rocket() -> Rocket<Build> {
                 ]
             )
             .mount(
-                "/api/user", 
+                "/api/user",
                 routes![
                     User::register,
                     User::login,
@@ -224,14 +222,14 @@ fn rocket() -> Rocket<Build> {
                 ]
             )
             .mount(
-                "/api/stats", 
+                "/api/stats",
                 routes![
                     Stats::media,
                     Stats::user
                 ]
             )
             .mount(
-                "/api/services", 
+                "/api/services",
                 routes![
                     Service::config,
                     Service::info
@@ -240,13 +238,13 @@ fn rocket() -> Rocket<Build> {
     }
 }
 
-impl Modify for ApiDoc {    
+impl Modify for ApiDoc {
     fn modify(&self, openapi: &mut openapi::OpenApi) {
         openapi.info.title = String::from("Centix Backend");
         openapi.info.description = Some(String::from("Centix backend api"));
         openapi.info.license = None;
         openapi.info.version = String::from("V1");
-        
+
         let config = config::grab_config();
         let mut domain_servers: Vec<Server> = Vec::new();
 
@@ -258,7 +256,7 @@ impl Modify for ApiDoc {
                 domain_servers.push(server);
             }
         }
-        
+
         if !domain_servers.is_empty() {
             openapi.servers = Some(domain_servers);
         }

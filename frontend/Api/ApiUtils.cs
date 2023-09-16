@@ -14,6 +14,11 @@ public class ApiUtils
         {
             PooledConnectionLifetime = Timeout.InfiniteTimeSpan,
             PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
+            // Only use this when debugging tls, completely ignores tls validation
+            // SslOptions = new SslClientAuthenticationOptions
+            // {
+            //     RemoteCertificateValidationCallback = delegate { return true; }
+            // }
         };
 
         _client = new HttpClient(socketsHandler);
