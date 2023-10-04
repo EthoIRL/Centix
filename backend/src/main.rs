@@ -5,8 +5,8 @@ use log::warn;
 use rocket::{
     serde::{Serialize, Deserialize},
     Responder,
-    routes, Build,
-    Rocket, data::{Limits, ByteUnit},
+    routes,
+    data::{Limits, ByteUnit},
     config::TlsConfig
 };
 
@@ -89,8 +89,8 @@ pub struct Error {
     pub error: String,
 }
 
-#[rocket::launch]
-fn rocket() -> Rocket<Build> {
+#[rocket::main]
+async fn main() -> Result<(), rocket::Error> {
     // env_logger::init();
 
     let config = config::grab_config();
@@ -136,106 +136,63 @@ fn rocket() -> Rocket<Build> {
     }
 
     let key = &config_arc.lock().unwrap().backend_analytics_key.clone();
+
+    let mut rocket_builder = rocket::build()
+        .configure(figment)
+        .manage(config_arc)
+        .manage(database_arc)
+        .mount(
+            "/",
+            SwaggerUi::new("/swagger/<_..>").url("/api-doc/openapi.json", doc.to_owned()),
+        )
+        .mount(
+            "/api/media",
+            routes![
+                    Media::info,
+                    Media::download,
+                    Media::search,
+                    Media::upload,
+                    Media::delete,
+                    Media::edit,
+                    Media::tags
+                ]
+        )
+        .mount(
+            "/api/user",
+            routes![
+                    User::register,
+                    User::login,
+                    User::delete,
+                    User::update_username,
+                    User::update_password,
+                    User::generate_invite,
+                    User::invite_info,
+                    User::list,
+                    User::info
+                ]
+        )
+        .mount(
+            "/api/stats",
+            routes![
+                    Stats::media,
+                    Stats::user
+                ]
+        )
+        .mount(
+            "/api/services",
+            routes![
+                    Service::config,
+                    Service::info
+                ]
+        );
+
     if let Some(analytics_key) = key {
-        rocket::build()
-            .configure(figment)
-            .manage(config_arc)
-            .manage(database_arc)
-            .mount(
-                "/",
-                SwaggerUi::new("/swagger/<_..>").url("/api-doc/openapi.json", doc.to_owned()),
-            )
-            .mount(
-                "/api/media",
-                routes![
-                    Media::info,
-                    Media::download,
-                    Media::search,
-                    Media::upload,
-                    Media::delete,
-                    Media::edit,
-                    Media::tags
-                ]
-            )
-            .mount(
-                "/api/user",
-                routes![
-                    User::register,
-                    User::login,
-                    User::delete,
-                    User::update_username,
-                    User::update_password,
-                    User::generate_invite,
-                    User::invite_info,
-                    User::list,
-                    User::info
-                ]
-            )
-            .mount(
-                "/api/stats",
-                routes![
-                    Stats::media,
-                    Stats::user
-                ]
-            )
-            .mount(
-                "/api/services",
-                routes![
-                    Service::config,
-                    Service::info
-                ]
-            )
-            .attach(Analytics::new(analytics_key.to_string()))
-    } else {
-        rocket::build()
-            .configure(figment)
-            .manage(config_arc)
-            .manage(database_arc)
-            .mount(
-                "/",
-                SwaggerUi::new("/swagger/<_..>").url("/api-doc/openapi.json", doc.to_owned()),
-            )
-            .mount(
-                "/api/media",
-                routes![
-                    Media::info,
-                    Media::download,
-                    Media::search,
-                    Media::upload,
-                    Media::delete,
-                    Media::edit,
-                    Media::tags
-                ]
-            )
-            .mount(
-                "/api/user",
-                routes![
-                    User::register,
-                    User::login,
-                    User::delete,
-                    User::update_username,
-                    User::update_password,
-                    User::generate_invite,
-                    User::invite_info,
-                    User::list,
-                    User::info
-                ]
-            )
-            .mount(
-                "/api/stats",
-                routes![
-                    Stats::media,
-                    Stats::user
-                ]
-            )
-            .mount(
-                "/api/services",
-                routes![
-                    Service::config,
-                    Service::info
-                ]
-            )
+        rocket_builder = rocket_builder.attach(Analytics::new(analytics_key.to_string()));
     }
+
+    rocket_builder.launch().await?;
+
+    Ok(())
 }
 
 impl Modify for ApiDoc {
