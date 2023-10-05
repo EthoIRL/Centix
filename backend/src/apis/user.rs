@@ -29,6 +29,7 @@ pub mod User {
     use chrono::{DateTime, Utc};
 
     use itertools::Itertools;
+    use crate::database::database_utils::{DatabaseExtension, DatabaseTreeExtension};
 
     #[derive(Serialize, Deserialize, IntoParams, ToSchema, Clone)]
     pub struct InviteInfo {
@@ -169,28 +170,9 @@ pub mod User {
             }
         }
 
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let invite_database = match database.open_tree("invite") {
-            Ok(result) => {
-                result
-            },
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
-
-        let user_database = match database.open_tree("user") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let invite_database = &database.get_tree("invite")?;
+        let user_database = &database.get_tree("user")?;
 
         let users: Vec<User> = user_database.iter()
             .filter_map(|item| item.ok())
@@ -433,19 +415,8 @@ pub mod User {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         credentials: Json<UserCredentials>
     ) -> Result<Status, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let user_database = match database.open_tree("user") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let user_database = &database.get_tree("user")?;
 
         let user_vec = match user_database.get(&credentials.username) {
             Ok(result) => {
@@ -558,19 +529,8 @@ pub mod User {
             }
         }
 
-        let user_database = match database_store.lock() {
-            Ok(database) => {
-                match database.open_tree("user") {
-                    Ok(result) => result,
-                    Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                        error: String::from("An internal error on the server's end has occurred")
-                    })))
-                }
-            },
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let user_database = &database.get_tree("user")?;
 
         let user_vec = match user_database.get(&body.user_credentials.username) {
             Ok(result) => {
@@ -687,19 +647,8 @@ pub mod User {
             }
         }
 
-        let user_database = match database_store.lock() {
-            Ok(database) => {
-                match database.open_tree("user") {
-                    Ok(result) => result,
-                    Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                        error: String::from("An internal error on the server's end has occurred")
-                    })))
-                }
-            },
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let user_database = &database.get_tree("user")?;
 
         let user_vec = match user_database.get(&body.user_credentials.username) {
             Ok(result) => {
@@ -811,26 +760,9 @@ pub mod User {
             })))
         }
 
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let invite_database = match database.open_tree("invite") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
-
-        let user_database = match database.open_tree("user") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let invite_database = &database.get_tree("invite")?;
+        let user_database = &database.get_tree("user")?;
 
         let user_vec = match user_database.get(&credentials.username) {
             Ok(result) => {
@@ -924,19 +856,8 @@ pub mod User {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         body: Json<InviteInfoRequest>
     ) -> Result<Json<InviteInfo>, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let invite_database = match database.open_tree("invite") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let invite_database = &database.get_tree("invite")?;
 
         let invite_vec = match invite_database.get(&body.invite_key) {
             Ok(result) => {
@@ -982,19 +903,8 @@ pub mod User {
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>
     ) -> Result<Json<UserList>, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let user_database = match database.open_tree("user") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let user_database = &database.get_tree("user")?;
 
         let usernames = user_database.iter()
             .filter_map(|item| item.ok())
@@ -1029,26 +939,9 @@ pub mod User {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         body: Json<UserApiKey>
     ) -> Result<Json<UserInfo>, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let user_database = match database.open_tree("user") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
-
-        let media_database = match database.open_tree("media") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let media_database = &database.get_tree("media")?;
+        let user_database = &database.get_tree("user")?;
 
         let user = user_database.iter()
             .filter_map(|item| item.ok())

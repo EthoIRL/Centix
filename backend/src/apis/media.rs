@@ -29,6 +29,8 @@ pub mod Media {
     use sled::IVec;
 
     use chrono::{DateTime, Utc};
+    use crate::database::database_utils;
+    use crate::database::database_utils::{DatabaseExtension, DatabaseTreeExtension};
 
     #[derive(Serialize, Deserialize, FromForm, IntoParams, ToSchema, Clone)]
     pub struct Media {
@@ -171,20 +173,8 @@ pub mod Media {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         identification: Media
     ) -> Result<Json<ContentInfo>, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let media_database = match database.open_tree("media") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let media_database = &database.get_tree("media")?;
 
         let media_vec: IVec = match media_database.get(&identification.id) {
             Ok(result) => {
@@ -240,19 +230,8 @@ pub mod Media {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         identification: Media
     ) -> Result<FileResponse, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let media_database = match database.open_tree("media") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let media_database = &database.get_tree("media")?;
 
         let media: Option<DBMedia> = media_database.iter()
             .filter_map(|item| item.ok())
@@ -347,26 +326,9 @@ pub mod Media {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         search: Json<SearchQuery>
     ) -> Result<Json<ContentFound>, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let media_database = match database.open_tree("media") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
-
-        let user_database = match database.open_tree("user") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let media_database = &database.get_tree("media")?;
+        let user_database = &database.get_tree("user")?;
 
         let user: Option<User> = if search.api_key.is_some() {
             user_database
@@ -515,19 +477,8 @@ pub mod Media {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         upload: Json<UploadMedia>
     ) -> Result<Json<Media>, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let user_database = match database.open_tree("user") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let user_database = &database.get_tree("user")?;
 
         let user = user_database.iter()
             .filter_map(|item| item.ok())
@@ -596,12 +547,7 @@ pub mod Media {
                     }
                 }
 
-                let media_database = match database.open_tree("media") {
-                    Ok(result) => result,
-                    Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                        error: String::from("An internal error on the server's end has occurred")
-                    })))
-                };
+                let media_database = &database.get_tree("media")?;
 
                 if !user.admin { 
                     if config.user_total_upload_size_limit > 0 {
@@ -824,19 +770,8 @@ pub mod Media {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         body: Json<DeleteMedia>
     ) -> Result<Status, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let user_database = match database.open_tree("user") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let user_database = &database.get_tree("user")?;
 
         let user = user_database.iter()
             .filter_map(|item| item.ok())
@@ -942,21 +877,10 @@ pub mod Media {
         database_store: &State<Arc<Mutex<sled::Db>>>,
         body: Json<EditMedia>
     ) -> Result<Status, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let user_database = &database.get_tree("user")?;
 
         let config = match config_store.lock() {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
-
-        let user_database = match database.open_tree("user") {
             Ok(result) => result,
             Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
                 error: String::from("An internal error on the server's end has occurred")
@@ -992,12 +916,7 @@ pub mod Media {
                 }
             }
 
-            let media_database = match database.open_tree("media") {
-                Ok(result) => result,
-                Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                    error: String::from("An internal error on the server's end has occurred")
-                })))
-            };
+            let media_database = &database.get_tree("media")?;
 
             let media: Option<DBMedia> = media_database.iter()
                 .filter_map(|item| item.ok())
@@ -1111,20 +1030,8 @@ pub mod Media {
         _config_store: &State<Arc<Mutex<Config>>>,
         database_store: &State<Arc<Mutex<sled::Db>>>,
     ) -> Result<Json<ContentTags>, status::Custom<Json<Error>>> {
-        let database = match database_store.lock() {
-            Ok(result) => result,
-
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("Failed to access backend database")
-            })))
-        };
-
-        let media_database = match database.open_tree("media") {
-            Ok(result) => result,
-            Err(_) => return Err(status::Custom(Status::InternalServerError, Json(Error {
-                error: String::from("An internal error on the server's end has occurred")
-            })))
-        };
+        let database = database_store.get_database()?;
+        let media_database = &database.get_tree("media")?;
 
         let media_tags: Vec<String> = media_database
             .into_iter()

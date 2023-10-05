@@ -23,6 +23,7 @@ use utoipa::{
 use utoipa_swagger_ui::SwaggerUi;
 use rocket_analytics::{self, Analytics};
 
+// TODO: Remove this and use traditional mod.rs files where applicable
 pub mod apis {
     pub mod media;
     pub mod user;
@@ -32,6 +33,8 @@ pub mod apis {
 
 pub mod database {
     pub mod database;
+
+    pub mod database_utils;
 }
 
 pub mod config;
