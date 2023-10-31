@@ -25,27 +25,27 @@
 @section AdditionalHead
 {
     <title>Signup</title>
-    <link rel="stylesheet" href="~/Web/Assets/css/Account/Signup/Signup.css">
+    <link rel="stylesheet" href="~/Web/Assets/css/Generic/Account/Credentials.css">
 }
 
 <!DOCTYPE html>
 
 <html>
 <body>
-<div class="signup-container">
-    @using (Html.BeginForm("signup", "signup", FormMethod.Post, new { @class = "signup-form-container"}))
+<div class="credentials-container">
+    @using (Html.BeginForm("signup", "signup", FormMethod.Post, new { @class = "credentials-form-container"}))
     {
         @Html.AntiForgeryToken()
         
-        <div class="signup-container-text">
+        <div class="credentials-container-text">
             Signup
         </div>
-        <div class="signup-form-text-container">
-            <div class="signup-form-input">
+        <div class="credentials-form-text-container">
+            <div class="credentials-form-input">
                 <label>Username</label>
                 @Html.TextBoxFor(model => model.username, null, new {placeholder = "Type your username", maxlength = config?.user_username_limit, autocomplete = "off", required = "required"})
             </div>
-            <div class="signup-form-input">
+            <div class="credentials-form-input">
                 <label>Password</label>
                 @Html.PasswordFor(model => model.password, new {placeholder = "Type your password", maxlength = config?.user_password_limit, autocomplete = "off", required = "required"})
             </div>
@@ -53,7 +53,7 @@
             @{
                 if (config is {registration_use_invite_keys: true })
                 {
-                    <div class="signup-form-input">
+                    <div class="credentials-form-input">
                         <label>
                             Invite<label style="color: red">*</label>
                         </label>
@@ -66,10 +66,10 @@
                 }
             }
         </div>
-        <label class="signup-form-error">
+        <label class="credentials-form-error">
             @Html.ValidationMessage("Error")
         </label>
-        <label class="signup-form-signup">
+        <label class="credentials-form-opposite">
             Already have an account? Try
             <a href="/login">
                 logging in!
