@@ -9,16 +9,21 @@
 }
 
 @font-face {
-    font-family: 'OpenSans Light';
-    src: url('OpenSans/OpenSans-Light.ttf') format('truetype');
-}
-
-@font-face {
     font-family: 'OpenSans';
     src: url('OpenSans/OpenSans-Regular.ttf') format('truetype');
 }
 
 @font-face {
+    font-family: 'OpenSans Light';
+    src: url('OpenSans/OpenSans-Light.ttf') format('truetype');
+}
+
+@font-face {
     font-family: 'OpenSans Italic';
     src: url('OpenSans/OpenSans-Italic.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Fugaz One';
+    src: url('Fugaz/FugazOne-Regular.ttf') format('truetype');
 }
