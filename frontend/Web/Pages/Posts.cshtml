@@ -17,29 +17,32 @@
     var popularSearchTask = Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", popularSearchModel);
     var generalSearchTask = Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", new ModelMediaSearch());
     var userInfoTask = CookieUtils.IsCookieUserValid(Program.ApiUtils, Request, Response);
-    // var userConfig = Program.ApiUtils.GetModelAsync<ModelConfig>(Program.ConfigManager.Config.BackendApiUri + "/services/config");
 
-
-    ModelMediaFound? popularSearch = await popularSearchTask;
     ModelMediaFound? generalSearch = await generalSearchTask;
-    ModelUserInfo? userInfo = await userInfoTask;
-    // ModelConfig? config = await userConfig;
+    bool postsAvailable = generalSearch != null && generalSearch.ids.Length > 0;
 
+    ModelMediaFound? popularSearch = null;
+    ModelUserInfo? userInfo = null;
     ModelMediaFound? userSearch = null;
-    if (userInfo != null)
-    {
-        var userSearchModel = new ModelMediaSearch
-        {
-            downloads = true,
-            username = userInfo.username,
-            api_key = Request.Cookies[CookieUtils.CookieName]
-        };
+    
+    if(postsAvailable) {
+        popularSearch = await popularSearchTask;
+        userInfo = await userInfoTask;
 
-        userSearch = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", userSearchModel);
+        if (userInfo != null)
+        {
+            var userSearchModel = new ModelMediaSearch
+            {
+                downloads = true,
+                username = userInfo.username,
+                api_key = Request.Cookies[CookieUtils.CookieName]
+            };
+
+            userSearch = await Program.ApiUtils.PostAndReceiveModel<ModelMediaSearch, ModelMediaFound>(Program.ConfigManager.Config.BackendApiUri + "/media/search", userSearchModel);
+        }
     }
 
-    bool postsAvailable = generalSearch != null && generalSearch.ids.Length > 0;
-    bool isApiDown = popularSearch == null && generalSearch == null;
+    bool isApiDown = generalSearch == null;
 }
 
 @section AdditionalHead
